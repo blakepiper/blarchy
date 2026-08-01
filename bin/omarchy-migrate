@@ -31,6 +31,20 @@ done
 OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}"
 STATE_DIR="${OMARCHY_MIGRATION_STATE:-$HOME/.local/state/omarchy/migrations}"
 MIGRATIONS_DIR="$OMARCHY_PATH/migrations"
+install_config="${BLARCHY_INSTALL_CONFIG:-/etc/blarchy.conf}"
+BLARCHY_INSTALL_MODE="${BLARCHY_INSTALL_MODE:-}"
+if [[ -r $install_config ]]; then
+  source "$install_config"
+fi
+
+migration_supported() {
+  local file="$1"
+
+  if [[ $BLARCHY_INSTALL_MODE == "standalone" ]] &&
+    grep -qx '# blarchy:standalone-safe=false' "$file"; then
+    return 1
+  fi
+}
 
 migration_entries() {
   [[ -d $MIGRATIONS_DIR ]] || return 0
@@ -39,6 +53,7 @@ migration_entries() {
 
   for file in "$MIGRATIONS_DIR"/*.sh; do
     [[ -f $file ]] || continue
+    migration_supported "$file" || continue
     filename=$(basename "$file")
     printf '%s\t%s\t%s\n' "$filename" "$file" "$STATE_DIR/$filename"
   done

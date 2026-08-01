@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # omarchy:summary=Update AUR packages if any are installed
+# omarchy:hidden=true
 
 if pacman -Qem >/dev/null; then
   if omarchy-pkg-aur-accessible; then

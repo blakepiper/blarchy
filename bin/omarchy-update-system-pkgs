@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # omarchy:summary=Update system packages with pacman
+# omarchy:hidden=true
 # omarchy:requires-sudo=true
 
 set -e
@@ -11,14 +12,13 @@ errors=$(mktemp)
 trap 'rm -f "$errors"' EXIT
 
 # BLARCHY source/configuration is Git-owned. Ignore upstream Omarchy content
-# packages so pacman cannot replace the fork. The overwrite rule remains for
-# other packages that legitimately install into the internal runtime path.
+# packages so pacman cannot replace the fork.
 #
 # Progress bars stay on stdout. Errors are on stderr, kept for the conflict
 # handler below; LC_ALL=C is what keeps them parseable in any locale.
 if sudo env LC_ALL=C OMARCHY_UPDATE_PACMAN=1 pacman -Syu --noconfirm \
   --ignore omarchy,omarchy-dev,omarchy-settings,omarchy-settings-dev \
-  --overwrite '/usr/share/omarchy/*' 2>"$errors"; then
+  2>"$errors"; then
   cat "$errors" >&2
   exit 0
 fi

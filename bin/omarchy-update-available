@@ -1,29 +1,18 @@
 #!/bin/bash
 
-# omarchy:summary=Check whether BLARCHY updates are available.
+# omarchy:summary=Check whether Arch or AUR package updates are available
+# omarchy:hidden=true
 
 set -euo pipefail
 
-updates=()
+repo_updates=$(checkupdates 2>/dev/null || true)
+aur_updates=$(yay -Qua 2>/dev/null || true)
 
-if [[ $OMARCHY_PATH != "/usr/share/omarchy" ]]; then
-  upstream=$(omarchy-update-dev --print-upstream 2>/dev/null || true)
-  if [[ -n $upstream ]]; then
-    GIT_TERMINAL_PROMPT=0 timeout 10 git -C "$OMARCHY_PATH" fetch --quiet 2>/dev/null || true
-
-    behind=$(git -C "$OMARCHY_PATH" rev-list --count "HEAD..$upstream" 2>/dev/null || echo 0)
-    if (( behind > 0 )); then
-      commit_label=commits
-      (( behind == 1 )) && commit_label=commit
-      updates+=("BLARCHY source $behind new $commit_label on $upstream")
-    fi
-  fi
-fi
-
-if (( ${#updates[@]} > 0 )); then
-  printf '%s\n' "${updates[@]}"
+if [[ -n $repo_updates || -n $aur_updates ]]; then
+  [[ -n $repo_updates ]] && printf '%s\n' "$repo_updates"
+  [[ -n $aur_updates ]] && printf '%s\n' "$aur_updates"
   exit 0
-else
-  echo "BLARCHY is up to date"
-  exit 1
 fi
+
+echo "System packages are up to date"
+exit 1

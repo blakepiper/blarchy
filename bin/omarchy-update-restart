@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # omarchy:summary=Prompt for required reboot or service restarts after updates
+# omarchy:hidden=true
 
 echo
 

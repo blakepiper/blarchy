@@ -10,15 +10,15 @@ usage() {
   cat <<USAGE
 Usage: omarchy finalize user [--force] [--first-install]
 
-Runs the per-user setup steps that /etc/skel can't seed:
+Runs per-user setup after BLARCHY defaults have been seeded:
 dev-aware skill symlinks, xdg-user-dirs + gtk bookmarks (need \$HOME),
 default browser/mailto, and install/user/all.sh.
 
-For shipped configs see /etc/skel (new users) and omarchy-reinstall-configs
-(existing users explicitly resyncing).
+For shipped configs see install/standalone/user.sh and
+omarchy-reinstall-configs (existing users explicitly resyncing).
 
---first-install is used by the ISO in the target chroot. It marks shipped
-migrations complete for the freshly-created user.
+--first-install marks migrations shipped at installation time complete for a
+freshly configured user.
 
 Idempotency marker: ~/.local/state/omarchy/done/finalize-user
 USAGE
@@ -89,10 +89,12 @@ ln -sfn "$OMARCHY_PATH/default/omarchy-skill" ~/.codex/skills/omarchy
 ln -sfn "$OMARCHY_PATH/default/omarchy-skill" ~/.pi/agent/skills/omarchy
 
 mkdir -p ~/Downloads ~/Pictures/Screenshots ~/Videos ~/.config/gtk-3.0
-xdg-user-dirs-update --set TEMPLATES "$HOME"
-xdg-user-dirs-update --set PUBLICSHARE "$HOME"
-xdg-user-dirs-update --set DESKTOP "$HOME"
-rmdir ~/Templates ~/Public ~/Desktop 2>/dev/null || true
+if [[ ${OMARCHY_PRESERVE_USER_CONFIG:-0} != "1" || ! -f $HOME/.config/user-dirs.dirs ]]; then
+  xdg-user-dirs-update --set TEMPLATES "$HOME"
+  xdg-user-dirs-update --set PUBLICSHARE "$HOME"
+  xdg-user-dirs-update --set DESKTOP "$HOME"
+  rmdir ~/Templates ~/Public ~/Desktop 2>/dev/null || true
+fi
 touch ~/.config/gtk-3.0/bookmarks
 for dir in Downloads Projects Pictures Videos; do
   bookmark="file://$HOME/$dir $dir"

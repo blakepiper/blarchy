@@ -1,4 +1,5 @@
 echo "Rename the T2 Mac BCE module (apple-bce → t2bce) and repair the boot image"
+# blarchy:standalone-safe=false
 
 # linux-t2 7.1.4 replaced the apple-bce driver with t2bce, so the apple-bce the
 # installer put in the mkinitcpio MODULES list no longer resolves and every

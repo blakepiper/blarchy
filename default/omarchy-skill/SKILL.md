@@ -43,7 +43,7 @@ When invoking a privileged command directly, use `pkexec` instead of `sudo` so O
 **For end-user customization tasks, NEVER modify anything in `/usr/share/omarchy/`** - but READING is safe and encouraged.
 
 This directory contains Omarchy's source files managed by git. Any changes will be:
-- Lost on next `omarchy update`
+- Liable to conflict with the next explicit BLARCHY `git pull`
 - Cause conflicts with upstream
 - Break the system's update mechanism
 
@@ -138,7 +138,7 @@ Run `omarchy --help` for the full list. The most common groups:
 | `omarchy reminder` | Desktop notification reminders | `omarchy reminder 15 "Pickup Jack"` |
 | `omarchy pkg` | Package management | `omarchy pkg add <pkg>` |
 | `omarchy setup` | Interactive setup wizards | `omarchy setup security fingerprint` |
-| `omarchy update` | System updates | `omarchy update` |
+| `yay` | Arch and AUR system updates | `yay -Syu` |
 
 ## Configuration Locations
 
@@ -251,7 +251,7 @@ executable):
 ├── battery-low.d/          # Low battery (percentage in $1)
 ├── font-set.d/             # After font change (font name in $1)
 ├── post-boot.d/            # After the desktop starts
-├── post-update.d/          # After `omarchy update`
+├── post-update.d/          # Legacy/source-maintenance hooks
 ├── pre-refresh-pacman.d/   # Before package sync during update
 └── theme-set.d/            # After theme change (theme slug in $1)
 ```
@@ -349,7 +349,7 @@ omarchy font set <name>         # Change font
 ### System
 
 ```bash
-omarchy update                  # Full system update
+yay -Syu                       # Full Arch and AUR package update
 omarchy version                 # Show Omarchy version
 omarchy debug --no-sudo --print # Debug info (ALWAYS use these flags)
 omarchy system lock             # Lock screen

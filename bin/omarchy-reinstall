@@ -1,9 +1,8 @@
 #!/bin/bash
 
 # omarchy:summary=Reinstall BLARCHY packages and reset default configs
-# omarchy:requires-sudo=true
 
-set -e
+set -euo pipefail
 
 echo -e "This will reinstall all default BLARCHY packages and reset default configs.\nWarning: user config changes will be overwritten.\n"
 

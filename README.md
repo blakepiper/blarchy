@@ -29,6 +29,40 @@ behavior.
 > `omarchy-*` command names intentionally so useful upstream changes remain
 > practical to merge.
 
+## Install on an existing Arch system
+
+Start with a bootable minimal Arch installation that you control. Complete the
+normal Arch installation yourself, including:
+
+- partitions and filesystems;
+- a kernel and firmware;
+- networking;
+- your preferred bootloader;
+- a non-root user with `sudo` access.
+
+GRUB, systemd-boot, rEFInd, Limine, and dual-boot layouts are all outside
+BLARCHY's ownership. Once the machine boots into Arch:
+
+```bash
+sudo pacman -S --needed git
+git clone https://github.com/blakepiper/blarchy.git ~/blarchy
+cd ~/blarchy
+./install.sh
+```
+
+The installer enables Arch multilib for Steam, bootstraps yay when needed,
+installs the desktop packages, links this checkout as the BLARCHY runtime,
+installs session integration, and seeds missing user configuration. It is safe
+to rerun: package operations use `--needed`, managed system files and symlinks
+converge on the same state, existing user configuration is preserved, and
+one-time finalization uses completion markers.
+
+It never partitions, formats, mounts, edits bootloader configuration, writes
+EFI entries, installs a bootloader, or directly rebuilds the initramfs. Normal
+Arch package hooks may still update an installed kernel or its initramfs during
+the package transaction. See the detailed
+[standalone installation contract](./docs/standalone-install.md).
+
 ## The default stack
 
 | Role | BLARCHY choice |
@@ -87,16 +121,24 @@ No title bars are required.
 ## Updates
 
 ```bash
-omarchy update
+yay -Syu
 ```
 
-The retained update pipeline handles snapshots, Arch packages, AUR packages,
-BLARCHY source, migrations, hooks, and restart checks. It never globally
-updates every npm package.
+That is the complete normal update path. BLARCHY does not block pacman, wrap
+yay, replace the user's package configuration, pull Git source during a package
+transaction, or globally update npm packages. `omarchy update` remains only as
+a compatibility alias for `yay -Syu`. The installer enables yay's development
+package checks so installed `*-git` packages participate too.
 
-The `quattro` branch tracks this repository's `origin/quattro`. Runtime source
-updates explicitly refuse the Basecamp/Omarchy remote, and pacman ignores
-upstream Omarchy content packages so they cannot replace BLARCHY-owned files.
+BLARCHY source is intentionally pinned to the checked-out revision. Until a
+real `blarchy-git` package is published to the AUR, update BLARCHY itself
+explicitly and rerun the idempotent installer:
+
+```bash
+cd ~/blarchy
+git pull --ff-only
+./install.sh
+```
 
 ## Working with upstream
 
@@ -108,8 +150,7 @@ git merge upstream/quattro
 ```
 
 Rebase or cherry-pick instead when that better fits the change. Upstream is
-incorporated deliberately; it is never used by the normal BLARCHY runtime
-update path.
+incorporated deliberately; it is never involved in `yay -Syu`.
 
 ## Repository map
 

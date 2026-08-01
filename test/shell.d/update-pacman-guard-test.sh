@@ -4,32 +4,16 @@ set -euo pipefail
 
 source "$(dirname "$0")/base-test.sh"
 
-test_tmp=$(mktemp -d)
-trap 'rm -rf "$test_tmp"' EXIT
+for command_line in \
+  'pacman -Syu --noconfirm' \
+  'pacman --sync --refresh --sysupgrade' \
+  'pacman -S firefox'; do
+  OMARCHY_PACMAN_CMDLINE="$command_line" \
+    "$ROOT/bin/omarchy-update-pacman-guard" ||
+    fail "compatibility guard blocks standard Arch package management" "$command_line"
+done
 
-run_guard() {
-  OMARCHY_PACMAN_CMDLINE="$1" "$ROOT/bin/omarchy-update-pacman-guard"
-}
-
-if run_guard "pacman -Syu --noconfirm" >"$test_tmp/direct.out" 2>"$test_tmp/direct.err"; then
-  fail "pacman guard blocks direct system upgrades"
+if grep -q '^AbortOnFail$' "$ROOT/default/libalpm/hooks/00-omarchy-update-guard.hook"; then
+  fail "legacy ALPM hook can abort a package transaction"
 fi
-grep -q 'omarchy update' "$test_tmp/direct.err" || fail "pacman guard explains omarchy update entrypoint"
-pass "pacman guard blocks direct pacman -Syu"
-
-if run_guard "pacman --sync --refresh --sysupgrade" >"$test_tmp/long.out" 2>"$test_tmp/long.err"; then
-  fail "pacman guard blocks long-form system upgrades"
-fi
-pass "pacman guard blocks long-form pacman sysupgrade"
-
-OMARCHY_UPDATE_PACMAN=1 run_guard "pacman -Syu --noconfirm" >"$test_tmp/omarchy.out" 2>"$test_tmp/omarchy.err"
-[[ ! -s $test_tmp/omarchy.err ]] || fail "pacman guard stays quiet for omarchy update pacman call"
-pass "pacman guard allows omarchy update pacman call"
-
-OMARCHY_ALLOW_DIRECT_PACMAN=1 run_guard "pacman -Syu --noconfirm" >"$test_tmp/override.out" 2>"$test_tmp/override.err"
-[[ ! -s $test_tmp/override.err ]] || fail "pacman guard stays quiet for explicit direct pacman override"
-pass "pacman guard allows explicit direct pacman override"
-
-run_guard "pacman -S firefox" >"$test_tmp/install.out" 2>"$test_tmp/install.err"
-[[ ! -s $test_tmp/install.err ]] || fail "pacman guard stays quiet for non-sysupgrade pacman command"
-pass "pacman guard ignores non-system-upgrade transactions"
+pass "BLARCHY never blocks pacman or yay updates"

@@ -1,4 +1,5 @@
 echo "Unpack the initramfs synchronously so Plymouth survives early boot"
+# blarchy:standalone-safe=false
 
 # Kernel 7.1 unpacks the initramfs asynchronously, which races /init: the
 # early /proc, /sys, /dev, and /run mounts fail while unpacking settles, so

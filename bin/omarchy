@@ -85,7 +85,7 @@ GROUP_DESCRIPTIONS[toggle]="Toggle BLARCHY features"
 GROUP_DESCRIPTIONS[transcode]="Image and video transcoding"
 GROUP_DESCRIPTIONS[tui]="Terminal UI launchers"
 GROUP_DESCRIPTIONS[tz]="Timezone selection"
-GROUP_DESCRIPTIONS[update]="BLARCHY and system updates"
+GROUP_DESCRIPTIONS[update]="Package and system updates"
 GROUP_DESCRIPTIONS[version]="Version and channel information"
 GROUP_DESCRIPTIONS[voxtype]="Voxtype dictation"
 GROUP_DESCRIPTIONS[weather]="Weather status"
@@ -498,7 +498,7 @@ Usage:
   omarchy <group> <command> --help
 
 Common commands:
-  omarchy update              Update BLARCHY and system packages
+  omarchy update              Update Arch and AUR packages with yay
   omarchy theme list          List available themes
   omarchy theme set <name>    Apply a theme
   omarchy font list           List available fonts

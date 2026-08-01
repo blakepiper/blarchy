@@ -4,8 +4,7 @@ Type = Package
 Target = *
 
 [Action]
-Description = Checking BLARCHY update entrypoint...
+Description = Preserving standard Arch package update behavior...
 When = PreTransaction
 Depends = omarchy
 Exec = /usr/bin/omarchy-update-pacman-guard
-AbortOnFail

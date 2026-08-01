@@ -51,6 +51,8 @@ jq -e '
 ' "$ROOT/default/firefox/policies.json" >/dev/null ||
   fail "Firefox policy installs removable uBlock Origin"
 grep -Fq '/config/firefox.sh' "$ROOT/install/config/all.sh" || fail "system install deploys Firefox policy"
+grep -Fq 'default/firefox/policies.json' "$ROOT/install/standalone/system.sh" ||
+  fail "standalone system install deploys Firefox policy"
 pass "fresh Firefox installs receive uBlock Origin without an extension lock"
 
 grep -Fxq 'Alacritty.desktop' "$ROOT/default/xdg-terminal-exec/hyprland-xdg-terminals.list" ||
@@ -67,8 +69,8 @@ grep -Fq 'interface_branding: BLARCHY Bootloader' "$ROOT/default/limine/limine.c
   fail "Limine uses BLARCHY branding"
 grep -Fq 'TARGET_OS_NAME="BLARCHY"' "$ROOT/etc/limine-entry-tool.d/omarchy-defaults.conf" ||
   fail "generated boot entries use the BLARCHY name"
-grep -Fq 'Pending BLARCHY Updates' "$ROOT/shell/plugins/bar/widgets/SystemUpdate.qml" ||
-  fail "top-bar update indicator uses BLARCHY branding"
+grep -Fq 'Pending system updates' "$ROOT/shell/plugins/bar/widgets/SystemUpdate.qml" ||
+  fail "top-bar update indicator describes ordinary package updates"
 grep -Fq '"name": "BLARCHY"' "$ROOT/default/themed/vscode-theme.json.tpl" ||
   fail "generated VSCodium theme uses BLARCHY branding"
 pass "visible boot, bar, and editor branding is BLARCHY-owned"
@@ -93,13 +95,11 @@ grep -Fq 'omarchy-shell notifications showHistory' "$ROOT/shell/plugins/bar/indi
   fail "notification indicator opens notification history"
 pass "notification indicator exposes history while retaining a DND control"
 
-grep -Fq -- '--ignore omarchy,omarchy-dev,omarchy-settings,omarchy-settings-dev' \
-  "$ROOT/bin/omarchy-update-system-pkgs" || fail "pacman update protects BLARCHY-owned content"
-grep -Fq -- '--ignore omarchy,omarchy-dev,omarchy-settings,omarchy-settings-dev' \
-  "$ROOT/bin/omarchy-refresh-pacman" || fail "pacman refresh protects BLARCHY-owned content"
-if grep -Fq 'https://github.com/basecamp/omarchy.git' "$ROOT/bin/omarchy-update-dev"; then
-  fail "BLARCHY source updater has no hard-coded Basecamp clone URL"
+grep -Fxq 'exec yay -Syu "$@"' "$ROOT/bin/omarchy-update" ||
+  fail "compatibility update route delegates directly to yay"
+grep -Fq "'yay -Syu'" "$ROOT/shell/plugins/bar/widgets/SystemUpdate.qml" ||
+  fail "top-bar update action launches yay directly"
+if rg -q 'omarchy-update-dev|git .*pull' "$ROOT/bin/omarchy-update"; then
+  fail "normal package updates pull BLARCHY source"
 fi
-grep -Fq 'refusing to update BLARCHY from Basecamp/Omarchy' "$ROOT/bin/omarchy-update-dev" ||
-  fail "BLARCHY source updater rejects the Basecamp remote"
-pass "BLARCHY updates protect fork-owned content and reject upstream source pulls"
+pass "normal updates use standard Arch and AUR behavior"

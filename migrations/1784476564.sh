@@ -1,4 +1,5 @@
 echo "Keep non-Latin keyboard layouts out of the initramfs so the LUKS passphrase stays typeable"
+# blarchy:standalone-safe=false
 
 # Bundling vconsole.conf in the initramfs makes Plymouth apply the user's
 # layout at the LUKS prompt. For layouts that don't type Latin letters, that

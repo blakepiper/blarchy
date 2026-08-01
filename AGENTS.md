@@ -78,7 +78,22 @@ Example:
 
 # Install Scripts
 
-The ISO owns installation orchestration. This repo ships target-side setup commands and reusable setup leaves:
+`./install.sh` is BLARCHY's primary installer. It runs on an already bootable
+minimal Arch system and must remain idempotent and bootloader-agnostic. It must
+not partition, format, mount, write under `/boot`, install/configure a
+bootloader, write EFI entries, or directly rebuild the initramfs. Preserve
+existing network and display managers when configured, and preserve existing
+user files on a normal install.
+
+Standalone-specific leaves live under `install/standalone/`. Reuse the package
+manifest and runtime setup abstractions, but do not call ISO leaves that replace
+pacman configuration or assume Limine/Snapper.
+
+Migrations that alter boot or snapshot state must declare
+`# blarchy:standalone-safe=false` immediately after their opening `echo` so the
+standalone migration runner excludes them.
+
+The retained ISO path ships target-side setup commands and reusable setup leaves:
 
 - `bin/omarchy-setup-system` runs root-owned system setup during ISO finalization.
 - `bin/omarchy-setup-hardware` runs idempotent hardware-specific setup and is called by `omarchy-setup-system`.
@@ -269,7 +284,14 @@ name containing `..` resolves and copies, landing outside `~/.config` rather tha
 
 Read `docs/migrations.md` before creating or changing migrations.
 
-Migrations are per-user and run through `omarchy-migrate` during `omarchy update` or from the login-time migration notification. Put migrations directly under `migrations/<timestamp>.sh`. Pending state is per-user under `~/.local/state/omarchy/migrations/`, so every user gets a chance to run every migration. Migrations run as the user; privileged work should invoke the appropriate helper or privilege prompt, and no-op when another user already applied it.
+Migrations are per-user and run through `omarchy-migrate` when `./install.sh` is
+rerun after a BLARCHY source update, or from the login-time migration
+notification. Normal system updates use `yay -Syu` and do not pull BLARCHY
+source. Put migrations directly under `migrations/<timestamp>.sh`. Pending
+state is per-user under `~/.local/state/omarchy/migrations/`, so every user gets
+a chance to run every migration. Migrations run as the user; privileged work
+should invoke the appropriate helper or privilege prompt, and no-op when
+another user already applied it.
 
 To create a new migration, run `omarchy-dev-add-migration --no-edit`.
 

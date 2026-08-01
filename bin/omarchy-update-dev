@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # omarchy:summary=Update the active BLARCHY source checkout
+# omarchy:hidden=true
 
 set -euo pipefail
 

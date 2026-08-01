@@ -10,7 +10,7 @@ After=graphical-session.target
 # than linger against a socket that is gone.
 PartOf=graphical-session.target
 # After= is ordering only -- it does not stop anything from starting this unit
-# while the target is inactive. An `omarchy update` over SSH has a live user
+# while the target is inactive. Starting setup over SSH can leave a live user
 # manager (pam_systemd) and no graphical session, and a fcitx5 started there
 # comes up with no WAYLAND_DISPLAY and no way to reach any client. Worse, it
 # stays active, so the later graphical-session.target activation won't pull in a

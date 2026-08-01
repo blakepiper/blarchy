@@ -1,4 +1,9 @@
-# Set default XCompose that is triggered with CapsLock
+# Set default XCompose that is triggered with CapsLock. Standalone installs
+# preserve an existing user-owned file.
+if [[ ${OMARCHY_PRESERVE_USER_CONFIG:-0} == "1" && -e $HOME/.XCompose ]]; then
+  return 0
+fi
+
 tee ~/.XCompose >/dev/null <<EOF
 # Run omarchy-restart-xcompose to apply changes
 

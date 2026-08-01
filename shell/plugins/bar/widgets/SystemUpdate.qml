@@ -17,7 +17,7 @@ BarWidget {
   function clear() { updateAvailable = false }
 
   function runUpdate() {
-    if (root.bar) root.bar.run("omarchy-launch-floating-terminal-with-presentation omarchy-update")
+    if (root.bar) root.bar.run("omarchy-launch-floating-terminal-with-presentation 'yay -Syu'")
   }
 
   visible: updateAvailable
@@ -59,7 +59,7 @@ BarWidget {
     text: "\uf021"
     slotSize: Style.bar.statusSlot
     fontSize: Style.font.caption
-    tooltipText: "Pending BLARCHY Updates"
+    tooltipText: "Pending system updates"
     onPressed: root.runUpdate()
   }
 }

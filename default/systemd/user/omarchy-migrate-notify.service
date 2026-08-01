@@ -1,11 +1,8 @@
 [Unit]
 Description=Notify about pending BLARCHY migrations
-# Login-only. There used to be an omarchy-update-user-notify.path watching
-# /usr/share/omarchy/migrations, but pacman writes that directory during every
-# update -- including the blessed `omarchy update`, which runs omarchy-migrate
-# itself a step later -- so the watcher notified about migrations that were
-# already being applied in the visible update terminal. Checking once per login
-# is the only trigger that cannot collide with a running update.
+# Login-only. Normal yay/pacman updates do not alter the Git-owned migration
+# directory. This catches an explicit source pull that was not followed by the
+# idempotent installer without watching the checkout continuously.
 ConditionPathIsDirectory=/usr/share/omarchy/migrations
 # The actionable notification launches its terminal through uwsm-app, whose
 # daemon starts after graphical-session.target. Run after the target too so this

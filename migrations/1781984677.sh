@@ -1,4 +1,5 @@
 echo "Normalize Snapper snapshot services"
+# blarchy:standalone-safe=false
 
 OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}"
 snapper_config_script=/usr/share/omarchy/install/config/snapper.sh

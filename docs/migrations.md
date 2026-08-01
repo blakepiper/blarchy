@@ -12,8 +12,9 @@ Migrations live in:
 migrations/*.sh
 ```
 
-They run as the current Omarchy user through `omarchy-migrate`, normally during
-`omarchy update`. A migration may touch user/session state (`~/.config`,
+They run as the current user through `omarchy-migrate`, normally when
+`./install.sh` is rerun after an explicit BLARCHY source update. A migration may
+touch user/session state (`~/.config`,
 `~/.local`, user systemd, browser/editor prefs, DBus/session state), and may also
 perform machine-wide repairs when needed.
 
@@ -31,13 +32,13 @@ that and no-op.
 
 ## When migrations run
 
-### During `omarchy update`
+### During a BLARCHY source update
 
-`omarchy update` is the normal update path. It runs package updates, then:
+After pulling BLARCHY source, rerun `./install.sh`. The installer reapplies
+package and system defaults, then runs:
 
 ```bash
 omarchy-migrate
-omarchy-hook post-update
 ```
 
 `omarchy-migrate` waits for any active pacman transaction to finish, then runs
@@ -52,9 +53,6 @@ Every graphical login starts `omarchy-migrate-notify.service` after
 omarchy-migrate --pending
 ```
 
-It stays silent while `omarchy update` holds its lock, since that update applies
-the pending migrations itself.
-
 If that user has pending migrations, it shows a notification that opens a
 terminal for:
 
@@ -64,14 +62,11 @@ omarchy-migrate
 
 The notifier never runs migrations silently in the background.
 
-This is what covers users who did not run the update themselves: someone who
-bypassed the pacman guard with `sudo env OMARCHY_ALLOW_DIRECT_PACMAN=1 pacman
--Syu`, and any second user on the machine, whose migration markers are per-user
-and therefore still missing after another user updated.
+This covers users who pulled source without rerunning the installer and any
+second user whose migration markers are still missing.
 
-Login is the only trigger on purpose. Watching the packaged migration directory
-also fires during a normal `omarchy update`, which prompts for migrations that
-`omarchy-migrate` is about to run in the visible update terminal.
+Normal `yay -Syu` package updates do not change the Git-owned migration
+directory and therefore do not create pending BLARCHY migrations.
 
 ### Manually
 

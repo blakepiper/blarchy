@@ -3,6 +3,11 @@
 How `omarchy/` is organized and where everything ends up on an installed
 system.
 
+BLARCHY's primary installation path is now `./install.sh` on an existing Arch
+system; see [`standalone-install.md`](standalone-install.md). The package/ISO
+mapping below is retained as upstream architecture reference and for the
+remaining package-oriented tooling, but it is not the BLARCHY disk installer.
+
 ## Mental model
 
 Two Arch packages are built from this one repo (PKGBUILDs live in
@@ -26,21 +31,19 @@ Two other packages live in `omarchy-pkgs/` but stand alone:
 `omarchy-keyring` (GPG keys for pacman) and `omarchy-nvim` (the Neovim
 setup; independently seeds `/etc/skel`).
 
-Three layers populate `$HOME`:
+Three layers populate `$HOME` on a standalone BLARCHY install:
 
-1. **Seed** — `omarchy-settings` ships static defaults to `/etc/skel/`.
-   Arch's `useradd -m` copies that tree into a new user's `$HOME` at user
-   creation. This is the only mechanism that touches a brand-new user's home
-   for these files.
+1. **Seed** — `install/standalone/user.sh preserve` copies missing shipped
+   defaults without replacing files the user already owns.
 2. **Finalize** — `omarchy-finalize-user` runs once per user and handles the
-   things `/etc/skel` can't do because they need `$HOME` expansion, the live
-   `$OMARCHY_PATH`, or runtime detection of system state.
+   things that need `$HOME` expansion, the live `$OMARCHY_PATH`, or runtime
+   detection of system state.
 3. **Resync** — `omarchy-reinstall-configs` is the explicit, destructive
    command for an existing user to clobber their configs back to shipped
    defaults.
 
-`/etc/skel` only fires at user creation. Existing users picking up new
-defaults must use the resync command.
+The retained ISO/package path instead seeds `/etc/skel` through
+`omarchy-settings`; that mapping is documented below for upstream reference.
 
 Current generated theme state lives under
 `~/.local/state/omarchy/current/`. Keep `~/.config/omarchy/` for files a user
@@ -208,16 +211,13 @@ that user, which checks `omarchy-migrate --pending`. If this user has missing
 migration state, it shows a notification that opens a terminal for
 `omarchy-migrate`. The notifier never runs migrations in the background.
 
-Login is the only trigger. Nothing watches the packaged migration directory: a
-watcher cannot tell a bypassed `pacman -Syu` from the package transaction inside
-a normal `omarchy update`, so it notified about migrations that `omarchy-migrate`
-was already applying in the visible update terminal.
+Login is the only automatic trigger. Nothing watches the migration directory;
+normal `yay -Syu` transactions do not modify the Git-owned BLARCHY checkout.
 
 `omarchy-migrate` waits for any active pacman transaction to finish, then runs
 pending migrations. It does not need `--force`; migrations happen when state
-files are missing. `omarchy update` runs `omarchy-migrate` after the package
-transaction in the already-visible update terminal, then runs
-`omarchy-hook post-update`.
+files are missing. Rerunning `./install.sh` after an explicit BLARCHY source
+update applies pending standalone-safe migrations.
 
 ## First-run (`omarchy-first-run`)
 
@@ -255,6 +255,7 @@ the legacy finalization marker from `~/.local/state/omarchy/` into `done/`.
 
 ## Root-side install orchestration
 
+This section describes the retained ISO path, not `./install.sh`.
 `omarchy-setup-system` (root, in chroot) runs target-side setup at ISO
 finalization. It sources:
 
@@ -275,19 +276,14 @@ Logging goes to `/var/log/omarchy-install.log` via
 When an existing user wants to reset to shipped defaults:
 
 ```
-~/  ←  cp -af /etc/skel/.
+install/standalone/user.sh overwrite
+omarchy-finalize-user --force
 ```
 
-Replaying `/etc/skel` over `$HOME` is exactly what `useradd -m` does for a
-brand-new user, so this one copy resyncs `.bashrc`, `.config/**`,
-`.local/share/applications/`, the nautilus-python extensions, hypr toggles,
-branding files, and the shipped migration markers in a single pass.
-
-Then it runs `omarchy-refresh-limine`, `omarchy-refresh-plymouth`, and the
-nvim refresh. Destructive: existing user files copied from `/etc/skel` are
-clobbered without backup. Fastfetch is package-owned at
-`/etc/fastfetch/config.jsonc`; delete `~/.config/fastfetch/config.jsonc` to
-return to the packaged default.
+This resync overwrites BLARCHY-owned user defaults without backup, removes the
+obsolete Limine snapshot notifier, reruns per-user finalization, and refreshes
+the editor setup when its optional helper is installed. It does not refresh or
+alter Limine, Plymouth, EFI, or initramfs configuration.
 
 ## Quick reference: where does X live?
 
@@ -299,7 +295,8 @@ return to the packaged default.
 | Package-owned system file (e.g. systemd user service/path in `/usr/lib`) | `default/`, document the mapping in `default/package-defaults.tsv`, then add the `install -Dm644` line in `omarchy-settings` PKGBUILD |
 | Per-user file that's static but lives outside `~/.config` | `default/`, then add `install -Dm644 ... $pkgdir/etc/skel/...` in `omarchy-settings` PKGBUILD |
 | Runtime tweak that needs `$HOME` or live system state | extend `omarchy-finalize-user`, or add a per-user leaf under `install/user/` and wire into `install/user/all.sh` |
-| One-time root-side setup step | `install/config/*.sh` or `install/hardware/*.sh`, wire into `install/config/all.sh` or `install/hardware/all.sh` |
+| Standalone root-side integration | Extend `install/standalone/system.sh`; do not cross the disk/boot ownership boundary |
+| Retained ISO-only root setup | `install/config/*.sh` or `install/hardware/*.sh`, wired into the matching `all.sh` |
 | One-time fix for existing installs | `migrations/<unix-timestamp>.sh` |
 | Package-owned path something else may already write | Prefer a path nothing else writes, such as a vendor drop-in under `/usr/lib`. Otherwise the `--overwrite` entry in `bin/omarchy-update-system-pkgs` has to ship a release before the file |
 | User-facing `omarchy-*` command | `bin/omarchy-<group>-<verb>` — see `GROUP_DESCRIPTIONS` in `bin/omarchy` |

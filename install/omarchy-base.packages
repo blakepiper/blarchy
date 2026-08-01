@@ -1,10 +1,9 @@
-# BLARCHY core package list pacstrapped by the ISO.
-# The ISO builder also reads this file when constructing the offline mirror.
+# BLARCHY core package list. The standalone installer resolves it through
+# pacman/AUR; retained ISO tooling may also use it to construct an offline mirror.
 
 aether
 alacritty
 alsa-utils
-asdcontrol
 avahi
 bash-completion
 bat
@@ -50,7 +49,7 @@ gvfs-nfs
 gvfs-smb
 hyprland
 hyprland-guiutils
-hyprland-preview-share-picker
+hyprland-preview-share-picker-git
 hyprpicker
 hyprsunset
 imagemagick
@@ -87,17 +86,13 @@ noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
 nss-mdns
-nvim
+neovim
 obs-studio
 obsidian
-omacut
-omawrite
-omarchy-nvim
 pacman-contrib
 pamixer
 pinta
 plocate
-plymouth
 postgresql-libs
 power-profiles-daemon
 python
@@ -125,9 +120,8 @@ tesseract-data-eng
 tldr
 tree-sitter-cli
 tmux
-tobi-try
 ttf-ia-writer
-ttf-jetbrains-mono-nerd-basic
+ttf-jetbrains-mono-nerd
 tzupdate
 udiskie
 ufw

@@ -1,4 +1,5 @@
 echo "Remove Snapper timeline snapshots leaked by earlier defaults"
+# blarchy:standalone-safe=false
 
 SNAPPER_CONFIG_PATH="${OMARCHY_SNAPPER_CONFIG_PATH:-/etc/snapper/configs/root}"
 

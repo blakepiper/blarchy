@@ -148,24 +148,25 @@ assertEqual(
 )
 assert(
   defaultById['update.omarchy'].icon === '',
-  'menu update BLARCHY entry uses the refresh glyph'
+  'menu system-package update entry uses the refresh glyph'
 )
 assert(
   !defaultById['update.omarchy'].iconFont,
-  'menu update BLARCHY entry does not depend on the Omarchy logo font'
+  'menu system-package update entry does not depend on the Omarchy logo font'
+)
+assert(
+  defaultById['update.omarchy'].action.includes('yay -Syu'),
+  'menu updates packages directly with yay'
 )
 assert(
   defaultById['setup.input'].action.includes('input.lua'),
   'menu keeps Input as a direct config action'
 )
 assert(
-  defaultById['setup.direct-boot'].action.includes('omarchy-setup-direct-boot'),
-  'menu places Direct Boot directly under Setup'
-)
-assertEqual(
-  defaultItems.findIndex(item => item.id === 'setup.direct-boot'),
-  defaultItems.findIndex(item => item.id === 'setup.input') + 1,
-  'menu lists Direct Boot immediately below Input'
+  !defaultById['setup.direct-boot'] &&
+    !defaultById['style.unlock'] &&
+    !defaultById['update.config.plymouth'],
+  'menu exposes no bootloader, EFI, Plymouth, or initramfs actions'
 )
 assert(
   defaultById['setup.security.passwordless-sudo'].action.includes('omarchy-sudo-passwordless'),

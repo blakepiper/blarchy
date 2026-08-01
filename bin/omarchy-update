@@ -1,48 +1,11 @@
 #!/bin/bash
 
-# omarchy:summary=Update BLARCHY and system packages
-# omarchy:args=[-y]
-# omarchy:examples=omarchy update | omarchy update -y
-# omarchy:requires-sudo=true
+# omarchy:summary=Update Arch and AUR packages with yay
+# omarchy:args=[yay options...]
+# omarchy:examples=omarchy update | omarchy update --devel
 
-set -e
+set -euo pipefail
 
-if [[ -z ${OMARCHY_UPDATE_LOGGED:-} ]]; then
-  script_command=$(printf '%q ' "$0" "$@")
-  exec env OMARCHY_UPDATE_LOGGED=1 script -qefc "$script_command" "/tmp/omarchy-update.log"
-fi
-
-if ! omarchy-update-lock held; then
-  exec omarchy-update-lock run "$0" "$@"
-fi
-
-trap 'echo ""; echo -e "\033[0;31mSomething went wrong during the BLARCHY update!\n\nPlease review the output above carefully, correct the error, and retry the update.\033[0m"' ERR
-trap 'omarchy-update-stay-awake stop' EXIT
-
-omarchy-update-requires-free-space
-
-if [[ ${1:-} == "-y" ]] || omarchy-update-confirm; then
-  omarchy-snapshot create || (($? == 127))
-
-  omarchy-update-stay-awake start
-
-  omarchy-update-dev
-  omarchy-update-keyring
-  omarchy-update-system-pkgs
-  omarchy-migrate
-  omarchy-hook post-update
-  omarchy-update-aur-pkgs
-  omarchy-update-mise
-  omarchy-update-orphan-pkgs
-
-  omarchy-update-analyze-logs
-  omarchy-update-status
-
-  # Release update-owned inhibitors before offering a reboot. A confirmed
-  # reboot can terminate this process before its EXIT trap gets a chance to
-  # remove the persistent Stay Awake marker.
-  omarchy-update-stay-awake stop
-  trap - EXIT
-
-  omarchy-update-restart
-fi
+# Compatibility route only. BLARCHY does not wrap the Arch update lifecycle or
+# pull its Git checkout as a side effect of updating packages.
+exec yay -Syu "$@"

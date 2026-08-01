@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # omarchy:summary=Check the update log for known failure conditions
+# omarchy:hidden=true
 
 update_log="/tmp/omarchy-update.log"
 

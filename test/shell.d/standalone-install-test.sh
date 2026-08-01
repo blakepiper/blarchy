@@ -28,6 +28,10 @@ pass "standalone installer has no disk, bootloader, EFI, or initramfs operations
 
 grep -Fq 'pacman -Syu --needed --noconfirm base-devel git' "$ROOT/install.sh" ||
   fail "standalone installer updates Arch and installs build prerequisites"
+if grep -Fxq git "$ROOT/install/omarchy-base.packages"; then
+  fail "standalone manifest duplicates the required Git prerequisite"
+fi
+pass "Git remains an installer prerequisite rather than a bundled default"
 grep -Fq 'yay -S --needed --noconfirm' "$ROOT/install.sh" ||
   fail "standalone installer installs repository and AUR packages idempotently"
 grep -Fq 'yay -Y --devel --save' "$ROOT/install.sh" ||

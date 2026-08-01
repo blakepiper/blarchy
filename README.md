@@ -75,7 +75,7 @@ the package transaction. See the detailed
 | Dock | `nwg-dock-hyprland` |
 | Music and games | Spotify + Steam |
 | Creative | GIMP |
-| Development | Git, Node.js/npm, Python/pip, Codex CLI, Claude Code |
+| Development | Node.js/npm, Python/pip, Codex CLI, Claude Code |
 | Packages | pacman + yay |
 
 No Chrome, Chromium, Foot, Docker, Discord, Google web apps, or social/messaging

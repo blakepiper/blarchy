@@ -14,6 +14,10 @@ for _, keys in ipairs({
   "SUPER + RIGHT",
   "SUPER + UP",
   "SUPER + DOWN",
+  "SUPER + CTRL + LEFT",
+  "SUPER + CTRL + RIGHT",
+  "SUPER + CTRL + UP",
+  "SUPER + CTRL + DOWN",
   "SUPER + SHIFT + LEFT",
   "SUPER + SHIFT + RIGHT",
   "SUPER + SHIFT + UP",
@@ -37,6 +41,11 @@ o.bind("SUPER + LEFT", "Snap window left", "omarchy-hyprland-window-snap left")
 o.bind("SUPER + RIGHT", "Snap window right", "omarchy-hyprland-window-snap right")
 o.bind("SUPER + UP", "Snap window up", "omarchy-hyprland-window-snap up")
 o.bind("SUPER + DOWN", "Snap window down", "omarchy-hyprland-window-snap down")
+
+o.bind("SUPER + CTRL + LEFT", "Focus window left", hl.dsp.focus({ direction = "l" }))
+o.bind("SUPER + CTRL + RIGHT", "Focus window right", hl.dsp.focus({ direction = "r" }))
+o.bind("SUPER + CTRL + UP", "Focus window above", hl.dsp.focus({ direction = "u" }))
+o.bind("SUPER + CTRL + DOWN", "Focus window below", hl.dsp.focus({ direction = "d" }))
 
 o.bind("SUPER + SHIFT + LEFT", "Move window to left monitor", hl.dsp.window.move({ monitor = "l" }))
 o.bind("SUPER + SHIFT + RIGHT", "Move window to right monitor", hl.dsp.window.move({ monitor = "r" }))

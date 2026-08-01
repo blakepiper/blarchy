@@ -98,6 +98,7 @@ web-app shortcuts are installed on a fresh BLARCHY setup.
 | <kbd>Super</kbd> + <kbd>1–9</kbd> | Switch workspace |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>1–9</kbd> | Move window to workspace |
 | <kbd>Super</kbd> + arrow | Snap window to that half of the monitor |
+| <kbd>Super</kbd> + <kbd>Ctrl</kbd> + arrow | Focus the window in that direction |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + arrow | Move window to an adjacent monitor |
 | <kbd>Super</kbd> + <kbd>T</kbd> | Return a snapped window to tiling |
 

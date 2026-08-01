@@ -108,6 +108,21 @@ if grep -Fq 'ChatGPT' <<<"$fresh_output"; then
 fi
 pass "default application bindings load from package defaults"
 
+unbind_block=$(sed -n '/for _, keys in ipairs({/,/}) do/p' "$ROOT/config/hypr/bindings.lua")
+for direction in LEFT RIGHT UP DOWN; do
+  grep -Fq "\"SUPER + CTRL + $direction\"" <<<"$unbind_block" ||
+    fail "BLARCHY bindings unbind inherited SUPER + CTRL + $direction behavior"
+done
+grep -Fq 'o.bind("SUPER + CTRL + LEFT", "Focus window left", hl.dsp.focus({ direction = "l" }))' "$ROOT/config/hypr/bindings.lua" ||
+  fail "BLARCHY bindings focus the window to the left"
+grep -Fq 'o.bind("SUPER + CTRL + RIGHT", "Focus window right", hl.dsp.focus({ direction = "r" }))' "$ROOT/config/hypr/bindings.lua" ||
+  fail "BLARCHY bindings focus the window to the right"
+grep -Fq 'o.bind("SUPER + CTRL + UP", "Focus window above", hl.dsp.focus({ direction = "u" }))' "$ROOT/config/hypr/bindings.lua" ||
+  fail "BLARCHY bindings focus the window above"
+grep -Fq 'o.bind("SUPER + CTRL + DOWN", "Focus window below", hl.dsp.focus({ direction = "d" }))' "$ROOT/config/hypr/bindings.lua" ||
+  fail "BLARCHY bindings focus the window below"
+pass "BLARCHY directional focus bindings override inherited behavior"
+
 grep -F 'hl.dsp.send_key_state({ mods = mods, key = key, state = "down" })' "$ROOT/default/hypr/bindings/clipboard.lua" >/dev/null ||
   fail "universal clipboard shortcuts send explicit mods to the focused surface"
 pass "universal clipboard shortcuts send explicit mods to the focused surface"

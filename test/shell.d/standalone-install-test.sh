@@ -34,7 +34,7 @@ grep -Fq 'yay -Y --devel --save' "$ROOT/install.sh" ||
   fail "standalone installer enables VCS package updates for plain yay -Syu"
 grep -Fq 'omarchy-migrate' "$ROOT/install.sh" ||
   fail "explicit BLARCHY source upgrades apply pending migrations"
-for package_name in neovim ttf-jetbrains-mono-nerd hyprland-preview-share-picker-git; do
+for package_name in blesh neovim ttf-jetbrains-mono-nerd hyprland-preview-share-picker-git; do
   grep -Fxq "$package_name" "$ROOT/install/omarchy-base.packages" ||
     fail "standalone manifest uses the public package name" "$package_name"
 done
@@ -44,6 +44,14 @@ for package_name in asdcontrol omacut omawrite omarchy-nvim tobi-try; do
   fi
 done
 pass "standalone installer resolves packages through normal Arch and AUR channels"
+
+grep -Fq 'source -- /usr/share/blesh/ble.sh --attach=none' "$ROOT/default/bash/rc" ||
+  fail "BLARCHY loads predictive suggestions before shell initialization"
+grep -Fq 'ble-attach' "$ROOT/default/bash/rc" ||
+  fail "BLARCHY attaches predictive suggestions after shell initialization"
+grep -Fq 'ble-import -d integration/fzf-completion' "$ROOT/default/bash/init" ||
+  fail "predictive suggestions use the compatible fzf integration"
+pass "Alacritty Bash sessions enable predictive history suggestions"
 
 for boot_package in limine limine-mkinitcpio-hook limine-snapper-sync plymouth snapper; do
   if grep -Fxq "$boot_package" "$ROOT/install/omarchy-base.packages"; then

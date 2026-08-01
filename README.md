@@ -68,7 +68,7 @@ the package transaction. See the detailed
 | Role | BLARCHY choice |
 | --- | --- |
 | Browser | Firefox + uBlock Origin |
-| Terminal | Alacritty |
+| Terminal | Alacritty + Bash predictive suggestions |
 | Files | Nautilus |
 | Code | VSCodium |
 | Launcher and top bar | BLARCHY Quickshell (retained Omarchy architecture) |

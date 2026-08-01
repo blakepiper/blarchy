@@ -11,12 +11,14 @@ BarIndicator {
   active: dnd
   activeText: "󰂛"
   inactiveText: "󰂛"
-  activeTooltipText: "Allow Notifications"
-  inactiveTooltipText: "Silence Notifications"
+  activeTooltipText: "Notification history · right-click to allow notifications"
+  inactiveTooltipText: "Notification history · right-click to silence notifications"
 
-  onPressed: function() {
-    if (root.notificationService) {
+  onPressed: function(button) {
+    if (button === Qt.RightButton && root.notificationService) {
       root.notificationService.setDoNotDisturb(!root.notificationService.doNotDisturb)
+    } else if (root.bar) {
+      root.bar.run("omarchy-shell notifications showHistory")
     }
   }
 }

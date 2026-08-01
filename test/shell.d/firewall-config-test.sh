@@ -15,17 +15,6 @@ if [[ ${1:-} == status ]]; then
 fi
 STUB
 
-cat >"$stub_dir/ufw-docker" <<'STUB'
-#!/bin/bash
-set -euo pipefail
-PATH="/bin:/usr/bin:/sbin:/usr/sbin:/snap/bin/"
-printf 'ufw-docker %s\n' "$*" >>"$TEST_LOG"
-if ! ufw status 2>/dev/null | grep -Fq 'Status: active'; then
-  echo 'inactive' >&2
-  exit 1
-fi
-STUB
-
 cat >"$stub_dir/sed" <<'STUB'
 #!/bin/bash
 printf 'sed %s\n' "$*" >>"$TEST_LOG"
@@ -45,7 +34,8 @@ chmod +x "$stub_dir"/*
 export TEST_LOG="$stub_dir/firewall.log"
 PATH="$stub_dir:$PATH" bash -eE -c 'source "$1"' bash "$ROOT/install/config/firewall.sh"
 
-grep -q '^ufw-docker install$' "$TEST_LOG" || fail "ufw-docker rules are installed"
+grep -q '^ufw default deny incoming$' "$TEST_LOG" || fail "incoming traffic is denied by default"
+grep -q '^ufw default allow outgoing$' "$TEST_LOG" || fail "outgoing traffic is allowed by default"
 grep -q '^systemctl enable ufw$' "$TEST_LOG" || fail "ufw is enabled for next boot"
 
-pass "firewall config installs ufw-docker rules without activating live UFW"
+pass "firewall config applies BLARCHY defaults without Docker-specific rules"

@@ -1,29 +1,47 @@
--- Keep only your personal keybinding overrides here. Add new bindings or
--- unbind defaults before replacing them.
+-- BLARCHY's user-facing defaults live in this small override layer so the
+-- Omarchy package defaults can continue to receive upstream improvements.
+for _, keys in ipairs({
+  "SUPER + SPACE",
+  "SUPER + RETURN",
+  "SUPER + F",
+  "SUPER + B",
+  "SUPER + Q",
+  "SUPER + L",
+  "SUPER + SHIFT + S",
+  "SUPER + SHIFT + F",
+  "SUPER + TAB",
+  "SUPER + LEFT",
+  "SUPER + RIGHT",
+  "SUPER + UP",
+  "SUPER + DOWN",
+  "SUPER + SHIFT + LEFT",
+  "SUPER + SHIFT + RIGHT",
+  "SUPER + SHIFT + UP",
+  "SUPER + SHIFT + DOWN",
+}) do
+  hl.unbind(keys)
+end
 
--- See current bindings and descriptions:
---   omarchy menu keybindings --print
+o.bind("SUPER + SPACE", "Application launcher", "omarchy-menu toggle apps")
+o.bind("SUPER + ALT + SPACE", "BLARCHY menu", "omarchy-menu toggle root")
+o.bind("SUPER + RETURN", "Terminal", { omarchy = "terminal" })
+o.bind("SUPER + F", "Files", { omarchy = "nautilus" })
+o.bind("SUPER + B", "Browser", { omarchy = "browser" })
+o.bind("SUPER + Q", "Close window", hl.dsp.window.close())
+o.bind("SUPER + L", "Lock system", "omarchy-system-lock")
+o.bind("SUPER + SHIFT + S", "Region screenshot", "omarchy-capture-screenshot region")
+o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
+o.bind("SUPER + TAB", "Former workspace", hl.dsp.focus({ workspace = "previous" }))
 
--- To disable every Omarchy default binding, set this in
--- ~/.config/hypr/hyprland.lua before require("default.hypr.omarchy"), then add
--- only the bindings you want below:
---   omarchy_default_bindings = false
+o.bind("SUPER + LEFT", "Snap window left", "omarchy-hyprland-window-snap left")
+o.bind("SUPER + RIGHT", "Snap window right", "omarchy-hyprland-window-snap right")
+o.bind("SUPER + UP", "Snap window up", "omarchy-hyprland-window-snap up")
+o.bind("SUPER + DOWN", "Snap window down", "omarchy-hyprland-window-snap down")
 
--- To disable all preinstalled app/webapp bindings, set:
---   omarchy_preinstalled_bindings = false
+o.bind("SUPER + SHIFT + LEFT", "Move window to left monitor", hl.dsp.window.move({ monitor = "l" }))
+o.bind("SUPER + SHIFT + RIGHT", "Move window to right monitor", hl.dsp.window.move({ monitor = "r" }))
+o.bind("SUPER + SHIFT + UP", "Move window to upper monitor", hl.dsp.window.move({ monitor = "u" }))
+o.bind("SUPER + SHIFT + DOWN", "Move window to lower monitor", hl.dsp.window.move({ monitor = "d" }))
 
--- Add a new binding.
--- o.bind("SUPER + SHIFT + R", "SSH", "alacritty -e ssh your-server")
-
--- Change an existing binding by unbinding it first, then binding the key again.
--- This example changes SUPER+SPACE from the launcher to the Omarchy root menu.
--- hl.unbind("SUPER + SPACE")
--- o.bind("SUPER + SPACE", "Omarchy menu", "omarchy-menu toggle root")
-
--- Disable a default binding without replacing it.
--- hl.unbind("SUPER + SHIFT + B")
-
--- Logitech MX Keys examples:
--- o.bind("SUPER + SHIFT + S", nil, "omarchy-capture-screenshot")
--- o.bind("SUPER + H", nil, "voxtype record toggle")
--- o.bind("SUPER + PERIOD", nil, "omarchy-shell shell toggle omarchy.emojis")
+-- SUPER + T remains Omarchy's standard floating/tiling toggle and returns a
+-- snapped floating window to the normal layout.

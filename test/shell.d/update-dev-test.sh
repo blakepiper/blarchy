@@ -36,8 +36,12 @@ case "$1" in
         ;;
     esac
     ;;
+  remote)
+    [[ $2 == "get-url" ]]
+    echo "${TEST_GIT_REMOTE_URL:-git@github.com:blake/blarchy.git}"
+    ;;
   pull)
-    [[ $2 == "--ff-only" ]]
+    [[ $2 == "--ff-only" && $3 == "origin" && $4 == "quattro" ]]
     ;;
   *)
     exit 1
@@ -60,9 +64,20 @@ pass "package-backed updates skip the dev checkout step"
 
 : >"$git_log"
 run_dev_update "$checkout"
-grep -Fx -- "-C $checkout pull --ff-only" "$git_log" >/dev/null ||
+grep -Fx -- "-C $checkout pull --ff-only origin quattro" "$git_log" >/dev/null ||
   fail "dev checkout update pulls its upstream with fast-forward only" "$(cat "$git_log")"
 pass "dev checkout update pulls its configured upstream"
+
+: >"$git_log"
+if TEST_GIT_REMOTE_URL=git@github.com:basecamp/omarchy.git run_dev_update "$checkout" >"$test_tmp/upstream.out" 2>"$test_tmp/upstream.err"; then
+  fail "dev checkout refuses the Basecamp/Omarchy remote"
+fi
+grep -Fq 'refusing to update BLARCHY from Basecamp/Omarchy' "$test_tmp/upstream.err" ||
+  fail "unsafe upstream refusal explains the ownership boundary" "$(cat "$test_tmp/upstream.err")"
+if grep -q ' pull ' "$git_log"; then
+  fail "unsafe upstream is never pulled" "$(cat "$git_log")"
+fi
+pass "dev checkout refuses to pull Basecamp/Omarchy"
 
 : >"$git_log"
 TEST_GIT_UPSTREAM=none run_dev_update "$checkout"

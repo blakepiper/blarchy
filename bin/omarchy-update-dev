@@ -1,8 +1,16 @@
 #!/bin/bash
 
-# omarchy:summary=Update the active Omarchy dev checkout
+# omarchy:summary=Update the active BLARCHY source checkout
 
 set -euo pipefail
+
+print_upstream=0
+if [[ ${1:-} == "--print-upstream" ]]; then
+  print_upstream=1
+elif (( $# > 0 )); then
+  echo "Usage: omarchy-update-dev [--print-upstream]" >&2
+  exit 1
+fi
 
 [[ $OMARCHY_PATH != "/usr/share/omarchy" ]] || exit 0
 
@@ -13,9 +21,28 @@ fi
 
 upstream=$(git -C "$OMARCHY_PATH" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)
 if [[ -z $upstream ]]; then
-  echo -e "\e[33m\nSkip Omarchy dev checkout update (current branch has no upstream)\e[0m"
+  (( print_upstream )) || echo -e "\e[33m\nSkip BLARCHY source update (current branch has no upstream)\e[0m"
   exit 0
 fi
 
-echo -e "\e[32m\nUpdate Omarchy dev checkout\e[0m"
-git -C "$OMARCHY_PATH" pull --ff-only
+remote=${upstream%%/*}
+remote_url=$(git -C "$OMARCHY_PATH" remote get-url "$remote" 2>/dev/null || true)
+remote_without_suffix=${remote_url%.git}
+if [[ -z $remote_url ]]; then
+  echo "Error: cannot resolve URL for BLARCHY update remote '$remote'." >&2
+  exit 1
+fi
+
+if [[ $remote_without_suffix == *"github.com:basecamp/omarchy" || $remote_without_suffix == *"github.com/basecamp/omarchy" ]]; then
+  echo "Error: refusing to update BLARCHY from Basecamp/Omarchy ($upstream)." >&2
+  echo "Configure the current branch to track your BLARCHY fork; keep Basecamp/Omarchy as a separate upstream remote." >&2
+  exit 1
+fi
+
+if (( print_upstream )); then
+  echo "$upstream"
+  exit 0
+fi
+
+echo -e "\e[32m\nUpdate BLARCHY source checkout from $upstream\e[0m"
+git -C "$OMARCHY_PATH" pull --ff-only "$remote" "${upstream#*/}"

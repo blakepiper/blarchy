@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Apply Omarchy system setup in the installed target
+# omarchy:summary=Apply BLARCHY system setup in the installed target
 # omarchy:group=setup
 # omarchy:requires-sudo=true
 # omarchy:examples=omarchy setup system --install-user dhh --first-install
@@ -11,7 +11,7 @@ usage() {
   cat <<USAGE
 Usage: omarchy setup system --install-user USER [--first-install|--upgrade]
 
-Runs root-owned Omarchy system setup. The ISO calls this in the target chroot
+Runs root-owned BLARCHY system setup. The ISO calls this in the target chroot
 after packages are installed and the target user exists. It also calls
 omarchy-setup-hardware, so hardware setup cannot be accidentally skipped.
 USAGE

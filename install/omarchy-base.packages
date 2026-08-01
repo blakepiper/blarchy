@@ -1,7 +1,8 @@
-# Omarchy core package list pacstrapped by the ISO.
+# BLARCHY core package list pacstrapped by the ISO.
 # The ISO builder also reads this file when constructing the offline mirror.
 
 aether
+alacritty
 alsa-utils
 asdcontrol
 avahi
@@ -13,16 +14,12 @@ bluez-utils
 bolt
 brightnessctl
 btop
-chromium
 clang
 cliamp
 cups
 cups-browsed
 cups-filters
 cups-pdf
-docker
-docker-buildx
-docker-compose
 dosfstools
 dotnet-runtime
 dua-cli
@@ -38,8 +35,9 @@ fcitx5-qt
 fd
 ffmpegthumbnailer
 fontconfig
-foot
+firefox
 fzf
+gimp
 git
 gnome-calculator
 gnome-keyring
@@ -64,7 +62,6 @@ networkmanager
 jq
 kdenlive
 kernel-modules-hook
-lazydocker
 lazygit
 less
 libsecret
@@ -82,6 +79,9 @@ mpv
 mpv-mpris
 nautilus
 nautilus-python
+nodejs
+npm
+nwg-dock-hyprland
 gnome-disk-utility
 noto-fonts
 noto-fonts-cjk
@@ -100,7 +100,9 @@ plocate
 plymouth
 postgresql-libs
 power-profiles-daemon
+python
 python-gobject
+python-pip
 python-poetry-core
 python-terminaltexteffects
 qemu-user-static-binfmt
@@ -113,7 +115,9 @@ tensaku
 sddm
 slurp
 socat
+spotify
 starship
+steam
 sushi
 system-config-printer
 tesseract
@@ -127,10 +131,10 @@ ttf-jetbrains-mono-nerd-basic
 tzupdate
 udiskie
 ufw
-ufw-docker
 unzip
 usage
 uwsm
+vscodium-bin
 whois
 wireless-regdb
 wireplumber

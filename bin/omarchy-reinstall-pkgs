@@ -1,18 +1,15 @@
 #!/bin/bash
 
-# omarchy:summary=Reinstall all default Omarchy packages from the stable channel
+# omarchy:summary=Update and ensure all default BLARCHY packages are installed
 # omarchy:requires-sudo=true
 
 set -e
 
-# Reinstall all default Omarchy packages from the stable channel and downgrade any packages that are too new.
-
-# Set the package repository to the stable mirrors
+# Refresh package metadata and update Arch/AUR-repository packages while the
+# refresh command protects Git-owned BLARCHY content packages.
 omarchy-refresh-pacman
 
-# Downgrade any packages to the stable setup
-sudo env OMARCHY_UPDATE_PACMAN=1 pacman -Suu --noconfirm
-
-# Ensure all packages are installed
+# Ensure all manifest packages are installed without changing package versions
+# arbitrarily or globally updating npm packages.
 mapfile -t packages < <(grep -v '^#' "$OMARCHY_PATH/install/omarchy-base.packages" | grep -v '^$')
-sudo env OMARCHY_UPDATE_PACMAN=1 pacman -Syu --noconfirm --needed "${packages[@]}"
+omarchy-pkg-add "${packages[@]}"

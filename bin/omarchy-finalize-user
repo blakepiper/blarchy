@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Finalize Omarchy user setup (runtime tweaks /etc/skel can't do)
+# omarchy:summary=Finalize BLARCHY user setup (runtime tweaks /etc/skel can't do)
 # omarchy:group=finalize
 # omarchy:examples=omarchy finalize user | omarchy finalize user --force
 
@@ -88,7 +88,7 @@ ln -sfn "$OMARCHY_PATH/default/omarchy-skill" ~/.claude/skills/omarchy
 ln -sfn "$OMARCHY_PATH/default/omarchy-skill" ~/.codex/skills/omarchy
 ln -sfn "$OMARCHY_PATH/default/omarchy-skill" ~/.pi/agent/skills/omarchy
 
-mkdir -p ~/Downloads ~/Pictures ~/Videos ~/.config/gtk-3.0
+mkdir -p ~/Downloads ~/Pictures/Screenshots ~/Videos ~/.config/gtk-3.0
 xdg-user-dirs-update --set TEMPLATES "$HOME"
 xdg-user-dirs-update --set PUBLICSHARE "$HOME"
 xdg-user-dirs-update --set DESKTOP "$HOME"
@@ -102,8 +102,12 @@ done
 source "$OMARCHY_INSTALL/user/all.sh"
 
 omarchy-refresh-applications
-env -u BROWSER xdg-settings set default-web-browser chromium.desktop
-xdg-mime default HEY.desktop x-scheme-handler/mailto
+env -u BROWSER xdg-settings set default-web-browser firefox.desktop
+xdg-mime default firefox.desktop x-scheme-handler/http
+xdg-mime default firefox.desktop x-scheme-handler/https
+xdg-mime default org.gnome.Nautilus.desktop inode/directory
+omarchy-default-terminal alacritty
+omarchy-default-editor codium
 
 if (( first_install )); then
   mkdir -p "$state_dir/migrations"

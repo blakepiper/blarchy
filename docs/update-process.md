@@ -1,11 +1,25 @@
-# Omarchy update process
+# BLARCHY update process
 
-This document describes the intended update behavior now that Omarchy is
-package-backed. It covers the blessed update path plus what happens when a user attempts to
-bypass it:
+BLARCHY keeps Omarchy's update orchestration and internal command names, but
+changes the ownership boundary: Arch/pacman owns normal system packages while
+the active BLARCHY Git checkout owns `/usr/share/omarchy`-style runtime content,
+defaults, and configuration. The package step therefore ignores the upstream
+`omarchy`, `omarchy-dev`, `omarchy-settings`, and `omarchy-settings-dev`
+packages.
 
-1. `omarchy update` — the blessed interactive Omarchy update flow.
-2. `sudo pacman -Syu` — guarded by Omarchy and aborted with instructions unless
+Before package work, a development checkout is fast-forwarded from its current
+branch's configured remote. `omarchy-update-dev` refuses a remote URL matching
+Basecamp/Omarchy. It never guesses or hard-codes the future BLARCHY fork URL.
+Omarchy package-channel switching is disabled because selecting those channels
+would reinstall upstream-owned content. Basecamp/Omarchy remains a manual Git
+development remote only.
+
+The rest of this document describes the preserved Omarchy orchestration. It
+covers the blessed update path plus what happens when a user attempts to bypass
+it:
+
+1. `omarchy update` — the blessed interactive BLARCHY update flow.
+2. `sudo pacman -Syu` — guarded by the retained Omarchy machinery and aborted with instructions unless
    the user explicitly bypasses the guard.
 
 The design goal is:

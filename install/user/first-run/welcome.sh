@@ -1,5 +1,5 @@
 (
-  if [[ -n $(omarchy-notification-send -u critical -g  "Learn Keybindings" "Super + K for cheatsheet.\nSuper + Space for application launcher.\nSuper + Alt + Space for Omarchy Menu." -a) ]]; then
+  if [[ -n $(omarchy-notification-send -u critical -g  "Welcome to BLARCHY" "Blake's Arch + Hyprland Environment\n\nSuper + K for shortcuts.\nSuper + Space for applications.\nSuper + Alt + Space for the BLARCHY menu." -a) ]]; then
     omarchy-menu-keybindings
   fi
 ) >/dev/null 2>&1 &

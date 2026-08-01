@@ -70,7 +70,7 @@ stop() {
       current_start_time=$(process_start_time "$inhibit_pid" 2>/dev/null || true)
       if [[ $current_start_time == "$recorded_start_time" ]] &&
         [[ $(process_state "$inhibit_pid" 2>/dev/null || true) != "Z" ]]; then
-        echo "Failed to stop the Omarchy update sleep inhibitor." >&2
+        echo "Failed to stop the BLARCHY update sleep inhibitor." >&2
         return 1
       fi
     fi
@@ -93,14 +93,14 @@ start() {
       systemd-inhibit \
         --what=sleep:idle \
         --who=omarchy-update \
-        --why="Omarchy update in progress" \
+        --why="BLARCHY update in progress" \
         --mode=block \
         sleep infinity >/dev/null 2>&1 {OMARCHY_UPDATE_LOCK_FD}>&- &
     else
       systemd-inhibit \
         --what=sleep:idle \
         --who=omarchy-update \
-        --why="Omarchy update in progress" \
+        --why="BLARCHY update in progress" \
         --mode=block \
         sleep infinity >/dev/null 2>&1 &
     fi

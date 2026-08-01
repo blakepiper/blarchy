@@ -1,5 +1,5 @@
 [Unit]
-Description=Lock Omarchy before suspend
+Description=Lock BLARCHY before suspend
 After=dbus.socket
 Requires=dbus.socket
 

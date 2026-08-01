@@ -147,12 +147,12 @@ assertEqual(
   'menu opens the emoji picker from Trigger'
 )
 assert(
-  defaultById['update.omarchy'].icon === '\ue900',
-  'menu update Omarchy entry uses the Omarchy glyph'
+  defaultById['update.omarchy'].icon === '',
+  'menu update BLARCHY entry uses the refresh glyph'
 )
 assert(
-  defaultById['update.omarchy'].iconFont === 'omarchy',
-  'menu update Omarchy entry renders the private glyph with the Omarchy font'
+  !defaultById['update.omarchy'].iconFont,
+  'menu update BLARCHY entry does not depend on the Omarchy logo font'
 )
 assert(
   defaultById['setup.input'].action.includes('input.lua'),

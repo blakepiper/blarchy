@@ -1,5 +1,10 @@
 {
   "policies": {
+    "Extensions": {
+      "Install": [
+        "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi"
+      ]
+    },
     "Preferences": {
       "apz.overscroll.enabled": {
         "Value": true,

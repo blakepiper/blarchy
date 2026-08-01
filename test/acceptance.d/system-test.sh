@@ -15,19 +15,19 @@ verify_core_packages() {
     pacman -Q "$package" >/dev/null 2>&1 || missing+=("$package")
   done <"$OMARCHY_PATH/install/omarchy-base.packages"
 
-  (( ${#missing[@]} == 0 )) || fail "all Omarchy core packages are installed" "missing packages: ${missing[*]}"
-  pass "all Omarchy core packages are installed (${#missing[@]} missing)"
+  (( ${#missing[@]} == 0 )) || fail "all BLARCHY core packages are installed" "missing packages: ${missing[*]}"
+  pass "all BLARCHY core packages are installed (${#missing[@]} missing)"
 }
 
 verify_defaults() {
-  [[ $(omarchy-default-browser) == "chromium" ]] || fail "Chromium is the default browser"
-  pass "Chromium is the default browser"
+  [[ $(omarchy-default-browser) == "firefox" ]] || fail "Firefox is the default browser"
+  pass "Firefox is the default browser"
 
-  [[ $(omarchy-default-terminal) == "foot" ]] || fail "Foot is the default terminal"
-  pass "Foot is the default terminal"
+  [[ $(omarchy-default-terminal) == "alacritty" ]] || fail "Alacritty is the default terminal"
+  pass "Alacritty is the default terminal"
 
-  [[ $(omarchy-default-editor) == "nvim" ]] || fail "Neovim is the default editor"
-  pass "Neovim is the default editor"
+  [[ $(omarchy-default-editor) == "codium" ]] || fail "VSCodium is the default editor"
+  pass "VSCodium is the default editor"
 
   [[ $(omarchy-theme-current) != "Unknown" ]] || fail "a current theme is configured"
   pass "a current theme is configured"
@@ -38,7 +38,7 @@ verify_defaults() {
   [[ -n $(omarchy-font-current) ]] || fail "a monospace font is configured"
   pass "a monospace font is configured"
 
-  [[ $(xdg-mime query default x-scheme-handler/http) == "chromium.desktop" ]] || fail "HTTP MIME handling uses Chromium"
+  [[ $(xdg-mime query default x-scheme-handler/http) == "firefox.desktop" ]] || fail "HTTP MIME handling uses Firefox"
   [[ $(xdg-mime query default inode/directory) == "org.gnome.Nautilus.desktop" ]] || fail "directory MIME handling uses Nautilus"
   pass "desktop MIME handlers are configured"
 }
@@ -47,7 +47,7 @@ verify_services() {
   local unit
 
   for unit in \
-    avahi-daemon.service cups.service cups-browsed.service docker.socket \
+    avahi-daemon.service cups.service cups-browsed.service \
     NetworkManager.service power-profiles-daemon.service sddm.service \
     systemd-resolved.service ufw.service; do
     systemctl is-enabled --quiet "$unit" || fail "core system services are enabled" "$unit is not enabled"
@@ -65,19 +65,19 @@ verify_services() {
 }
 
 verify_runtime_tools() {
-  timeout 20 docker info >/dev/null 2>&1 || fail "Docker is usable by the desktop user"
-  pass "Docker is usable by the desktop user"
-
   nvim --headless '+qa' >/dev/null 2>&1 || fail "Neovim starts headlessly"
   pass "Neovim starts headlessly"
 
   timeout 10 fastfetch --pipe false >/dev/null 2>&1 || fail "Fastfetch can read system information"
   pass "Fastfetch can read system information"
 
-  git --version >/dev/null || fail "Git is installed and runnable"
+  local command
+  for command in alacritty firefox gimp git nautilus node npm pip python codium codex claude spotify steam; do
+    command -v "$command" >/dev/null || fail "BLARCHY default commands are installed" "$command is missing"
+  done
   tmux -V >/dev/null || fail "Tmux is installed and runnable"
   mise --version >/dev/null || fail "Mise is installed and runnable"
-  pass "core terminal tools are runnable"
+  pass "BLARCHY default commands are installed and core terminal tools are runnable"
 }
 
 verify_user_setup() {
@@ -92,7 +92,7 @@ verify_user_setup() {
   [[ -e $HOME/.local/state/omarchy/current/background ]] || fail "current background state exists"
   [[ -s $HOME/.config/omarchy/shell.json ]] || fail "shell configuration exists"
   jq empty "$HOME/.config/omarchy/shell.json" || fail "shell configuration is valid JSON"
-  pass "Omarchy user state and shell configuration exist"
+  pass "BLARCHY user state and shell configuration exist"
 }
 
 for check in verify_core_packages verify_defaults verify_services verify_runtime_tools verify_user_setup; do

@@ -1,7 +1,7 @@
 [SddmGreeterTheme]
-Name=Omarchy
+Name=BLARCHY
 Description=Minimal terminal-style login theme matching the Limine bootloader aesthetic
-Author=Omarchy
+Author=Omarchy contributors / Blake
 Type=sddm-theme
 Version=1.0
 QtVersion=6

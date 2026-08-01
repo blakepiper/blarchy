@@ -10,9 +10,8 @@ image/tiff=imv.desktop
 
 application/pdf=org.gnome.Evince.desktop
 
-x-scheme-handler/http=chromium.desktop
-x-scheme-handler/https=chromium.desktop
-x-scheme-handler/mailto=HEY.desktop
+x-scheme-handler/http=firefox.desktop
+x-scheme-handler/https=firefox.desktop
 
 video/mp4=mpv.desktop
 video/x-msvideo=mpv.desktop
@@ -30,7 +29,7 @@ video/x-ogm+ogg=mpv.desktop
 video/x-theora+ogg=mpv.desktop
 application/ogg=mpv.desktop
 
-text/plain=nvim.desktop
+text/plain=codium.desktop
 text/english=nvim.desktop
 text/x-makefile=nvim.desktop
 text/x-c++hdr=nvim.desktop

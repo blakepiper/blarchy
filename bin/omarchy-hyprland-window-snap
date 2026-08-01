@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# omarchy:summary=Snap the focused window to half of its current monitor
+# omarchy:args=<left|right|up|down>
+
+set -euo pipefail
+
+direction="${1:-}"
+case "$direction" in
+left | right | up | down) ;;
+*)
+  echo "Usage: omarchy-hyprland-window-snap <left|right|up|down>" >&2
+  exit 1
+  ;;
+esac
+
+window=$(hyprctl activewindow -j)
+address=$(jq -r '.address // empty' <<<"$window")
+monitor_id=$(jq -r '.monitor // empty' <<<"$window")
+floating=$(jq -r '.floating // false' <<<"$window")
+fullscreen=$(jq -r '.fullscreen // 0' <<<"$window")
+
+[[ -n $address && -n $monitor_id ]] || exit 0
+
+monitor_geometry=$(hyprctl monitors -j | jq -r --argjson monitor "$monitor_id" '
+  .[] | select(.id == $monitor) |
+  (.transform // 0) as $transform |
+  [
+    .x,
+    .y,
+    (if ([1, 3, 5, 7] | index($transform)) then (.height / .scale) else (.width / .scale) end | floor),
+    (if ([1, 3, 5, 7] | index($transform)) then (.width / .scale) else (.height / .scale) end | floor),
+    (.reserved[0] // 0),
+    (.reserved[1] // 0),
+    (.reserved[2] // 0),
+    (.reserved[3] // 0)
+  ] | @tsv
+')
+
+[[ -n $monitor_geometry ]] || exit 1
+read -r monitor_x monitor_y monitor_width monitor_height reserved_left reserved_top reserved_right reserved_bottom \
+  <<<"$monitor_geometry"
+
+usable_x=$((monitor_x + reserved_left))
+usable_y=$((monitor_y + reserved_top))
+usable_width=$((monitor_width - reserved_left - reserved_right))
+usable_height=$((monitor_height - reserved_top - reserved_bottom))
+
+case "$direction" in
+left)
+  x=$usable_x
+  y=$usable_y
+  width=$((usable_width / 2))
+  height=$usable_height
+  ;;
+right)
+  width=$((usable_width / 2))
+  x=$((usable_x + usable_width - width))
+  y=$usable_y
+  height=$usable_height
+  ;;
+up)
+  x=$usable_x
+  y=$usable_y
+  width=$usable_width
+  height=$((usable_height / 2))
+  ;;
+down)
+  x=$usable_x
+  height=$((usable_height / 2))
+  y=$((usable_y + usable_height - height))
+  width=$usable_width
+  ;;
+esac
+
+(( width > 0 && height > 0 )) || exit 1
+
+if (( fullscreen > 0 )); then
+  hyprctl dispatch fullscreen 0 >/dev/null
+fi
+
+if [[ $floating != "true" ]]; then
+  hyprctl dispatch setfloating "address:$address" >/dev/null
+fi
+
+hyprctl dispatch resizewindowpixel "exact $width $height,address:$address" >/dev/null
+hyprctl dispatch movewindowpixel "exact $x $y,address:$address" >/dev/null

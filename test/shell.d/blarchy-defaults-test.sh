@@ -1,0 +1,105 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/base-test.sh"
+
+packages="$ROOT/install/omarchy-base.packages"
+
+for package_name in \
+  alacritty firefox gimp git nautilus nodejs npm nwg-dock-hyprland python \
+  python-pip spotify steam vscodium-bin; do
+  grep -Fxq "$package_name" "$packages" || fail "BLARCHY package manifest includes $package_name"
+done
+pass "BLARCHY package manifest includes every package-managed default"
+
+for package_name in chromium docker docker-buildx docker-compose foot lazydocker ufw-docker; do
+  if grep -Fxq "$package_name" "$packages"; then
+    fail "BLARCHY package manifest excludes $package_name"
+  fi
+done
+pass "BLARCHY package manifest excludes removed package defaults"
+
+while IFS= read -r desktop_file; do
+  [[ ! -e $ROOT/applications/$desktop_file ]] || fail "removed launcher is absent" "$desktop_file"
+done <<'DESKTOPS'
+Basecamp.desktop
+ChatGPT.desktop
+Discord.desktop
+Docker.desktop
+Google Contacts.desktop
+Google Maps.desktop
+Google Messages.desktop
+Google Photos.desktop
+HEY.desktop
+WhatsApp.desktop
+X.desktop
+YouTube.desktop
+Zoom.desktop
+foot.desktop
+DESKTOPS
+pass "removed applications have no shipped launcher entries"
+
+if rg -q '(^|[|<])foot([|>)]|$)|foot\.desktop' "$ROOT/bin/omarchy-install-terminal"; then
+  fail "Foot is not offered by the terminal installer"
+fi
+pass "Foot is absent from terminal defaults and installation choices"
+
+jq -e '
+  .policies.Extensions.Install == ["https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi"] and
+  (.policies.Extensions.Locked // [] | length) == 0
+' "$ROOT/default/firefox/policies.json" >/dev/null ||
+  fail "Firefox policy installs removable uBlock Origin"
+grep -Fq '/config/firefox.sh' "$ROOT/install/config/all.sh" || fail "system install deploys Firefox policy"
+pass "fresh Firefox installs receive uBlock Origin without an extension lock"
+
+grep -Fxq 'Alacritty.desktop' "$ROOT/default/xdg-terminal-exec/hyprland-xdg-terminals.list" ||
+  fail "xdg-terminal-exec defaults to Alacritty"
+grep -Fxq 'x-scheme-handler/http=firefox.desktop' "$ROOT/default/applications/mimeapps.list" ||
+  fail "HTTP MIME default is Firefox"
+grep -Fxq 'inode/directory=org.gnome.Nautilus.desktop' "$ROOT/default/applications/mimeapps.list" ||
+  fail "directory MIME default is Nautilus"
+grep -Fxq 'text/plain=codium.desktop' "$ROOT/default/applications/mimeapps.list" ||
+  fail "text MIME default is VSCodium"
+pass "BLARCHY application defaults use Firefox, Alacritty, Nautilus, and VSCodium"
+
+grep -Fq 'interface_branding: BLARCHY Bootloader' "$ROOT/default/limine/limine.conf" ||
+  fail "Limine uses BLARCHY branding"
+grep -Fq 'TARGET_OS_NAME="BLARCHY"' "$ROOT/etc/limine-entry-tool.d/omarchy-defaults.conf" ||
+  fail "generated boot entries use the BLARCHY name"
+grep -Fq 'Pending BLARCHY Updates' "$ROOT/shell/plugins/bar/widgets/SystemUpdate.qml" ||
+  fail "top-bar update indicator uses BLARCHY branding"
+grep -Fq '"name": "BLARCHY"' "$ROOT/default/themed/vscode-theme.json.tpl" ||
+  fail "generated VSCodium theme uses BLARCHY branding"
+pass "visible boot, bar, and editor branding is BLARCHY-owned"
+
+grep -Fxq 'omarchy-mise-install codex' "$ROOT/install/user/mise.sh" || fail "Codex has a mise installation path"
+grep -Fxq 'omarchy-mise-install claude' "$ROOT/install/user/mise.sh" || fail "Claude Code has a mise installation path"
+pass "Codex and Claude Code use the existing idempotent mise wrappers"
+
+if grep -Fq 'mise use -g node' "$ROOT/install/user/mise-work.sh"; then
+  fail "Node.js is not replaced by a mise-managed version"
+fi
+pass "Node.js and npm remain owned by Arch packages"
+
+grep -Fq 'nwg-dock-hyprland -d -p bottom -a center' "$ROOT/config/hypr/autostart.lua" ||
+  fail "BLARCHY autostarts the bottom-center autohide dock"
+for pin in firefox org.gnome.Nautilus Alacritty Spotify steam; do
+  grep -Fxq "$pin" "$ROOT/install/user/dock.sh" || fail "dock pins $pin"
+done
+pass "BLARCHY dock is autohidden and seeds the requested pins"
+
+grep -Fq 'omarchy-shell notifications showHistory' "$ROOT/shell/plugins/bar/indicators/Dnd.qml" ||
+  fail "notification indicator opens notification history"
+pass "notification indicator exposes history while retaining a DND control"
+
+grep -Fq -- '--ignore omarchy,omarchy-dev,omarchy-settings,omarchy-settings-dev' \
+  "$ROOT/bin/omarchy-update-system-pkgs" || fail "pacman update protects BLARCHY-owned content"
+grep -Fq -- '--ignore omarchy,omarchy-dev,omarchy-settings,omarchy-settings-dev' \
+  "$ROOT/bin/omarchy-refresh-pacman" || fail "pacman refresh protects BLARCHY-owned content"
+if grep -Fq 'https://github.com/basecamp/omarchy.git' "$ROOT/bin/omarchy-update-dev"; then
+  fail "BLARCHY source updater has no hard-coded Basecamp clone URL"
+fi
+grep -Fq 'refusing to update BLARCHY from Basecamp/Omarchy' "$ROOT/bin/omarchy-update-dev" ||
+  fail "BLARCHY source updater rejects the Basecamp remote"
+pass "BLARCHY updates protect fork-owned content and reject upstream source pulls"

@@ -71,7 +71,7 @@ the package transaction. See the detailed
 | Terminal | Alacritty |
 | Files | Nautilus |
 | Code | VSCodium |
-| Launcher and top bar | Omarchy Quickshell |
+| Launcher and top bar | BLARCHY Quickshell (retained Omarchy architecture) |
 | Dock | `nwg-dock-hyprland` |
 | Music and games | Spotify + Steam |
 | Creative | GIMP |
@@ -157,7 +157,7 @@ incorporated deliberately; it is never involved in `yay -Syu`.
 ```text
 bin/          commands and update helpers
 config/       BLARCHY user configuration defaults
-default/      shared application, shell, boot, and theme defaults
+default/      shared application, system-integration, shell, and theme defaults
 install/      system and per-user setup leaves
 shell/        the retained Quickshell desktop
 test/         CLI, shell, and graphical acceptance coverage

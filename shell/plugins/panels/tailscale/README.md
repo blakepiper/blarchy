@@ -1,6 +1,6 @@
-# Tailscale Omarchy Widget
+# Tailscale BLARCHY Widget
 
-Native Omarchy bar widget for Tailscale.
+Native BLARCHY bar widget for Tailscale.
 
 ## Features
 

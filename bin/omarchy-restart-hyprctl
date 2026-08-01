@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# omarchy:summary=Reload hyprland configuration (used by the Omarchy theme switching).
+# omarchy:summary=Reload Hyprland configuration used by BLARCHY theme switching.
 
 hyprctl reload >/dev/null

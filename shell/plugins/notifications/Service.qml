@@ -157,7 +157,7 @@ Item {
     //   - app_name is "notify-send" (the CLI default — means the sender
     //     didn't bother declaring an identity, so it's almost certainly
     //     ephemeral test/feedback noise)
-    //   - app_name is "omarchy-action" (Omarchy's own user-action
+    //   - app_name is "omarchy-action" (BLARCHY's retained user-action
     //     toasts — the user just triggered them, they don't
     //     need to be archived)
     var transient = false

@@ -1,5 +1,5 @@
 -- BLARCHY's user-facing defaults live in this small override layer so the
--- Omarchy package defaults can continue to receive upstream improvements.
+-- inherited default bindings can continue to receive upstream improvements.
 for _, keys in ipairs({
   "SUPER + SPACE",
   "SUPER + RETURN",
@@ -43,5 +43,5 @@ o.bind("SUPER + SHIFT + RIGHT", "Move window to right monitor", hl.dsp.window.mo
 o.bind("SUPER + SHIFT + UP", "Move window to upper monitor", hl.dsp.window.move({ monitor = "u" }))
 o.bind("SUPER + SHIFT + DOWN", "Move window to lower monitor", hl.dsp.window.move({ monitor = "d" }))
 
--- SUPER + T remains Omarchy's standard floating/tiling toggle and returns a
+-- SUPER + T remains BLARCHY's standard floating/tiling toggle and returns a
 -- snapped floating window to the normal layout.

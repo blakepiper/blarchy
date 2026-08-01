@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Build and install an Omarchy package from a local checkout
+# omarchy:summary=Build a retained upstream package layout for compatibility testing
 # omarchy:group=dev
 # omarchy:args=[package-name] [path-to-checkout]
 # omarchy:examples=omarchy dev pkg-test | omarchy dev pkg-test omarchy-dev ~/Work/omarchy/omarchy-installer

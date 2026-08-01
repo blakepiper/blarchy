@@ -2,21 +2,24 @@
 name: omarchy
 description: >
   REQUIRED for end-user customization of Linux desktop, window manager, or system config.
-  Use when editing ~/.config/hypr/, ~/.config/omarchy/,
-  ~/.config/alacritty/, ~/.config/foot/, ~/.config/kitty/, or ~/.config/ghostty/.
+  Use when editing ~/.config/hypr/, ~/.config/omarchy/, or
+  ~/.config/alacritty/.
   Triggers: Hyprland, window rules, animations, keybindings, monitors, gaps, borders,
   blur, opacity, omarchy-shell, bar, terminal config, themes, background,
   night light, idle, lock screen, screenshots, reminders, layer rules, workspace
-  settings, display config, and user-facing omarchy commands. Excludes Omarchy
+  settings, display config, and user-facing omarchy commands. Excludes BLARCHY
   source development through `omarchy dev link` workflows.
 ---
 
-# Omarchy Skill
+# BLARCHY Desktop Skill
 
-Manage [Omarchy](https://omarchy.org/) Linux systems - a beautiful, modern, opinionated Arch Linux distribution with Hyprland.
+Manage an installed BLARCHY desktop: Blake's Arch + Hyprland Environment.
+BLARCHY is a configuration and desktop layer on Arch Linux, not a separate
+distribution. It retains the `omarchy` command and config namespaces for
+upstream compatibility.
 
 This skill is for end-user customization on installed systems.
-It is not for contributing to Omarchy source code.
+It is not for contributing to BLARCHY source code.
 
 ## When This Skill MUST Be Used
 
@@ -24,7 +27,7 @@ It is not for contributing to Omarchy source code.
 
 - Editing ANY file in `~/.config/hypr/` (window rules, animations, keybindings, monitors, etc.)
 - Editing `~/.config/omarchy/shell.json` (status bar layout, widgets)
-- Editing terminal configs (alacritty, foot, kitty, ghostty)
+- Editing the Alacritty terminal config
 - Editing ANY file in `~/.config/omarchy/`
 - Window behavior, animations, opacity, blur, gaps, borders
 - Layer rules, workspace settings, display/monitor configuration
@@ -34,18 +37,21 @@ It is not for contributing to Omarchy source code.
 
 **If you're about to edit a config file in ~/.config/ on this system, STOP and use this skill first.**
 
-**Do NOT use this skill for Omarchy development tasks** (editing the Omarchy source tree, creating migrations, or running `omarchy dev ...` workflows).
+**Do NOT use this skill for BLARCHY development tasks** (editing the BLARCHY source tree, creating migrations, or running `omarchy dev ...` workflows).
 
 ## Critical Safety Rules
 
-When invoking a privileged command directly, use `pkexec` instead of `sudo` so Omarchy can show a graphical authorization prompt with command context. Do not wrap commands that already manage privilege elevation themselves.
+When invoking a privileged command directly from a graphical context, use
+`pkexec` so BLARCHY can show an authorization prompt with command context. Do
+not wrap commands that already manage privilege elevation themselves.
 
 **For end-user customization tasks, NEVER modify anything in `/usr/share/omarchy/`** - but READING is safe and encouraged.
 
-This directory contains Omarchy's source files managed by git. Any changes will be:
+On a standalone install this compatibility path points to the user's BLARCHY
+Git checkout. Any direct changes will be:
 - Liable to conflict with the next explicit BLARCHY `git pull`
 - Cause conflicts with upstream
-- Break the system's update mechanism
+- Bypass BLARCHY's explicit source-update workflow
 
 ```
 /usr/share/omarchy/     # READ-ONLY - NEVER EDIT (reading is OK)
@@ -53,7 +59,7 @@ This directory contains Omarchy's source files managed by git. Any changes will 
 ├── config/                 # Default config templates
 ├── themes/                 # Stock themes
 ├── default/                # System defaults
-├── shell/                  # Omarchy shell source and defaults
+├── shell/                  # BLARCHY shell source and defaults
 ├── migrations/             # Update migrations
 └── install/                # Installation scripts
 ```
@@ -69,12 +75,12 @@ This directory contains Omarchy's source files managed by git. Any changes will 
 - `~/.config/omarchy/themes/<custom-name>/` - Custom themes (must be real directories)
 - `~/.config/omarchy/hooks/` - Custom automation hooks
 
-If the request is to develop Omarchy itself, this skill is out of scope. Follow repository development instructions instead of this skill.
+If the request is to develop BLARCHY itself, this skill is out of scope. Follow repository development instructions instead of this skill.
 
 ## Privilege Escalation
 
 For an interactive script or command run in a visible terminal, use `sudo` for
-privileged work. Omarchy may grant passwordless `sudo` access to particular
+privileged work. BLARCHY may grant passwordless `sudo` access to particular
 commands, and the terminal is the appropriate place to request a password
 when one is needed.
 
@@ -85,20 +91,22 @@ command changes system state.
 
 ## System Architecture
 
-Omarchy is built on:
+BLARCHY is built on:
 
 | Component | Purpose | Config Location |
 |-----------|---------|-----------------|
 | **Arch Linux** | Base OS | `/etc/`, `~/.config/` |
 | **Hyprland** | Wayland compositor/WM | `~/.config/hypr/` |
-| **Omarchy shell** | Status bar + notifications (Quickshell) | `~/.config/omarchy/shell.json` |
+| **BLARCHY shell** | Status bar + notifications (Quickshell) | `~/.config/omarchy/shell.json` |
 | **Launcher** | Quickshell launcher | `~/.config/omarchy/shell.json` |
-| **Alacritty/Foot/Kitty/Ghostty** | Terminals | `~/.config/<terminal>/` |
-| **Omarchy OSD** | On-screen display | Quickshell plugin |
+| **Alacritty** | Default terminal | `~/.config/alacritty/` |
+| **BLARCHY OSD** | On-screen display | Quickshell plugin |
 
 ## Command Discovery
 
-Omarchy ships a single `omarchy` CLI that dispatches to all `omarchy-*` binaries via `omarchy <group> <action>`. Always prefer this form — it is self-documenting and stable. The underlying `omarchy-*` binaries still exist on `PATH` and remain safe to read for source.
+BLARCHY retains a single `omarchy` CLI that dispatches to all `omarchy-*`
+binaries via `omarchy <group> <action>`. Always prefer this form — it is a
+stable compatibility API. The underlying binaries remain safe to inspect.
 
 ```bash
 # List every documented command and its summary
@@ -132,11 +140,11 @@ Run `omarchy --help` for the full list. The most common groups:
 | `omarchy bar` | Bar layout and widgets | `omarchy bar move omarchy.clock --section right` |
 | `omarchy plugin` | Manage/clone shell plugins | `omarchy plugin clone omarchy.clock` |
 | `omarchy hook` | Install automation hooks | `omarchy hook install theme-set <script>` |
-| `omarchy install` | Install optional software / packages | `omarchy install docker dbs` |
+| `omarchy install` | Install optional software / setup integrations | `omarchy install --help` |
 | `omarchy launch` | Launch apps | `omarchy launch browser` |
 | `omarchy capture` | Screenshots and recordings | `omarchy capture screenshot` |
 | `omarchy reminder` | Desktop notification reminders | `omarchy reminder 15 "Pickup Jack"` |
-| `omarchy pkg` | Package management | `omarchy pkg add <pkg>` |
+| `omarchy pkg` | Internal package helper retained for scripts | `omarchy pkg add <pkg>` |
 | `omarchy setup` | Interactive setup wizards | `omarchy setup security fingerprint` |
 | `yay` | Arch and AUR system updates | `yay -Syu` |
 
@@ -144,12 +152,12 @@ Run `omarchy --help` for the full list. The most common groups:
 
 ### Hyprland (Window Manager)
 
-Omarchy configures Hyprland in Lua. User files are loaded after Omarchy's
+BLARCHY configures Hyprland in Lua. User files are loaded after BLARCHY's
 defaults, so overrides go here:
 
 ```
 ~/.config/hypr/
-├── hyprland.lua       # Main config (loads Omarchy defaults, then user files)
+├── hyprland.lua       # Main config (loads BLARCHY defaults, then user files)
 ├── bindings.lua       # Keybindings
 ├── monitors.lua       # Display configuration
 ├── input.lua          # Keyboard/mouse settings
@@ -165,7 +173,7 @@ defaults, so overrides go here:
 - If `hyprctl configerrors` reports errors, address them and rerun validation until clean or until a real blocker is identified
 - Use `omarchy refresh hyprland` to reset to defaults
 
-### Omarchy shell (Status Bar + Notifications)
+### BLARCHY shell (Status Bar + Notifications)
 
 The bar, notification daemon, settings panel, and assorted overlays all run
 inside a single long-running Quickshell process (`omarchy-shell`).
@@ -193,9 +201,6 @@ omarchy plugin clone omarchy.workspaces
 
 ```
 ~/.config/alacritty/alacritty.toml
-~/.config/foot/foot.ini
-~/.config/kitty/kitty.conf
-~/.config/ghostty/config
 ```
 
 **Command:** `omarchy restart terminal`
@@ -227,7 +232,7 @@ cp ~/.config/hypr/bindings.lua ~/.config/hypr/bindings.lua.bak.$(date +%s)
 
 # 4. Apply changes
 # - Hyprland: auto-reloads on save, but MUST validate with `hyprctl reload` and `hyprctl configerrors`
-# - Omarchy shell: shell.json hot-reloads; use `omarchy-shell shell rescanPlugins` for plugin/widget code changes
+# - BLARCHY shell: shell.json hot-reloads; use `omarchy-shell shell rescanPlugins` for plugin/widget code changes
 # - Launcher: restart with `omarchy restart shell`
 # - Terminals: MUST restart with `omarchy restart terminal`
 ```
@@ -251,8 +256,8 @@ executable):
 ├── battery-low.d/          # Low battery (percentage in $1)
 ├── font-set.d/             # After font change (font name in $1)
 ├── post-boot.d/            # After the desktop starts
-├── post-update.d/          # Legacy/source-maintenance hooks
-├── pre-refresh-pacman.d/   # Before package sync during update
+├── post-update.d/          # Compatibility hooks; not run by yay
+├── pre-refresh-pacman.d/   # Runs only with explicit `omarchy refresh pacman`
 └── theme-set.d/            # After theme change (theme slug in $1)
 ```
 
@@ -296,7 +301,7 @@ omarchy theme install <url>     # Install from git repo
 Edit `~/.config/hypr/bindings.lua`. Format:
 ```lua
 o.bind("SUPER + SHIFT + R", "SSH", "alacritty -e ssh your-server")
-o.bind("SUPER + B", "Browser", { launch = "chromium" })  -- launch wraps with uwsm-app
+o.bind("SUPER + B", "Browser", { launch = "firefox" })  -- launch wraps with uwsm-app
 ```
 
 View current bindings: `omarchy menu keybindings --print`
@@ -307,15 +312,15 @@ View current bindings: `omarchy menu keybindings --print`
 2. If the key is already bound, you MUST call `hl.unbind(...)` BEFORE the new `o.bind(...)`
 3. Inform the user what the key was previously bound to
 
-Example - rebinding SUPER+F (which is bound to fullscreen by default):
+Example - rebinding SUPER+F (which opens Files by default):
 ```lua
--- Unbind existing SUPER+F (was: fullscreen)
+-- Unbind existing SUPER+F (was: Files)
 hl.unbind("SUPER + F")
 -- New binding for file manager
 o.bind("SUPER + F", "File manager", { launch = "nautilus" })
 ```
 
-Always tell the user: "Note: SUPER+F was previously bound to fullscreen. I've added an unbind to override it."
+Always tell the user: "Note: SUPER+F was previously bound to Files. I've added an unbind to override it."
 
 ### Display/Monitors
 
@@ -331,12 +336,13 @@ List monitors and supported modes: `hyprctl monitors all`
 
 **CRITICAL: Hyprland window rules syntax changes frequently between versions.**
 
-Before writing ANY window rules, you MUST fetch the current documentation from the official Hyprland wiki:
-- https://wiki.hypr.land/Configuring/Window-Rules/
+Before writing any window rules, consult the installed Hyprland version and
+current official documentation at https://wiki.hypr.land/Configuring/Window-Rules/.
+Do not rely on memorized window-rule syntax; it changes between versions.
 
-DO NOT rely on cached or memorized window rule syntax. The format has changed multiple times and using outdated syntax will cause errors or unexpected behavior.
-
-Window rules go in `~/.config/hypr/hyprland.lua` or a required Lua module. Prefer Omarchy's `o.window(match, rules)` helper — see examples in `$OMARCHY_PATH/default/hypr/windows.lua`.
+Window rules go in `~/.config/hypr/hyprland.lua` or a required Lua module.
+Prefer BLARCHY's retained `o.window(match, rules)` helper — see examples in
+`$OMARCHY_PATH/default/hypr/windows.lua`.
 
 ### Fonts
 
@@ -350,7 +356,7 @@ omarchy font set <name>         # Change font
 
 ```bash
 yay -Syu                       # Full Arch and AUR package update
-omarchy version                 # Show Omarchy version
+omarchy version                 # Show the retained source version
 omarchy debug --no-sudo --print # Debug info (ALWAYS use these flags)
 omarchy system lock             # Lock screen
 omarchy system shutdown         # Shutdown
@@ -381,11 +387,13 @@ omarchy reinstall
 
 When user requests system changes:
 
-1. **Is it a stock omarchy command?** Use it directly
+1. **Is it a retained BLARCHY `omarchy` command?** Use it directly
 2. **Is it a config edit?** Edit in `~/.config/`, never `/usr/share/omarchy/`
 3. **Is it a theme customization?** Create a NEW custom theme directory
 4. **Is it automation?** Use `omarchy hook install` and the hook `.d` directories
-5. **Is it a package install?** Use `omarchy pkg add <pkgs...>` (or `omarchy pkg aur add <pkgs...>` for AUR-only packages)
+5. **Is it a normal package install?** Use `yay -S <pkgs...>` so official and
+   AUR packages follow normal Arch behavior. Use `omarchy pkg` only when
+   maintaining a BLARCHY script that needs its package abstraction.
 6. **Is it built-in shell/plugin code?** Clone it with `omarchy plugin clone`; never edit the packaged copy
 7. **Unsure if command exists?** Run `omarchy commands` (or `omarchy <group> --help` for one group)
 
@@ -402,7 +410,7 @@ omarchy reminder clear
 
 ## Out of Scope
 
-This skill intentionally does not cover Omarchy source development. Do not use this skill for:
+This skill intentionally does not cover BLARCHY source development. Do not use this skill for:
 - Editing files in `/usr/share/omarchy/` (`bin/`, `config/`, `default/`, `shell/`, `themes/`, `migrations/`, etc.)
 - Creating or editing migrations
 - Running `omarchy dev ...` commands

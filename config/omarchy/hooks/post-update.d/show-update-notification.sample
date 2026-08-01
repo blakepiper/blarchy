@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# This hook is called after an Omarchy system update has been performed.
+# This is a retained compatibility-hook example. Normal BLARCHY updates use
+# `yay -Syu`, which does not invoke post-update hooks. It runs only when a
+# command explicitly calls `omarchy-hook post-update`.
 # To put it into use, remove .sample from this file name.
 
 # Example: Show notification after the system has been updated.
-# notify-send -u low "Update Performed" "Your system is now up to date"
+# omarchy-notification-send -u low "Update Performed" "Your system is now up to date"

@@ -1,6 +1,6 @@
-# Omarchy migrations
+# BLARCHY migrations
 
-Omarchy migrations are one-time repair scripts for existing installs. They are
+BLARCHY migrations are one-time repair scripts for existing installs. They are
 used when a package update needs to change state that pacman cannot safely own by
 itself.
 
@@ -117,7 +117,7 @@ New migration format:
   with `bash -euo pipefail`, not through executable bits.
 - No shebang line.
 - Start with an `echo` describing what the migration does.
-- Use `$OMARCHY_PATH` to reference the Omarchy directory.
+- Use `$OMARCHY_PATH` to reference the BLARCHY checkout.
 - Be idempotent. Check existing state before changing it.
 - Use helper commands such as `omarchy-cmd-present`, `omarchy-cmd-missing`,
   `omarchy-pkg-add`, `omarchy-pkg-drop`, `omarchy-pkg-present`, and
@@ -126,7 +126,7 @@ New migration format:
 Example:
 
 ```bash
-echo "Relink Neovim theme to Omarchy current state"
+echo "Relink Neovim theme to BLARCHY current state"
 
 theme_link="$HOME/.config/nvim/lua/plugins/theme.lua"
 current_relative_target="../../../../.local/state/omarchy/current/theme/neovim.lua"
@@ -150,6 +150,6 @@ rm ~/.local/state/omarchy/migrations/<migration>.sh
 omarchy-migrate
 ```
 
-Omarchy 4.0 is upgraded through `bin/omarchy-upgrade-to-quattro`, not through the
-normal migration runner. Do not add compatibility migrations for old installer
-layouts; put pre-4 package-layout transition work in the upgrade command instead.
+`bin/omarchy-upgrade-to-quattro` is retained upstream upgrade code. It is not
+part of BLARCHY's supported standalone install or update path; do not put new
+BLARCHY migration work there.

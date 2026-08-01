@@ -1,17 +1,16 @@
 #!/bin/bash
 
-# This hook is called by `omarchy refresh pacman` AFTER the channel template
-# is copied to /etc/pacman.conf and BEFORE `pacman -Syyuu` runs. Use it to
-# layer customizations onto the freshly-written pacman.conf so they're
-# respected by the upgrade — common cases are adding a custom repository
-# (e.g. CachyOS, Chaotic-AUR, an internal company repo) or extra IgnorePkg
-# lines.
+# This compatibility hook is called only by an explicit `omarchy refresh
+# pacman`, before that command refreshes package databases. BLARCHY never
+# replaces /etc/pacman.conf or the mirrorlist. Normal `yay -Syu` updates do not
+# run this hook; manage custom repositories through ordinary Arch configuration.
 #
 # The hook runs as the invoking user with a warm sudo cache.
 #
 # To put it into use, remove .sample from this file name.
 
-# Example: add an Include line above [core] for a custom repo.
+# Example: add an Include line above [core] for a custom repo during an explicit
+# refresh. This is not needed for normal package updates.
 # Maintain the repo entries in /etc/pacman.d/custom-repos.conf yourself.
 
 CONF=/etc/pacman.conf

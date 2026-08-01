@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Overwrite the user config for the Plymouth drive decryption and boot sequence with the Omarchy default and rebuild it.
+# omarchy:summary=Retained upstream: overwrite and rebuild the legacy Plymouth boot configuration.
 # omarchy:requires-sudo=true
 
 sudo cp -r "$OMARCHY_PATH/default/plymouth/." /usr/share/plymouth/themes/omarchy/

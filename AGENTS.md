@@ -8,6 +8,29 @@
 - Shebangs must use `#!/bin/bash` consistently (never `#!/usr/bin/env bash`)
 - Scripts under `install/` and `migrations/` may be sourced and intentionally omit shebangs
 
+# BLARCHY Source of Truth
+
+BLARCHY is a personal Arch Linux + Hyprland environment derived from Omarchy.
+It is not a distribution and does not own the base operating system. The
+supported installation path is a user cloning this repository on an already
+bootable minimal Arch system and running `./install.sh`.
+
+- `install/omarchy-base.packages` is the default package manifest. The inherited
+  filename is intentional.
+- `yay -Syu` is the normal system and AUR update path.
+- BLARCHY source updates are explicit: fast-forward the user's clone and rerun
+  `./install.sh`. Package updates must never pull or replace this checkout.
+- Never add partitioning, formatting, mounting, bootloader, EFI, `/boot`, or
+  initramfs ownership to the standalone installer.
+- Do not depend on private Omarchy package repositories, `omarchy-pkgs`,
+  `omarchy-settings`, an Omarchy ISO, or `/etc/skel` package seeding.
+- The `omarchy-*` command names, `$OMARCHY_PATH`, `~/.config/omarchy`, plugin
+  IDs, and related internal namespaces are retained compatibility APIs. Do not
+  rename them merely for branding.
+- Some upstream ISO/package code remains for merge compatibility. It is not an
+  alternate supported BLARCHY installation path and must not be wired into
+  `./install.sh` without first adapting it to the standalone ownership boundary.
+
 # Command Naming
 
 All commands start with `omarchy-`. Prefixes indicate purpose.
@@ -62,7 +85,7 @@ Example:
 
 # Runtime Environment
 
-- `$OMARCHY_PATH` is set at the top level by the uwsm session environment and is always available to Omarchy runtime code.
+- `$OMARCHY_PATH` is set at the top level by the uwsm session environment and is always available to BLARCHY runtime code.
 - Commands in `bin/` and Quickshell QML should rely on `$OMARCHY_PATH` / `Quickshell.env("OMARCHY_PATH")`; do not derive fallback paths from `HOME`, `Quickshell.shellDir`, or re-export/default `OMARCHY_PATH` manually.
 
 # Privileged Commands
@@ -86,22 +109,31 @@ existing network and display managers when configured, and preserve existing
 user files on a normal install.
 
 Standalone-specific leaves live under `install/standalone/`. Reuse the package
-manifest and runtime setup abstractions, but do not call ISO leaves that replace
-pacman configuration or assume Limine/Snapper.
+manifest and runtime setup abstractions, but do not call inherited leaves that
+replace pacman configuration or assume Limine, Snapper, an ISO chroot, or
+package-seeded `/etc/skel` defaults.
 
 Migrations that alter boot or snapshot state must declare
 `# blarchy:standalone-safe=false` immediately after their opening `echo` so the
 standalone migration runner excludes them.
 
-The retained ISO path ships target-side setup commands and reusable setup leaves:
+The active flow is:
 
-- `bin/omarchy-setup-system` runs root-owned system setup during ISO finalization.
-- `bin/omarchy-setup-hardware` runs idempotent hardware-specific setup and is called by `omarchy-setup-system`.
-- `bin/omarchy-finalize-user` runs the per-user runtime finalization (skill symlinks, xdg-user-dirs, mime defaults, `install/user/all.sh`). Shipped user defaults are seeded by `/etc/skel` from `omarchy-settings`, not by this command. `bin/omarchy-reinstall-configs` is the explicit destructive resync of those defaults into an existing user's `$HOME`.
-- leaf scripts under `install/` are sourced by `run_logged $OMARCHY_INSTALL/path/to/script.sh` and intentionally do not have shebangs.
-- avoid `exit` in sourced setup scripts unless intentionally aborting setup.
-- use `$OMARCHY_INSTALL` and `$OMARCHY_PATH` instead of hard-coded Omarchy paths.
-- keep root-scoped hardware setup under `install/hardware/` and orchestrate it through `install/hardware/all.sh`.
+- `install.sh` installs packages with yay and orchestrates system and user setup.
+- `install/standalone/system.sh` installs system integration without taking over
+  the machine's boot, storage, or pacman configuration.
+- `install/standalone/user.sh` seeds missing user files, or overwrites only when
+  its explicit `overwrite` mode is requested.
+- `bin/omarchy-finalize-user` handles runtime-dependent per-user setup and
+  sources `install/user/all.sh`.
+- `bin/omarchy-reinstall-configs` is the explicit destructive resync path.
+- sourced leaves under `install/` intentionally omit shebangs and must avoid
+  `exit` unless aborting the parent setup is intended.
+- use `$OMARCHY_INSTALL` and `$OMARCHY_PATH` instead of hard-coded checkout paths.
+- new root-scoped standalone work belongs in `install/standalone/system.sh` or a
+  standalone leaf it sources. Treat `bin/omarchy-setup-system`,
+  `install/config/`, `install/hardware/`, and `install/login/` as inherited
+  upstream code unless the standalone installer explicitly adopts a safe leaf.
 - keep every per-user setup leaf under `install/user/` (including `install/user/hardware/` and `install/user/first-run/`) so it is clear what must run for each user.
 - prefer helper commands for package and command checks where available.
 
@@ -118,7 +150,7 @@ Use these instead of raw shell commands:
 - `omarchy-notification-send` - send desktop notifications; do not call `notify-send` directly
 - `omarchy-hw-asus-rog` - detect ASUS ROG hardware (and similar `hw-*` commands)
 
-Commands installed by Omarchy's default package set are runtime invariants. Invoke them directly; do not add defensive `omarchy-cmd-present` / `omarchy-cmd-missing` checks around them. Use command-presence helpers only for genuinely optional dependencies or code that can run before the default package set is installed.
+Commands installed by BLARCHY's default package manifest are runtime invariants. Invoke them directly; do not add defensive `omarchy-cmd-present` / `omarchy-cmd-missing` checks around them. Use command-presence helpers only for genuinely optional dependencies or code that can run before the default package set is installed.
 
 Exceptions are allowed for migration and package-helper scripts where the helper may not be available yet, where the helper itself is being implemented, or where direct package-manager behavior is required.
 
@@ -134,58 +166,45 @@ Run focused automated tests for the area you changed. Current test entry points:
 
 - `./test/all` - aggregate runner for CLI and shell tests; it intentionally does not run graphical acceptance tests
 - `./test/cli` - CLI routing, command metadata, theme helpers, and safe dispatch coverage
-- `./test/shell` - all Omarchy shell tests under `test/shell.d/`
+- `./test/shell` - all BLARCHY shell tests under `test/shell.d/`
 
-New Omarchy shell tests should live in `test/shell.d/*-test.sh` so `./test/shell` picks them up automatically. Source `test/shell.d/base-test.sh` for shared root-path discovery, assertions, and Node test helpers.
+New BLARCHY shell tests should live in `test/shell.d/*-test.sh` so `./test/shell` picks them up automatically. Source `test/shell.d/base-test.sh` for shared root-path discovery, assertions, and Node test helpers.
 
 # Acceptance Tests
 
-The graphical acceptance suite lives in `test/acceptance` with test files under
-`test/acceptance.d/*-test.sh`. It exercises a real installed Omarchy desktop,
+The inherited graphical acceptance suite lives in `test/acceptance` with test files under
+`test/acceptance.d/*-test.sh`. It exercises a real installed desktop,
 including session health, shell surfaces, panels, keyboard navigation,
 representative applications, and system setup. Source
 `test/acceptance.d/base-test.sh` for the shared helpers.
 
-Run acceptance tests in a disposable VM through the sibling `omarchy-iso`
-repository, not in the active development session. The suite opens and closes
-applications and temporarily changes desktop configuration.
+Run acceptance tests only in a disposable Arch VM installed through the current
+`./install.sh`, never in the active development session. The suite opens and
+closes applications and temporarily changes desktop configuration. Package
+manifest, installer, finalization, and shipped-default changes require a fresh
+minimal Arch VM so the supported installation path is actually exercised.
 
-For acceptance-test-only changes, reuse an installed base and sync the suite:
-
-```bash
-cd ../omarchy-iso
-./bin/omarchy-iso-test release/<iso>.iso --reuse-base --sync-omarchy ../omarchy --no-preview
-```
-
-Use `--sync-all ../omarchy` instead of `--sync-omarchy ../omarchy` when the
-acceptance run must exercise local `bin/`, `config/`, or `shell/` source too.
-Changes to package manifests, installation, finalization, or shipped defaults
-require a fresh ISO built from the local checkouts and a run without
-`--reuse-base`:
-
-```bash
-cd ../omarchy-iso
-./bin/omarchy-iso-make --no-boot-offer --local-source ../omarchy ../omarchy-pkgs
-./bin/omarchy-iso-test release/<generated-iso>.iso --no-preview
-```
+The old sibling `omarchy-iso` harness is upstream infrastructure. It may still
+help diagnose inherited graphical behavior, but it does not validate BLARCHY's
+installer or ownership model and is not a release gate. There is not yet a
+BLARCHY-specific VM harness; document manual VM coverage honestly rather than
+claiming an ISO test proves the standalone flow.
 
 Keep unrelated acceptance workflows in separate test files. The runner records
 a failed file and continues with the remaining files, which preserves as much
 diagnostic coverage as possible. Restore modified user state with traps, close
 anything the test opens, and capture every visually distinct state (including
 entered input where relevant) as `success-<step>.png`; failure helpers capture
-`failure-<step>.png`. The ISO harness collects the screenshots and logs under
-its timestamped `test-runs/` directory and opens the screenshots after the run
-unless `--no-preview` is passed.
+`failure-<step>.png`. Preserve screenshots and logs with the VM test artifacts.
 
-The ISO harness exercises compositor-level shortcuts with QMP virtual keyboard
-input. In-guest `wtype` is suitable for typing into focused controls, but it
-does not reliably prove that a global Hyprland keybinding works.
+In-guest `wtype` is suitable for typing into focused controls, but it does not
+reliably prove that a global Hyprland keybinding works. Use compositor-level
+input from the VM host when validating global shortcuts.
 
 # Visual Verification
 
 Visual changes must be verified in the running UI in addition to automated
-tests. This includes Omarchy shell styling and layout, panels, menus,
+tests. This includes BLARCHY shell styling and layout, panels, menus,
 notifications, desktop appearance, animations, transitions, screenshots, and
 screen recording flows. Creating an artifact is not sufficient: inspect it for
 clipping, overlap, incorrect spacing, stale state, focus problems, and visual
@@ -221,7 +240,7 @@ If a launched UI would otherwise remain open, keep track of its PID and stop it
 after the screenshot or recording; avoid broad process kills unless checking
 with `ps` first.
 
-# Omarchy shell
+# BLARCHY shell (retained Omarchy namespace)
 
 The Quickshell desktop runs as a single long-running process out of
 `shell/`. Hyprland autostart launches it directly with `quickshell -n -p`;
@@ -299,9 +318,11 @@ New migration format:
 - File permissions must be `0644` (`-rw-r--r--`); migration runners execute them with `bash -euo pipefail`, not through executable bits
 - No shebang line
 - Start with an `echo` describing what the migration does
-- Use `$OMARCHY_PATH` to reference the omarchy directory
+- Use `$OMARCHY_PATH` to reference the BLARCHY checkout
 - Prefer helper commands such as `omarchy-cmd-present`, `omarchy-cmd-missing`, `omarchy-pkg-present`, and `omarchy-pkg-missing`
 
-Omarchy 4.0 is upgraded through `bin/omarchy-upgrade-to-quattro`, not through the normal migration runner. Do not add compatibility migrations for old installer layouts; put pre-4 package-layout transition work in the upgrade command instead.
+`bin/omarchy-upgrade-to-quattro` is retained upstream upgrade code, not part of
+the supported BLARCHY install or update path. Do not add new BLARCHY migration
+work to it.
 
 Migrations may use raw `pacman`, `command -v`, or direct config edits when needed for one-off repair work.

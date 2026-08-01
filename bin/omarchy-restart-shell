@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Restart the Omarchy shell
+# omarchy:summary=Restart the BLARCHY shell
 # omarchy:examples=omarchy restart shell
 
 # A caller opened after dev link/unlink may disagree with the still-running
@@ -9,7 +9,7 @@ session_omarchy_path=$(systemctl --user show-environment 2>/dev/null | sed -n 's
 : "${session_omarchy_path:=$OMARCHY_PATH}"
 
 CONFIG_DIR="$session_omarchy_path/shell"
-[[ -f $CONFIG_DIR/shell.qml ]] || { echo "Omarchy shell config not found: $CONFIG_DIR" >&2; exit 1; }
+[[ -f $CONFIG_DIR/shell.qml ]] || { echo "BLARCHY shell config not found: $CONFIG_DIR" >&2; exit 1; }
 
 # Allow running from outside the session (e.g. over ssh) by deriving the
 # Hyprland instance signature from the newest instance runtime dir.
@@ -19,7 +19,7 @@ if [[ -z ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
 fi
 
 if [[ $(hyprctl -j monitors 2>/dev/null) == *'"LOCK"'* ]]; then
-  echo "Refusing to restart Omarchy shell while the session is locked." >&2
+  echo "Refusing to restart BLARCHY shell while the session is locked." >&2
   exit 1
 fi
 
@@ -46,5 +46,5 @@ for (( attempt = 0; attempt < 20; attempt++ )); do
   sleep 0.1
 done
 
-echo "Omarchy shell did not become ready after restart." >&2
+echo "BLARCHY shell did not become ready after restart." >&2
 exit 1

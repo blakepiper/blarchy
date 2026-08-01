@@ -1,305 +1,160 @@
-# File layout
+# BLARCHY file layout
 
-How `omarchy/` is organized and where everything ends up on an installed
-system.
-
-BLARCHY's primary installation path is now `./install.sh` on an existing Arch
-system; see [`standalone-install.md`](standalone-install.md). The package/ISO
-mapping below is retained as upstream architecture reference and for the
-remaining package-oriented tooling, but it is not the BLARCHY disk installer.
+This document describes the supported standalone installation from this
+repository. Inherited Omarchy package/ISO files remain in the tree for upstream
+merge compatibility, but they are not a second BLARCHY installation model.
 
 ## Mental model
 
-Two Arch packages are built from this one repo (PKGBUILDs live in
-`omarchy-pkgs/pkgbuilds/`):
+BLARCHY has three layers:
 
-- **`omarchy`** — runtime binaries (`bin/`, including `bin/omarchy-dev-*`),
-  install/finalize scripts (`install/`), migrations, themes, and the
-  Quickshell desktop (`shell/`). Depends on `omarchy-settings`.
-- **`omarchy-settings`** — everything that has to be on the target *before*
-  the omarchy package installs (specifically before `useradd -m` and the
-  limine bootloader install): all `/etc/skel/**`, `/etc/` drop-ins,
-  package-owned system files under `/usr/share` and `/usr/lib`, fonts,
-  plymouth theme, sddm theme, branding, plus the limine/snapper configs
-  (mkinitcpio hooks, limine-entry-tool drop-ins, snapper template, the
-  `default/limine/` and `default/snapper/` trees, and the boot/snapshot
-  story end-to-end). Also ships the three debug binaries
-  (`omarchy-debug`, `omarchy-debug-idle`, `omarchy-upload-log`) needed by
-  the live ISO env.
+1. **Arch and the AUR own packages.** `install/omarchy-base.packages` is the
+   desired package list and `yay` resolves it through normal Arch/AUR sources.
+2. **The user's Git clone owns BLARCHY source.** `./install.sh` links that clone
+   into the runtime and installs stable system integration files.
+3. **The user owns their home configuration.** A normal install copies only
+   missing defaults. Explicit resync is destructive and separate.
 
-Two other packages live in `omarchy-pkgs/` but stand alone:
-`omarchy-keyring` (GPG keys for pacman) and `omarchy-nvim` (the Neovim
-setup; independently seeds `/etc/skel`).
+The inherited `omarchy-*`, `$OMARCHY_PATH`, `~/.config/omarchy`, and
+`omarchy.*` plugin namespaces are compatibility APIs. They do not mean the
+machine is installed or updated as Omarchy.
 
-Three layers populate `$HOME` on a standalone BLARCHY install:
+## Standalone install map
 
-1. **Seed** — `install/standalone/user.sh preserve` copies missing shipped
-   defaults without replacing files the user already owns.
-2. **Finalize** — `omarchy-finalize-user` runs once per user and handles the
-   things that need `$HOME` expansion, the live `$OMARCHY_PATH`, or runtime
-   detection of system state.
-3. **Resync** — `omarchy-reinstall-configs` is the explicit, destructive
-   command for an existing user to clobber their configs back to shipped
-   defaults.
-
-The retained ISO/package path instead seeds `/etc/skel` through
-`omarchy-settings`; that mapping is documented below for upstream reference.
-
-Current generated theme state lives under
-`~/.local/state/omarchy/current/`. Keep `~/.config/omarchy/` for files a user
-may intentionally version in a dotfile manager, such as user themes, hooks,
-shell layout, plugins, and themed template overrides.
-
-## Build-time map (repo → installed paths)
-
-```
-omarchy/                            built into          installed at
-─────────────────────────           ──────────────      ────────────────────────────────────
-
-bin/omarchy-*                  ──►  omarchy             /usr/bin/omarchy-*
-                                                        (and symlinks in /usr/share/omarchy/bin/)
-bin/omarchy-debug,
-bin/omarchy-debug-idle,
-bin/omarchy-upload-log         ──►  omarchy-settings    /usr/bin/  (needed before omarchy is installed)
-
-default/libalpm/hooks/*.hook
-                                ──►  omarchy             /usr/share/libalpm/hooks/*.hook
-
-install/**                     ──►  omarchy             /usr/share/omarchy/install/
-migrations/**                  ──►  omarchy             /usr/share/omarchy/migrations/
-themes/**                      ──►  omarchy             /usr/share/omarchy/themes/
-shell/**                       ──►  omarchy             /usr/share/omarchy/shell/
-version                        ──►  omarchy             /usr/share/omarchy/version
-                                                        + /etc/skel/.local/state/omarchy/migrations/*
-
-config/**                      ──►  omarchy-settings    /etc/skel/.config/**         (seeds new users)
-                                                        /usr/share/omarchy/config/** (resync source)
-etc/fastfetch/config.jsonc     ──►  omarchy-settings    /etc/fastfetch/config.jsonc
-
-applications/*.desktop         ──►  omarchy-settings    /etc/skel/.local/share/applications/
-                                                        /usr/share/omarchy/applications/
-default/applications/battlenet.desktop
-                                ──►  omarchy-settings    /usr/share/omarchy/default/applications/
-                                                        (installer-only launcher template)
-applications/icons/*           ──►  omarchy-settings    /usr/share/icons/hicolor/{48,256,scalable}/apps/
-
-etc/**                         ──►  omarchy-settings    /etc/**           (drop-ins we own outright)
-  ├─ mkinitcpio.conf.d/{omarchy_hooks,thunderbolt_module}.conf
-  └─ limine-entry-tool.d/{omarchy-defaults,omarchy-uki}.conf
-
-default/limine/limine.conf     ──►  omarchy-settings    /usr/share/omarchy/default/limine/limine.conf
-default/limine/default.conf    ──►  omarchy-settings    /usr/share/omarchy/default/limine/default.conf
-                                                        (template; ISO substitutes @@CMDLINE@@ → /etc/default/limine)
-default/snapper/root           ──►  omarchy-settings    /etc/snapper/config-templates/omarchy
-                                                        (+ /usr/share/omarchy/default/snapper/root)
-
-default/**                     ──►  omarchy-settings    /usr/share/omarchy/default/
-  ├─ bash/env-bootstrap                                 /usr/share/omarchy/default/bash/env-bootstrap
-  │                                                       (sourced by every shell/session entry point; see "Env bootstrap")
-  ├─ bashrc                                             /usr/share/omarchy/etc-overrides/dot.bashrc
-  │                                                       → /etc/skel/.bashrc (post_install cp -f)
-  ├─ hypr/toggles/flags.lua                             /etc/skel/.local/state/omarchy/toggles/hypr/
-  ├─ nautilus-python/extensions/*.py                    /etc/skel/.local/share/nautilus-python/extensions/
-  ├─ tensaku/state.toml                                 /etc/skel/.local/state/tensaku/state.toml
-  ├─ uwsm/env.d/10-omarchy                              /usr/share/uwsm/env.d/
-  ├─ environment.d/*.conf                               /usr/lib/environment.d/
-  ├─ fontconfig/conf.avail/50-omarchy.conf              /usr/share/fontconfig/conf.avail/
-  │                                                       + symlink /etc/fonts/conf.d/50-omarchy.conf
-  ├─ xdg-terminal-exec/*.list                           /usr/share/xdg-terminal-exec/
-  ├─ applications/mimeapps.list                         /usr/share/applications/mimeapps.list
-  ├─ systemd/user/*.{service,path}                      /usr/lib/systemd/user/
-  ├─ systemd/user/app.slice.d/10-oomd.conf              /usr/lib/systemd/user/app.slice.d/
-  ├─ systemd/system-sleep/unmount-fuse                  /usr/lib/systemd/system-sleep/
-  ├─ systemd/zram-generator.conf.d/90-omarchy.conf      /usr/lib/systemd/zram-generator.conf.d/
-  ├─ fonts/omarchy/omarchy.ttf                          /usr/share/fonts/omarchy/
-  ├─ sddm/omarchy/                                      /usr/share/sddm/themes/omarchy/
-  ├─ sddm/hyprland.lua                                  /usr/share/sddm/hyprland.lua
-  ├─ wayland-sessions/omarchy.desktop                   /usr/local/share/wayland-sessions/
-  ├─ plymouth/                                          /usr/share/plymouth/themes/omarchy/
-  └─ security/faillock, nsswitch, cups-browsed,
-     plymouthd.conf, os-release                         /usr/share/omarchy/etc-overrides/
-                                                          → /etc/* (post_install cp -f, see below)
-
-logo.{txt,svg}, icon.{txt,png}  ──► omarchy-settings    /usr/share/omarchy/  (resync source)
-                                                        /usr/share/pixmaps/omarchy.png
-                                                        /usr/share/icons/hicolor/256x256/apps/omarchy.png
-                                                        /etc/skel/.config/omarchy/branding/{about,screensaver}.txt
+```text
+Git checkout
+├── install.sh                         package + setup orchestrator
+├── install/omarchy-base.packages      canonical package manifest
+├── install/standalone/system.sh       root-owned system integration
+├── install/standalone/user.sh         preserve/overwrite user seeding
+├── bin/omarchy*                       retained command API
+├── config/**                          user configuration defaults
+├── default/**                         shared runtime/system defaults
+├── shell/**                           BLARCHY Quickshell desktop
+├── themes/**                          first-party themes
+└── migrations/**                      per-user source migrations
 ```
 
-### Why `etc-overrides/` exists
+`install/standalone/system.sh` creates or installs:
 
-Some files under `/etc/` (`.bashrc` in `/etc/skel`, `nsswitch.conf`,
-`security/faillock.conf`, `cups/cups-browsed.conf`, `plymouth/plymouthd.conf`,
-`os-release`) are owned by upstream Arch packages, so we can't install over
-them via pacman without a file conflict. Instead they ship at
-`/usr/share/omarchy/etc-overrides/` and the `omarchy-settings` `post_install`
-/ `post_upgrade` scriptlet `cp -f`'s them into place.
-
-Tradeoff: user edits to those files get clobbered on every `omarchy-settings`
-upgrade. This is documented in the PKGBUILD.
-
-## Env bootstrap (`default/bash/env-bootstrap`)
-
-Single source of truth for `OMARCHY_PATH` and dev-link-aware `PATH`. It:
-
-- Sources `/etc/omarchy.conf` (written by `omarchy-dev-link`, reset to the
-  package path by `omarchy-dev-unlink`) if present; otherwise forces
-  `OMARCHY_PATH=/usr/share/omarchy` so a stale inherited value can't survive
-  an `omarchy-dev-unlink`.
-- Prepends `$OMARCHY_PATH/bin` to `PATH` **only when** `OMARCHY_PATH` is
-  not `/usr/share/omarchy`. On a production install the binaries are
-  already on `PATH` as `/usr/bin/omarchy-*` via the `omarchy` package.
-
-Sourced by every entry point that needs the env set:
-
-```
-/etc/profile.d/omarchy.sh                      (system login shells)
-/etc/skel/.bashrc                              (interactive shells)
-/usr/share/uwsm/env.d/10-omarchy               (Hyprland session via uwsm)
-/usr/share/omarchy/default/bash/envs           (SSH / non-login bash)
+```text
+/usr/share/omarchy -> <user's BLARCHY checkout>
+/usr/local/bin/omarchy* -> <checkout>/bin/omarchy*
+/etc/omarchy.conf                    OMARCHY_PATH compatibility environment
+/etc/blarchy.conf                    standalone installation marker
+/etc/profile.d/omarchy.sh            login environment bootstrap
+/usr/share/uwsm/env.d/10-omarchy     graphical-session environment
+/usr/share/wayland-sessions/omarchy.desktop
+/usr/lib/systemd/user/**              BLARCHY user units
+/usr/lib/firefox/distribution/policies.json
+/etc/pam.d/omarchy-lock-password
+/usr/share/{fonts,fontconfig,sddm,icons,pixmaps}/...
 ```
 
-Idempotent — safe to source more than once in the same shell.
+Those inherited filenames are stable runtime identifiers. User-visible labels
+inside them should say BLARCHY.
 
-## Runtime finalization (`omarchy-finalize-user`)
+The system leaf enables common desktop services when available, preserves an
+existing display manager, and preserves an existing network stack. It does not
+partition, mount, configure a bootloader, write EFI state or `/boot`, replace
+pacman configuration, or directly rebuild an initramfs. See
+[`standalone-install.md`](standalone-install.md) for the full ownership contract.
 
-Runs once per user. It does **not** copy `~/.config/**`, `~/.bashrc`,
-`flags.lua`, or the nautilus extensions — `/etc/skel` already seeded those.
-It only does the things `/etc/skel` can't:
+## User defaults and finalization
 
-- Skill symlinks `~/.{agents,claude,codex,pi/agent}/skills/omarchy` →
-  `$OMARCHY_PATH/default/omarchy-skill`. Symlinks (not copies) so
-  `omarchy dev link` against a dev checkout repoints them correctly.
-- `xdg-user-dirs-update` (Templates/Public/Desktop folded back into `$HOME`)
-  and `~/.config/gtk-3.0/bookmarks` (needs `$HOME` expansion).
-- Hyprland's package-owned default input reads `XKBLAYOUT` / `XKBVARIANT`
-  from `/etc/vconsole.conf`; no per-user Hyprland config rewrite is needed.
-- Sets Firefox, Alacritty, Nautilus, and VSCodium through the existing XDG and
-  Omarchy default-application helpers.
-- `omarchy-refresh-applications` (composes generated `.desktop` launchers).
-- Sources `install/user/all.sh` — theme, git, mise, dock pins, keyring, per-user
-  hardware quirks (asus mic/mixer, framework f13 audio, …).
-- On `--first-install`, marks every shipped user migration as already applied
-  for the freshly-created user.
+On a normal install, `install/standalone/user.sh preserve` copies only missing
+files from:
 
-Idempotency marker: `~/.local/state/omarchy/done/finalize-user`, managed
-by `omarchy-done`.
-
-The ISO calls it as `omarchy-finalize-user --force --first-install` in the
-target chroot as the install user, after `omarchy-setup-system` has finished
-the root-side work.
-
-## Migrations (`omarchy-migrate`)
-
-See [`migrations.md`](migrations.md) for the full migration model, authoring
-guidelines, and troubleshooting notes.
-
-Omarchy migrations live in `migrations/*.sh` and run per-user through
-`omarchy-migrate`. Completion state lives in
-`~/.local/state/omarchy/migrations/`, so every user gets a chance to run every
-migration. Migrations run as the user; privileged work should invoke the
-appropriate helper or privilege prompt. Migrations must be idempotent;
-machine-wide repairs should no-op when another user already applied them.
-
-Each graphical user has `omarchy-migrate-notify.service`, started once per login
-through `WantedBy=graphical-session.target` and ordered after that target so
-notification actions can safely launch through UWSM. The package also ships
-`omarchy-update-user-notify.service` as a symlink onto it, so users enabled
-under the old unit name keep working before they reach migration `1785095882`.
-It runs `omarchy-migrate-notify` as
-that user, which checks `omarchy-migrate --pending`. If this user has missing
-migration state, it shows a notification that opens a terminal for
-`omarchy-migrate`. The notifier never runs migrations in the background.
-
-Login is the only automatic trigger. Nothing watches the migration directory;
-normal `yay -Syu` transactions do not modify the Git-owned BLARCHY checkout.
-
-`omarchy-migrate` waits for any active pacman transaction to finish, then runs
-pending migrations. It does not need `--force`; migrations happen when state
-files are missing. Rerunning `./install.sh` after an explicit BLARCHY source
-update applies pending standalone-safe migrations.
-
-## First-run (`omarchy-first-run`)
-
-Runs once on first interactive login, after the user manager is live. Used
-for steps that need a running graphical session and/or a working user
-systemd instance:
-
-- `omarchy-hook-install post-update install-voxtype.hook` — register the
-  Voxtype post-update hook.
-- `install/user/first-run/enable-user-units.sh` — `systemctl --user enable`
-  the shipped user units (`bt-agent`, `omarchy-sleep-lock`,
-  `omarchy-recover-internal-monitor`, `omarchy-migrate-notify.service`,
-  `omarchy-fcitx5.service`).
-  Done here, not at finalize, because
-  the user manager isn't reachable from the ISO chroot; `ConditionPath*`
-  in the unit files keeps services inert when they don't apply.
-- `install/user/first-run/gnome-theme.sh`,
-  `install/user/first-run/gtk-primary-paste.sh` — GNOME/GTK settings that
-  need the dconf daemon.
-- `install/user/first-run/welcome.sh`,
-  `install/user/first-run/wifi.sh` — welcome and Wi-Fi/update toasts
-  (waits for a live notification server before firing).
-
-The entire sequence has one idempotency marker:
-`~/.local/state/omarchy/done/first-run-user`, managed by `omarchy-done`.
-Completed users exit before any first-run step. On failure the marker is not
-written and the sequence retries next login.
-
-Completion markers live under `~/.local/state/omarchy/done/`. Use
-`omarchy-done check <name>` to check one and `omarchy-done mark <name>` to record it.
-Use `omarchy-done ensure <name>` as a conditional when the guarded work should
-run only once; it records completion before returning success.
-The Quattro upgrade completes graphical first-run for upgraded users and moves
-the legacy finalization marker from `~/.local/state/omarchy/` into `done/`.
-
-## Root-side install orchestration
-
-This section describes the retained ISO path, not `./install.sh`.
-`omarchy-setup-system` (root, in chroot) runs target-side setup at ISO
-finalization. It sources:
-
-- `install/config/all.sh` — theme links, lockout limits, lockscreen PAM,
-  powerprofilesctl shebang fix, docker setup, Snapper retention, locate
-  index tuning, service enablement, firewall.
-- `install/hardware/all.sh` via `omarchy-setup-hardware` — vendor- and
-  device-specific kernel modules, udev rules, microcode, wireless regdom,
-  ASUS / Framework / Intel / Apple / Lenovo quirks.
-- `install/login/all.sh` — SDDM theme/session config.
-- `install/post-install/all.sh` — final pacman/udev/localdb passes.
-
-Logging goes to `/var/log/omarchy-install.log` via
-`install/helpers/logging.sh`.
-
-## Explicit resync (`omarchy-reinstall-configs`)
-
-When an existing user wants to reset to shipped defaults:
-
-```
-install/standalone/user.sh overwrite
-omarchy-finalize-user --force
+```text
+config/**                              -> ~/.config/**
+etc/fastfetch/config.jsonc             -> ~/.config/fastfetch/config.jsonc
+default/applications/mimeapps.list     -> ~/.config/mimeapps.list
+default/nautilus-python/extensions/**  -> ~/.local/share/nautilus-python/extensions/**
+default/hypr/toggles/flags.lua         -> ~/.local/state/omarchy/toggles/hypr/flags.lua
+icon.txt and logo.txt                  -> ~/.config/omarchy/branding/**
 ```
 
-This resync overwrites BLARCHY-owned user defaults without backup, removes the
-obsolete Limine snapshot notifier, reruns per-user finalization, and refreshes
-the editor setup when its optional helper is installed. It does not refresh or
-alter Limine, Plymouth, EFI, or initramfs configuration.
+It also appends one marker-delimited BLARCHY bootstrap block to `~/.bashrc`.
+Rerunning the installer does not duplicate that block or overwrite existing
+user files.
 
-## Quick reference: where does X live?
+`bin/omarchy-finalize-user` then handles state that needs the live user,
+including XDG directories and MIME defaults, application defaults, generated
+launchers, skill links, dock pins, theme state, and per-user setup leaves under
+`install/user/`.
 
-| Goal | Touch |
+`bin/omarchy-first-run` performs tasks that need a graphical session and a
+working user systemd instance. Completion markers live under
+`~/.local/state/omarchy/done/`.
+
+`bin/omarchy-reinstall-configs` is the explicit destructive resync. It calls the
+user seeder in `overwrite` mode and reruns finalization; it does not touch the
+boot chain.
+
+## Runtime environment
+
+`default/bash/env-bootstrap` is the source of truth for `$OMARCHY_PATH`.
+`/etc/omarchy.conf` points it at the user's clone; `/usr/share/omarchy` is a
+compatibility symlink to the same checkout. The checkout's `bin/` is available
+through `/usr/local/bin/omarchy*` links and may also be prepended while using a
+development link.
+
+The environment bootstrap is sourced by login shells, the bash configuration,
+and the UWSM session. Runtime code should consume `$OMARCHY_PATH`; it should not
+guess a checkout path from `$HOME`.
+
+## Updates and migrations
+
+Normal package updates are simply:
+
+```bash
+yay -Syu
+```
+
+They do not mutate the Git checkout. BLARCHY source changes are deliberate:
+
+```bash
+cd ~/blarchy
+git pull --ff-only
+./install.sh
+```
+
+The installer runs pending standalone-safe migrations after a source update.
+Migration state is per-user under `~/.local/state/omarchy/migrations/`. See
+[`migrations.md`](migrations.md).
+
+## Where new work belongs
+
+| Goal | Source location |
 | --- | --- |
-| Default file at `~/.config/foo/` | `config/foo/` |
-| `/etc/` drop-in we own outright | `etc/` |
-| `/etc/` file owned by an upstream package | `default/`, then add to `etc-overrides` in `omarchy-settings` PKGBUILD + scriptlet |
-| Package-owned system file (e.g. systemd user service/path in `/usr/lib`) | `default/`, document the mapping in `default/package-defaults.tsv`, then add the `install -Dm644` line in `omarchy-settings` PKGBUILD |
-| Per-user file that's static but lives outside `~/.config` | `default/`, then add `install -Dm644 ... $pkgdir/etc/skel/...` in `omarchy-settings` PKGBUILD |
-| Runtime tweak that needs `$HOME` or live system state | extend `omarchy-finalize-user`, or add a per-user leaf under `install/user/` and wire into `install/user/all.sh` |
-| Standalone root-side integration | Extend `install/standalone/system.sh`; do not cross the disk/boot ownership boundary |
-| Retained ISO-only root setup | `install/config/*.sh` or `install/hardware/*.sh`, wired into the matching `all.sh` |
-| One-time fix for existing installs | `migrations/<unix-timestamp>.sh` |
-| Package-owned path something else may already write | Prefer a path nothing else writes, such as a vendor drop-in under `/usr/lib`. Otherwise the `--overwrite` entry in `bin/omarchy-update-system-pkgs` has to ship a release before the file |
-| User-facing `omarchy-*` command | `bin/omarchy-<group>-<verb>` — see `GROUP_DESCRIPTIONS` in `bin/omarchy` |
-| New stock theme | `themes/<name>/` (+ matching templates under `default/themed/` if they need theme colors) |
-| User-installed theme | `~/.config/omarchy/themes/<name>/` |
-| Generated current theme/background state | `~/.local/state/omarchy/current/` |
+| Default package | `install/omarchy-base.packages` |
+| Root-owned standalone integration | `install/standalone/system.sh` or a sourced standalone leaf |
+| Default file under `~/.config` | `config/` |
+| Per-user runtime setup | `install/user/` and `bin/omarchy-finalize-user` |
+| First graphical-login setup | `install/user/first-run/` and `bin/omarchy-first-run` |
+| User-facing command | `bin/omarchy-<group>-<verb>` |
+| One-time repair after a source update | `migrations/<unix-timestamp>.sh` |
+| Quickshell code | `shell/` |
+| Stock theme | `themes/<name>/` and, when needed, `default/themed/` |
+| System file copied by the standalone installer | `default/` or `etc/`, plus an explicit install line in `install/standalone/system.sh` |
+
+Do not add a new dependency on `omarchy-pkgs`, `omarchy-settings`, a private
+package repository, an ISO finalizer, or package-seeded `/etc/skel` state.
+
+## Retained upstream-only code
+
+The following areas came from Omarchy's ISO/package architecture and are not
+called by BLARCHY's supported installer unless a standalone script explicitly
+adopts an individual safe component:
+
+- `bin/omarchy-setup-system`, `bin/omarchy-setup-hardware`, and
+  `bin/omarchy-upgrade-to-quattro`;
+- `install/config/`, `install/hardware/`, `install/login/`, and
+  `install/post-install/`;
+- `default/limine/`, `default/snapper/`, `default/plymouth/`, and inherited
+  libalpm update machinery.
+
+Keep this code isolated for practical upstream merges. Do not document it as a
+BLARCHY release path, and do not route the standalone installer through it
+without removing assumptions about an ISO chroot, private packages, Limine,
+Snapper, `/etc/skel`, and boot ownership.

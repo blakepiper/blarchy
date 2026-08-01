@@ -1,7 +1,7 @@
-# Omarchy shell
+# BLARCHY shell
 
 `omarchy-shell` is a single long-running [Quickshell](https://quickshell.org/)
-instance that hosts the Omarchy desktop. Hyprland autostart launches one shell
+instance that hosts the BLARCHY desktop. Hyprland autostart launches one shell
 per graphical session; everything else — the bar, background switcher, panels,
 and overlays — runs **inside** the shell as a plugin.
 
@@ -11,7 +11,10 @@ Hosting everything inside one shell means:
 - summoning a panel is an IPC call into a process that is already running,
   not a fresh `quickshell -p ...` cold start
 - third-party plugins can be loaded from disk without changing any source
-  code in Omarchy itself
+  code in BLARCHY itself
+
+The executable, config paths, IPC targets, and `omarchy.*` plugin IDs retain
+their inherited names as compatibility APIs.
 
 The runtime layout:
 

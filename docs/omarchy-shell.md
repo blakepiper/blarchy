@@ -1,10 +1,13 @@
-# omarchy-shell
+# BLARCHY shell (`omarchy-shell`)
 
 A single long-running [Quickshell](https://quickshell.org/) instance
-that hosts the Omarchy desktop. The bar, panels, overlays, menus, and
-services all run inside as plugins. IPC is the canonical way for CLIs
-to talk to a running shell — `omarchy-shell-ipc` auto-starts it on
-first call.
+that hosts the BLARCHY desktop. The bar, panels, overlays, menus, and
+services all run inside as plugins. `omarchy-shell` is the canonical IPC entry
+point for CLIs and forwards to the already-running shell; it does not start an
+additional Quickshell process.
+
+The `omarchy-shell`, `omarchy.*`, and `~/.config/omarchy` names are retained
+compatibility APIs and should not be renamed for branding alone.
 
 ## Plugin manifest
 

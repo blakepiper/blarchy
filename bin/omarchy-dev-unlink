@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Restore Omarchy to the package install after reboot
+# omarchy:summary=Restore BLARCHY to the installed compatibility path after reboot
 # omarchy:group=dev
 # omarchy:args=[--no-reboot]
 
@@ -46,7 +46,7 @@ default_target="/usr/share/omarchy"
 
 printf 'export OMARCHY_PATH="%s"\n' "$default_target" | sudo tee /etc/omarchy.conf >/dev/null
 
-echo "Pointed Omarchy at $default_target"
+echo "Pointed BLARCHY at $default_target"
 echo
 
 if (( prompt_reboot )) && gum confirm "Reboot now to activate?"; then

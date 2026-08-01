@@ -37,7 +37,8 @@ fi
 cat > "$LOG_FILE" <<EOF
 Date: $(date)
 Hostname: $(hostname)
-Omarchy Package: $(pacman -Q omarchy-dev 2>/dev/null || pacman -Q omarchy 2>/dev/null || echo "unknown")
+BLARCHY Source: $(omarchy-version 2>/dev/null || echo "unknown")
+BLARCHY Path: ${OMARCHY_PATH:-/usr/share/omarchy}
 
 =========================================
 SYSTEM INFORMATION

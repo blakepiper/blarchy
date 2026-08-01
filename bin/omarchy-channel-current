@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Print the active Omarchy package channel
+# omarchy:summary=Inspect retained upstream package-channel state
 
 set -euo pipefail
 

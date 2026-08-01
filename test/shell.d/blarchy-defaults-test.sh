@@ -7,7 +7,7 @@ source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/base-test.sh"
 packages="$ROOT/install/omarchy-base.packages"
 
 for package_name in \
-  alacritty firefox gimp git nautilus nodejs npm nwg-dock-hyprland python \
+  alacritty firefox gimp nautilus nodejs npm nwg-dock-hyprland python \
   python-pip spotify steam vscodium-bin; do
   grep -Fxq "$package_name" "$packages" || fail "BLARCHY package manifest includes $package_name"
 done

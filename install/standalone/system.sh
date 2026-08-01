@@ -46,6 +46,17 @@ copy_tree() {
   cp -a "$source_dir/." "$target/"
 }
 
+install_user_command_override() {
+  local unit="$1"
+  local command="$2"
+  local target
+
+  target=$(target_path "/etc/systemd/user/$unit.d/10-blarchy-standalone.conf")
+  mkdir -p "$(dirname "$target")"
+  printf '[Service]\nExecStart=\nExecStart=/usr/local/bin/%s\n' "$command" >"$target"
+  chmod 0644 "$target"
+}
+
 runtime_link=$(target_path /usr/share/omarchy)
 mkdir -p "$(dirname "$runtime_link")"
 if [[ -e $runtime_link && ! -L $runtime_link ]]; then
@@ -89,12 +100,19 @@ install_file "$repo_path/default/xdg-terminal-exec/hyprland-xdg-terminals.list" 
 install_file "$repo_path/default/environment.d/10-omarchy-fcitx.conf" \
   /usr/lib/environment.d/10-omarchy-fcitx.conf
 install_file "$repo_path/default/firefox/policies.json" \
-  /usr/lib/firefox/distribution/policies.json
+  /etc/firefox/policies/policies.json
 install_file "$repo_path/default/pam/omarchy-lock-password" \
   /etc/pam.d/omarchy-lock-password
 
 copy_tree "$repo_path/default/systemd/user" /usr/lib/systemd/user
 copy_tree "$repo_path/default/systemd/user@.service.d" /usr/lib/systemd/user@.service.d
+
+# The inherited units target package-owned commands in /usr/bin. Standalone
+# installs intentionally expose the checkout through /usr/local/bin instead.
+install_user_command_override omarchy-migrate-notify.service omarchy-migrate-notify
+install_user_command_override omarchy-recover-internal-monitor.service omarchy-hw-recover-internal-monitor
+install_user_command_override omarchy-sleep-lock.service omarchy-system-sleep-monitor
+install_user_command_override omarchy-tailscale-receive.service omarchy-tailscale-receive
 
 install_file "$repo_path/default/fonts/omarchy/omarchy.ttf" \
   /usr/share/fonts/omarchy/omarchy.ttf

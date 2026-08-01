@@ -33,6 +33,10 @@ The installer may:
 - enable NetworkManager only when another network stack is not already enabled;
 - seed missing user configuration and set BLARCHY application defaults.
 
+Initial user finalization is safe from the minimal Arch console: it writes XDG
+MIME/default files directly and does not require a running desktop notification
+service. Graphical-only setup is deferred to the first BLARCHY login.
+
 The checkout should remain at a stable path after installation. Moving it is
 supported by rerunning `./install.sh` from the new location.
 

@@ -46,7 +46,8 @@ Git checkout
 /usr/share/uwsm/env.d/10-omarchy     graphical-session environment
 /usr/share/wayland-sessions/omarchy.desktop
 /usr/lib/systemd/user/**              BLARCHY user units
-/usr/lib/firefox/distribution/policies.json
+/etc/systemd/user/*.service.d/**      standalone /usr/local command overrides
+/etc/firefox/policies/policies.json
 /etc/pam.d/omarchy-lock-password
 /usr/share/{fonts,fontconfig,sddm,icons,pixmaps}/...
 ```

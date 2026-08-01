@@ -38,6 +38,13 @@ grep -Fq 'yay -Y --devel --save' "$ROOT/install.sh" ||
   fail "standalone installer enables VCS package updates for plain yay -Syu"
 grep -Fq 'omarchy-migrate' "$ROOT/install.sh" ||
   fail "explicit BLARCHY source upgrades apply pending migrations"
+if grep -Fq 'xdg-settings set' "$ROOT/bin/omarchy-finalize-user"; then
+  fail "console finalization does not require a live desktop session"
+fi
+for default_command in omarchy-default-terminal omarchy-default-editor; do
+  grep -Eq 'omarchy-notification-send .* \|\| true$' "$ROOT/bin/$default_command" ||
+    fail "console finalization ignores unavailable desktop notifications" "$default_command"
+done
 for package_name in blesh neovim ttf-jetbrains-mono-nerd hyprland-preview-share-picker-git; do
   grep -Fxq "$package_name" "$ROOT/install/omarchy-base.packages" ||
     fail "standalone manifest uses the public package name" "$package_name"
@@ -47,7 +54,7 @@ for package_name in asdcontrol omacut omawrite omarchy-nvim tobi-try; do
     fail "standalone manifest includes an Omarchy-repository-only package" "$package_name"
   fi
 done
-pass "standalone installer resolves packages through normal Arch and AUR channels"
+pass "standalone installer resolves packages and finalizes without a desktop session"
 
 grep -Fq 'source -- /usr/share/blesh/ble.sh --attach=none' "$ROOT/default/bash/rc" ||
   fail "BLARCHY loads predictive suggestions before shell initialization"
@@ -109,12 +116,22 @@ done
   fail "system integration exposes BLARCHY commands"
 [[ -f $test_root/usr/share/wayland-sessions/omarchy.desktop ]] ||
   fail "system integration installs the BLARCHY session"
-[[ -f $test_root/usr/lib/firefox/distribution/policies.json ]] ||
+[[ -f $test_root/etc/firefox/policies/policies.json ]] ||
   fail "system integration installs the Firefox policy"
 [[ -f $test_root/etc/pam.d/omarchy-lock-password ]] ||
   fail "system integration installs lock-screen authentication"
 grep -Fxq 'BLARCHY_INSTALL_MODE=standalone' "$test_root/etc/blarchy.conf" ||
   fail "system integration records standalone ownership"
+while IFS=' ' read -r unit command; do
+  override="$test_root/etc/systemd/user/$unit.d/10-blarchy-standalone.conf"
+  grep -Fxq "ExecStart=/usr/local/bin/$command" "$override" ||
+    fail "standalone user service resolves its command" "$unit"
+done <<'UNITS'
+omarchy-migrate-notify.service omarchy-migrate-notify
+omarchy-recover-internal-monitor.service omarchy-hw-recover-internal-monitor
+omarchy-sleep-lock.service omarchy-system-sleep-monitor
+omarchy-tailscale-receive.service omarchy-tailscale-receive
+UNITS
 [[ ! -e $test_root/boot ]] ||
   fail "system integration creates no boot files"
 pass "system integration is idempotent and bootloader-agnostic"

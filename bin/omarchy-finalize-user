@@ -68,6 +68,8 @@ export OMARCHY_SETUP_CONTEXT="${OMARCHY_SETUP_CONTEXT:-runtime}"
 export PATH="$OMARCHY_PATH/bin:$PATH"
 
 if (( first_install )); then
+  # Retained compatibility value: this means any headless first install,
+  # including BLARCHY's supported minimal-Arch console flow.
   export OMARCHY_SETUP_CONTEXT=iso-chroot
 fi
 
@@ -104,7 +106,8 @@ done
 source "$OMARCHY_INSTALL/user/all.sh"
 
 omarchy-refresh-applications
-env -u BROWSER xdg-settings set default-web-browser firefox.desktop
+# xdg-settings is intended for a live desktop session. MIME defaults work from
+# the minimal-Arch console where the standalone installer runs.
 xdg-mime default firefox.desktop x-scheme-handler/http
 xdg-mime default firefox.desktop x-scheme-handler/https
 xdg-mime default org.gnome.Nautilus.desktop inode/directory

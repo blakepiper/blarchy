@@ -121,7 +121,9 @@ The active flow is:
 
 - `install.sh` installs packages with yay and orchestrates system and user setup.
 - `install/standalone/system.sh` installs system integration without taking over
-  the machine's boot, storage, or pacman configuration.
+  the machine's boot, storage, or pacman configuration. Its systemd user-unit
+  drop-ins point inherited `/usr/bin/omarchy-*` `ExecStart` paths at the
+  standalone `/usr/local/bin` command links; keep those layers aligned.
 - `install/standalone/user.sh` seeds missing user files, or overwrites only when
   its explicit `overwrite` mode is requested.
 - `bin/omarchy-finalize-user` handles runtime-dependent per-user setup and

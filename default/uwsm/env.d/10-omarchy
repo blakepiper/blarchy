@@ -16,5 +16,29 @@ fi
 # Optional user overrides kept for compatibility with older installs.
 [ -f "$HOME/.config/uwsm/default" ] && . "$HOME/.config/uwsm/default"
 
+# Import console keyboard defaults before Hyprland starts. Avoid sourcing this
+# system file: values are data, not shell code.
+OMARCHY_XKB_LAYOUT=us
+OMARCHY_XKB_VARIANT=
+if [ -r /etc/vconsole.conf ]; then
+  while IFS='=' read -r key value; do
+    case "$key" in
+      XKBLAYOUT|XKBVARIANT)
+        value=${value%%#*}
+        value=${value#\"}
+        value=${value%\"}
+        value=${value#\'}
+        value=${value%\'}
+        if [ "$key" = XKBLAYOUT ] && [ -n "$value" ]; then
+          OMARCHY_XKB_LAYOUT=$value
+        elif [ "$key" = XKBVARIANT ]; then
+          OMARCHY_XKB_VARIANT=$value
+        fi
+        ;;
+    esac
+  done </etc/vconsole.conf
+fi
+export OMARCHY_XKB_LAYOUT OMARCHY_XKB_VARIANT
+
 # Activate mise if present on the system
 omarchy-cmd-present mise && eval "$(mise activate bash --shims)"

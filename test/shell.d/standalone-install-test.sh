@@ -32,8 +32,17 @@ if grep -Fxq git "$ROOT/install/omarchy-base.packages"; then
   fail "standalone manifest duplicates the required Git prerequisite"
 fi
 pass "Git remains an installer prerequisite rather than a bundled default"
-grep -Fq 'yay -S --needed --noconfirm' "$ROOT/install.sh" ||
-  fail "standalone installer installs repository and AUR packages idempotently"
+grep -Fq 'pacman -S --needed --noconfirm "${repo_packages[@]}"' "$ROOT/install.sh" ||
+  fail "standalone installer installs repository packages before AUR builds"
+grep -Fq 'yay -S --needed --noconfirm "${aur_packages[@]}"' "$ROOT/install.sh" ||
+  fail "standalone installer installs AUR packages idempotently"
+grep -Fq 'base-devel git rust' "$ROOT/install.sh" ||
+  fail "standalone installer uses Arch rust as its fresh-install AUR toolchain"
+for provider in rust rustup cargo; do
+  if grep -Fxq "$provider" "$ROOT/install/omarchy-base.packages"; then
+    fail "package manifest duplicates the installer-owned Rust provider" "$provider"
+  fi
+done
 grep -Fq 'yay -Y --devel --save' "$ROOT/install.sh" ||
   fail "standalone installer enables VCS package updates for plain yay -Syu"
 grep -Fq 'omarchy-migrate' "$ROOT/install.sh" ||
@@ -60,8 +69,12 @@ grep -Fq 'source -- /usr/share/blesh/ble.sh --attach=none' "$ROOT/default/bash/r
   fail "BLARCHY loads predictive suggestions before shell initialization"
 grep -Fq 'ble-attach' "$ROOT/default/bash/rc" ||
   fail "BLARCHY attaches predictive suggestions after shell initialization"
-grep -Fq 'ble-import -d integration/fzf-completion' "$ROOT/default/bash/init" ||
-  fail "predictive suggestions use the compatible fzf integration"
+if rg -q 'ble-import -d|menu-complete-backward' \
+  "$ROOT/default/bash/rc" "$ROOT/default/bash/init" "$ROOT/default/bash/inputrc"; then
+  fail "Bash defaults use no interfaces unsupported by Arch blesh"
+fi
+grep -Fq '[[ -z ${BLE_VERSION:-}' "$ROOT/default/bash/init" ||
+  fail "fzf Readline keybindings are skipped while blesh owns line editing"
 pass "Alacritty Bash sessions enable predictive history suggestions"
 
 for boot_package in limine limine-mkinitcpio-hook limine-snapper-sync plymouth snapper; do
@@ -116,6 +129,8 @@ done
   fail "system integration exposes BLARCHY commands"
 [[ -f $test_root/usr/share/wayland-sessions/omarchy.desktop ]] ||
   fail "system integration installs the BLARCHY session"
+[[ -f $test_root/usr/share/pixmaps/omarchy.png ]] ||
+  fail "system integration installs the stable Fastfetch logo asset"
 [[ -f $test_root/etc/firefox/policies/policies.json ]] ||
   fail "system integration installs the Firefox policy"
 [[ -f $test_root/etc/pam.d/omarchy-lock-password ]] ||

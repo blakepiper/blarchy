@@ -1,35 +1,14 @@
 -- https://wiki.hypr.land/Configuring/Basics/Variables/#input
 
-local function read_vconsole()
-  local values = {}
-  local file = io.open("/etc/vconsole.conf", "r")
-  if not file then
-    return values
-  end
-
-  for line in file:lines() do
-    local key, value = line:match("^%s*([%w_]+)%s*=%s*(.-)%s*$")
-    if key and value then
-      value = value:gsub("%s+#.*$", "")
-      value = value:gsub('^"(.*)"$', "%1")
-      value = value:gsub("^'(.*)'$", "%1")
-      values[key] = value
-    end
-  end
-
-  file:close()
-  return values
-end
-
 -- Layouts that can't type Latin letters. Keep in sync with the list in
 -- etc/mkinitcpio.conf.d/omarchy_hooks.conf.
 local non_latin_layouts =
   " af am ara bd bg by et ge gr il in iq ir kg kh kz la lk mk mm mn mv np rs ru sy th tj ua "
 
-local vconsole = read_vconsole()
-
-local kb_layout = vconsole.XKBLAYOUT or "us"
-local kb_variant = vconsole.XKBVARIANT or ""
+-- UWSM reads vconsole.conf before Hyprland starts. Config reloads only consult
+-- the session environment, because file I/O can exceed Hyprland's Lua budget.
+local kb_layout = os.getenv("OMARCHY_XKB_LAYOUT") or "us"
+local kb_variant = os.getenv("OMARCHY_XKB_VARIANT") or ""
 -- CapsLock is the compose key, so Caps Lock itself has to live somewhere else.
 -- Both Shifts together is the usual home for it, but it's easy to hit by
 -- accident while typing. The _cancel variant sets Caps Lock the same way and
@@ -62,7 +41,7 @@ hl.config({
     numlock_by_default = true,
 
     touchpad = {
-      natural_scroll = false,
+      natural_scroll = true,
       clickfinger_behavior = true,
       scroll_factor = 0.4,
     },

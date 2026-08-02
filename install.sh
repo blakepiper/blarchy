@@ -106,16 +106,44 @@ load_packages() {
   printf '%s\n' "${packages[@]}"
 }
 
+split_packages() {
+  local package_name
+
+  repo_packages=()
+  aur_packages=()
+  for package_name in "${packages[@]}"; do
+    if pacman -Si -- "$package_name" >/dev/null 2>&1; then
+      repo_packages+=("$package_name")
+    else
+      aur_packages+=("$package_name")
+    fi
+  done
+}
+
 sudo -v
 enable_multilib
 
 echo "Update Arch and install build prerequisites"
-sudo pacman -Syu --needed --noconfirm base-devel git
+if pacman -Q rustup >/dev/null 2>&1; then
+  if ! rustup default >/dev/null 2>&1; then
+    echo "Initialize the installed rustup provider for AUR builds"
+    rustup default stable
+  fi
+  sudo pacman -Syu --needed --noconfirm base-devel git
+else
+  sudo pacman -Syu --needed --noconfirm base-devel git rust
+fi
 install_yay
 
 mapfile -t packages < <(load_packages)
-echo "Install BLARCHY packages"
-yay -S --needed --noconfirm "${packages[@]}"
+split_packages
+
+echo "Install BLARCHY repository packages"
+sudo pacman -S --needed --noconfirm "${repo_packages[@]}"
+if (( ${#aur_packages[@]} )); then
+  echo "Build and install BLARCHY AUR packages"
+  yay -S --needed --noconfirm "${aur_packages[@]}"
+fi
 yay -Y --devel --save
 
 echo "Install BLARCHY system integration"

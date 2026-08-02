@@ -4,7 +4,9 @@
 # suggestions and syntax-aware completion without changing the user's shell.
 if [[ $- == *i* && -r /usr/share/blesh/ble.sh ]]; then
   source -- /usr/share/blesh/ble.sh --attach=none
-  ble-face -s auto_complete fg=8
+  if declare -F ble-face >/dev/null; then
+    ble-face -s auto_complete fg=8
+  fi
 fi
 
 source "$OMARCHY_PATH/default/bash/envs"

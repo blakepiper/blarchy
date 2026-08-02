@@ -19,16 +19,13 @@ if command -v try &> /dev/null; then
 fi
 
 if command -v fzf &> /dev/null; then
-  if [[ -n ${BLE_VERSION:-} ]]; then
-    ble-import -d integration/fzf-completion
-    ble-import -d integration/fzf-key-bindings
-  else
-    if [[ -f /usr/share/fzf/completion.bash ]]; then
-      source /usr/share/fzf/completion.bash
-    fi
-    if [[ -f /usr/share/fzf/key-bindings.bash ]]; then
-      source /usr/share/fzf/key-bindings.bash
-    fi
+  if [[ -f /usr/share/fzf/completion.bash ]]; then
+    source /usr/share/fzf/completion.bash
+  fi
+  # fzf's C-z mode-switch bindings use Readline functions that ble.sh 0.3
+  # cannot translate. ble.sh supplies its own interactive keybindings.
+  if [[ -z ${BLE_VERSION:-} && -f /usr/share/fzf/key-bindings.bash ]]; then
+    source /usr/share/fzf/key-bindings.bash
   fi
 fi
 

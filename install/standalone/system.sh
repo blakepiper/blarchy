@@ -157,7 +157,12 @@ for unit in \
   enable_if_available "$unit"
 done
 
-display_manager=$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null || true)
+display_manager_link=/etc/systemd/system/display-manager.service
+if [[ -e $display_manager_link || -L $display_manager_link ]]; then
+  display_manager=$(readlink -f "$display_manager_link" 2>/dev/null || true)
+else
+  display_manager=""
+fi
 if [[ -z $display_manager || $display_manager == */sddm.service ]]; then
   enable_if_available sddm.service
 else

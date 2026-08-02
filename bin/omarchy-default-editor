@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # omarchy:summary=Set the default editor used by omarchy-launch-editor
-# omarchy:args=[codium|code|cursor|zed|sublime_text|helix|vim|emacs|nvim]
+# omarchy:args=[codium|code|cursor|zed|sublime_text|helix|vim|emacs]
 # omarchy:examples=omarchy default editor | omarchy default editor codium | omarchy default editor helix
 
 editor_file="$HOME/.local/state/omarchy/defaults/editor"
@@ -11,7 +11,7 @@ if (($# == 0)); then
     read -r editor <"$editor_file"
   fi
 
-  [[ -n $editor ]] && echo "$editor" || echo "nvim"
+  [[ -n $editor ]] && echo "$editor" || echo "codium"
   exit 0
 fi
 
@@ -24,9 +24,8 @@ sublime_text) editor="sublime_text"; name="Sublime Text"; glyph= ;;
 helix) editor="helix"; name="Helix"; glyph= ;;
 vim) editor="vim"; name="Vim"; glyph= ;;
 emacs) editor="emacs"; name="Emacs"; glyph= ;;
-nvim) editor="nvim"; name="Neovim"; glyph= ;;
 *)
-  echo "Usage: omarchy-default-editor <codium|code|cursor|zed|sublime_text|helix|vim|emacs|nvim>"
+  echo "Usage: omarchy-default-editor <codium|code|cursor|zed|sublime_text|helix|vim|emacs>"
   exit 1
   ;;
 esac

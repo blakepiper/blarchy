@@ -1,6 +1,6 @@
 {
   // BLARCHY menu definition, implemented on Omarchy's stable menu APIs.
-  // JSONC is used for Neovim-friendly highlighting, comments, and trailing commas.
+  // JSONC provides editor-friendly highlighting, comments, and trailing commas.
   // IDs are object keys. Dotted IDs imply hierarchy: trigger.share.file belongs
   // under trigger.share.
   // Kind is inferred: action -> action, target -> link, otherwise submenu.
@@ -39,7 +39,6 @@
   "learn.blarchy": {"icon":"","label":"BLARCHY","action":"omarchy-launch-editor \"$OMARCHY_PATH/README.md\""},
   "learn.hyprland": {"icon":"","label":"Hyprland","action":"omarchy-launch-webapp 'https://wiki.hypr.land/'"},
   "learn.arch": {"icon":"󰣇","label":"Arch","action":"omarchy-launch-webapp 'https://wiki.archlinux.org/title/Main_page'"},
-  "learn.neovim": {"icon":"","label":"Neovim","action":"omarchy-launch-webapp 'https://www.lazyvim.org/keymaps'"},
   "learn.bash": {"icon":"󱆃","label":"Bash","action":"omarchy-launch-webapp 'https://devhints.io/bash'"},
   "learn.tmux-keybindings": {"icon":"","label":"Tmux","action":"omarchy-menu-tmux-keybindings"},
 
@@ -133,7 +132,6 @@
   "setup.default.terminal.kitty": {"icon":"","label":"Kitty","when":"omarchy-cmd-present kitty","checked":"[[ \"$(omarchy-default-terminal)\" == \"kitty\" ]]","action":"omarchy-default-terminal kitty"},
   "setup.default.editor": {"icon":"","label":"Editor"},
   "setup.default.editor.codium": {"icon":"","label":"VSCodium","when":"omarchy-cmd-present codium","checked":"[[ \"$(omarchy-default-editor)\" == \"codium\" ]]","action":"omarchy-default-editor codium"},
-  "setup.default.editor.neovim": {"icon":"","label":"Neovim","when":"omarchy-cmd-present nvim","checked":"[[ \"$(omarchy-default-editor)\" == \"nvim\" ]]","action":"omarchy-default-editor nvim"},
   "setup.default.editor.vscode": {"icon":"","label":"VSCode","when":"omarchy-cmd-present code","checked":"[[ \"$(omarchy-default-editor)\" == \"code\" ]]","action":"omarchy-default-editor code"},
   "setup.default.editor.cursor": {"icon":"","label":"Cursor","when":"omarchy-cmd-present cursor","checked":"[[ \"$(omarchy-default-editor)\" == \"cursor\" ]]","action":"omarchy-default-editor cursor"},
   "setup.default.editor.zed": {"icon":"","label":"Zed","when":"omarchy-cmd-present zeditor","checked":"[[ \"$(omarchy-default-editor)\" == \"zeditor\" ]]","action":"omarchy-default-editor zed"},

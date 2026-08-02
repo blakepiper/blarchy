@@ -54,10 +54,16 @@ for default_command in omarchy-default-terminal omarchy-default-editor; do
   grep -Eq 'omarchy-notification-send .* \|\| true$' "$ROOT/bin/$default_command" ||
     fail "console finalization ignores unavailable desktop notifications" "$default_command"
 done
-for package_name in blesh neovim ttf-jetbrains-mono-nerd hyprland-preview-share-picker-git; do
+for package_name in blesh ttf-jetbrains-mono-nerd hyprland-preview-share-picker-git; do
   grep -Fxq "$package_name" "$ROOT/install/omarchy-base.packages" ||
     fail "standalone manifest uses the public package name" "$package_name"
 done
+for package_name in cliamp kdenlive libreoffice-fresh moonlight-qt neovim obs-studio obsidian pinta xournalpp; do
+  if grep -Fxq "$package_name" "$ROOT/install/omarchy-base.packages"; then
+    fail "standalone manifest excludes removed desktop bloat" "$package_name"
+  fi
+done
+pass "standalone manifest excludes removed desktop bloat"
 for package_name in asdcontrol omacut omawrite omarchy-nvim tobi-try; do
   if grep -Fxq "$package_name" "$ROOT/install/omarchy-base.packages"; then
     fail "standalone manifest includes an Omarchy-repository-only package" "$package_name"

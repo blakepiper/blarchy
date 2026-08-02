@@ -105,6 +105,6 @@ pending standalone-safe migrations.
 `install/omarchy-base.packages` is the canonical desired package list. Every
 entry resolves through the normal Arch repositories or the AUR. Omarchy-only
 packages with no public package source are omitted, and public equivalents use
-their actual Arch/AUR names (`neovim`, `ttf-jetbrains-mono-nerd`, and
+their actual Arch/AUR names (`ttf-jetbrains-mono-nerd` and
 `hyprland-preview-share-picker-git`). BLARCHY does not add or trust the Omarchy
 package repository or keyring.

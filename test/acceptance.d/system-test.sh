@@ -65,9 +65,6 @@ verify_services() {
 }
 
 verify_runtime_tools() {
-  nvim --headless '+qa' >/dev/null 2>&1 || fail "Neovim starts headlessly"
-  pass "Neovim starts headlessly"
-
   timeout 10 fastfetch --pipe false >/dev/null 2>&1 || fail "Fastfetch can read system information"
   pass "Fastfetch can read system information"
 

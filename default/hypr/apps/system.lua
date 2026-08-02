@@ -28,13 +28,13 @@ o.window("org.omarchy.screensaver", { animation = "slide" })
 
 -- No transparency on media windows.
 o.window(
-  "^(zoom|vlc|mpv|org.kde.kdenlive|com.obsproject.Studio|com.github.PintaProject.Pinta|imv|org.gnome.NautilusPreviewer)$",
+  "^(zoom|vlc|mpv|imv|org.gnome.NautilusPreviewer)$",
   {
     tag = "-default-opacity",
   }
 )
 o.window(
-  "^(zoom|vlc|mpv|org.kde.kdenlive|com.obsproject.Studio|com.github.PintaProject.Pinta|imv|org.gnome.NautilusPreviewer)$",
+  "^(zoom|vlc|mpv|imv|org.gnome.NautilusPreviewer)$",
   {
     opacity = "1 1",
   }

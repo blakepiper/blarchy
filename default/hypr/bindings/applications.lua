@@ -11,9 +11,7 @@ if o.preinstalled_bindings_enabled() then
   -- Bindings inherited for optional applications and TUIs.
   o.bind("SUPER + ALT + RETURN", "Tmux", { omarchy = "terminal-tmux" })
   o.bind("SUPER + SHIFT + M", "Music", { omarchy = "spotify" })
-  o.bind("SUPER + SHIFT + ALT + M", "Music TUI", { tui = "cliamp", focus = true })
   o.bind("SUPER + SHIFT + G", "Signal", { omarchy = "signal" })
-  o.bind("SUPER + SHIFT + O", "Obsidian", { launch = "obsidian", focus = "^obsidian$" })
   o.bind("SUPER + SHIFT + SLASH", "Passwords", { omarchy = "1password" })
 
   o.bind("SUPER + SHIFT + ALT + A", "Grok", { webapp = "https://grok.com" })

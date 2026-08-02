@@ -36,7 +36,6 @@ launch_and_verify() {
 # name|command|window class regex|launch timeout
 apps='terminal|alacritty|^Alacritty$
 browser|firefox --new-window|(?i)firefox
-neovim|xdg-terminal-exec --app-id=org.omarchy.nvim nvim|org.omarchy.nvim
 writer|omawrite|(?i)omawrite'
 
 status=0

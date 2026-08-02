@@ -16,7 +16,6 @@ brightnessctl
 btop
 chafa
 clang
-cliamp
 cups
 cups-browsed
 cups-filters
@@ -60,13 +59,11 @@ inotify-tools
 inxi
 networkmanager
 jq
-kdenlive
 kernel-modules-hook
 lazygit
 less
 libsecret
 libyaml
-libreoffice-fresh
 llvm
 localsend
 lua51
@@ -74,7 +71,6 @@ luarocks
 man-db
 mariadb-libs
 mise
-moonlight-qt
 mpv
 mpv-mpris
 nautilus
@@ -87,12 +83,8 @@ noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
 nss-mdns
-neovim
-obs-studio
-obsidian
 pacman-contrib
 pamixer
-pinta
 plocate
 postgresql-libs
 power-profiles-daemon
@@ -138,7 +130,6 @@ woff2-font-awesome
 xdg-desktop-portal-gtk
 xdg-desktop-portal-hyprland
 xdg-terminal-exec
-xournalpp
 yaru-icon-theme
 yay
 yt-dlp

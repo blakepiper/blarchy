@@ -48,7 +48,7 @@ local function command_from(value, description)
   end
 
   if value.omarchy then
-    return "omarchy-launch-" .. value.omarchy
+    return "omarchy-hyprland-window-prepare-launch; omarchy-launch-" .. value.omarchy
   elseif value.focus and value.launch then
     return o.launch_sole(value.focus, value.launch)
   elseif value.launch then
@@ -95,7 +95,7 @@ function o.bind(keys, description, dispatcher, options)
 end
 
 function o.launch(command)
-  return "uwsm-app -- " .. command
+  return "omarchy-hyprland-window-prepare-launch; uwsm-app -- " .. command
 end
 
 function o.exec_on_start(command)

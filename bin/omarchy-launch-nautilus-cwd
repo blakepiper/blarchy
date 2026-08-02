@@ -2,4 +2,5 @@
 
 # omarchy:summary=Launch Files in the active terminal's current directory
 
+omarchy-hyprland-window-prepare-launch
 exec setsid uwsm-app -- nautilus --new-window "$(omarchy-cmd-terminal-cwd)"

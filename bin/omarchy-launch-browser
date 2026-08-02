@@ -3,6 +3,7 @@
 # omarchy:summary=Launch the default browser as determined by xdg-settings.
 # omarchy:args=[url]
 
+omarchy-hyprland-window-prepare-launch
 default_browser=$(env -u BROWSER xdg-settings get default-web-browser)
 if [[ -z $default_browser ]]; then
   default_browser=$(xdg-mime query default x-scheme-handler/https)

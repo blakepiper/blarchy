@@ -11,7 +11,7 @@ trap 'rm -rf "$test_tmp"' EXIT
 
 mock_bin="$test_tmp/bin"
 log="$test_tmp/hyprctl.log"
-mkdir -p "$mock_bin"
+mkdir -p "$mock_bin" "$test_tmp/runtime"
 
 cat >"$mock_bin/hyprctl" <<'SH'
 #!/bin/bash
@@ -52,7 +52,7 @@ chmod +x "$mock_bin/hyprctl"
 
 run_snap() {
   : >"$log"
-  TEST_HYPRCTL_LOG="$log" TEST_HYPRCTL_LUA=1 PATH="$mock_bin:$PATH" \
+  TEST_HYPRCTL_LOG="$log" TEST_HYPRCTL_LUA=1 XDG_RUNTIME_DIR="$test_tmp/runtime" PATH="$mock_bin:$PATH" \
     "$ROOT/bin/omarchy-hyprland-window-snap" "$1"
 }
 

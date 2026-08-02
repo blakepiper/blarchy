@@ -2,4 +2,5 @@
 
 # omarchy:summary=Launch Files
 
+omarchy-hyprland-window-prepare-launch
 exec setsid uwsm-app -- nautilus --new-window

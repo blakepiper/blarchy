@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# omarchy:summary=Prepare a snapped window for the next tiled application
+
+set -euo pipefail
+
+SNAP_STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/omarchy-window-snap"
+
+active_window=$(hyprctl activewindow -j)
+address=$(jq -r '.address // empty' <<<"$active_window")
+state="$SNAP_STATE_DIR/$address"
+
+[[ -n $address && -f $state ]] || exit 0
+
+client=$(hyprctl clients -j | jq -c --arg address "$address" '.[] | select(.address == $address)')
+if [[ -z $client ]]; then
+  unlink "$state"
+  exit 0
+fi
+
+floating=$(jq -r '.floating // false' <<<"$client")
+if [[ $floating != "true" ]]; then
+  unlink "$state"
+  exit 0
+fi
+
+direction=$(<"$state")
+case "$direction" in
+left) preselect=r ;;
+right) preselect=l ;;
+up) preselect=d ;;
+down) preselect=u ;;
+*)
+  unlink "$state"
+  exit 0
+  ;;
+esac
+
+hyprctl dispatch "layoutmsg preselect $preselect" >/dev/null
+hyprctl dispatch "togglefloating address:$address" >/dev/null
+unlink "$state"

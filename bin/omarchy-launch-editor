@@ -3,6 +3,7 @@
 # omarchy:summary=Launch the default editor selected by BLARCHY.
 # omarchy:args=[--inline] <path>
 
+omarchy-hyprland-window-prepare-launch
 default_editor="$HOME/.local/state/omarchy/defaults/editor"
 
 if [[ ${1:-} == "--inline" ]]; then

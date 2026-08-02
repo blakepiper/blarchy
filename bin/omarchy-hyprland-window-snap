@@ -5,6 +5,8 @@
 
 set -euo pipefail
 
+SNAP_STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/omarchy-window-snap"
+
 direction="${1:-}"
 case "$direction" in
 left | right | up | down) ;;
@@ -105,3 +107,6 @@ hypr_dispatch "hl.dsp.window.resize({ window = \"address:$address\", x = $width,
   resizewindowpixel "exact $width $height,address:$address"
 hypr_dispatch "hl.dsp.window.move({ window = \"address:$address\", x = $x, y = $y })" \
   movewindowpixel "exact $x $y,address:$address"
+
+mkdir -p "$SNAP_STATE_DIR"
+printf '%s\n' "$direction" >"$SNAP_STATE_DIR/$address"

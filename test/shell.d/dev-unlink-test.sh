@@ -21,9 +21,7 @@ for arg in "$@"; do
 done
 printf '\n' >>"$OMARCHY_DEV_UNLINK_TEST_LOG"
 
-if [[ $1 == "tee" ]]; then
-  cat >"$OMARCHY_DEV_UNLINK_TEST_CONF"
-fi
+[[ $1 != "rm" ]] || rm -f "$OMARCHY_DEV_UNLINK_TEST_CONF"
 SH
 chmod +x "$stub_bin/sudo"
 
@@ -56,10 +54,9 @@ run_unlink() {
 : >"$log_file"
 run_unlink --no-reboot
 
-grep -Fx $'sudo\ttee\t/etc/omarchy.conf' "$log_file" >/dev/null ||
-  fail "dev unlink writes the package path without rebooting" "$(cat "$log_file")"
-[[ $(<"$conf_file") == 'export OMARCHY_PATH="/usr/share/omarchy"' ]] ||
-  fail "dev unlink writes the package path guard" "$(<"$conf_file")"
+grep -Fx $'sudo\trm\t-f\t/etc/blarchy-dev.conf' "$log_file" >/dev/null ||
+  fail "dev unlink removes the explicit runtime override" "$(cat "$log_file")"
+[[ ! -e $conf_file ]] || fail "dev unlink removes the dev config"
 if grep -Eq '^(gum|reboot)' "$log_file"; then
   fail "dev unlink --no-reboot skips the reboot prompt" "$(cat "$log_file")"
 fi

@@ -62,13 +62,13 @@ run_invitation_hook() {
 
 run_invitation_hook
 
-[[ ! -f $test_home/.local/state/omarchy/done/fingerprint-setup-invitation ]] || fail "fingerprint invitation stays pending without a reader"
+[[ ! -f $test_home/.local/state/blarchy/done/fingerprint-setup-invitation ]] || fail "fingerprint invitation stays pending without a reader"
 [[ ! -s $log_file ]] || fail "fingerprint invitation does nothing without a reader"
 
 touch "$hw_marker"
 run_invitation_hook
 
-[[ -f $test_home/.local/state/omarchy/done/fingerprint-setup-invitation ]] || fail "fingerprint invitation records completion"
+[[ -f $test_home/.local/state/blarchy/done/fingerprint-setup-invitation ]] || fail "fingerprint invitation records completion"
 [[ -f $hook_path ]] || fail "fingerprint invitation keeps its hook installed"
 [[ $(grep -c '^systemd-run:' "$log_file") -eq 2 ]] || fail "fingerprint invitation uses durable user services"
 grep -q -- '--user --collect --quiet --service-type=exec --unit=omarchy-fingerprint-setup-invitation' "$log_file" || fail "fingerprint invitation configures its user service"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Restore BLARCHY to the installed compatibility path after reboot
+# omarchy:summary=Restore BLARCHY to the installed runtime after reboot
 # omarchy:group=dev
 # omarchy:args=[--no-reboot]
 
@@ -28,7 +28,7 @@ case "${1:-}" in
     cat <<USAGE
 Usage: omarchy dev unlink [--no-reboot]
 
-Writes /etc/omarchy.conf so OMARCHY_PATH resolves to /usr/share/omarchy
+Removes /etc/blarchy-dev.conf so BLARCHY_PATH resolves to the installed runtime
 after reboot. This intentionally does not rewrite the running Hyprland,
 systemd, shell, or app-launcher environment; reboot to make every layer agree.
 
@@ -42,11 +42,9 @@ USAGE
     ;;
 esac
 
-default_target="/usr/share/omarchy"
+sudo rm -f /etc/blarchy-dev.conf
 
-printf 'export OMARCHY_PATH="%s"\n' "$default_target" | sudo tee /etc/omarchy.conf >/dev/null
-
-echo "Pointed BLARCHY at $default_target"
+echo "Restored BLARCHY to /usr/local/share/blarchy"
 echo
 
 if (( prompt_reboot )) && gum confirm "Reboot now to activate?"; then

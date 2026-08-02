@@ -17,7 +17,7 @@ Item {
   // Injected by omarchy-shell (the first-party service loader).
   property var shell: null
 
-  property string omarchyPath: Quickshell.env("OMARCHY_PATH")
+  property string omarchyPath: Quickshell.env("BLARCHY_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/blarchy"
   readonly property string home: Quickshell.env("HOME")
   // History + DND live under XDG_STATE_HOME: they're persistent user state
   // (history of received notifications, last-set DND preference), not

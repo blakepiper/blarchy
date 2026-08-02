@@ -11,7 +11,7 @@ stub_bin="$test_tmp/bin"
 test_home="$test_tmp/home"
 mkdir -p "$stub_bin" "$test_home"
 
-cat >"$stub_bin/omarchy-migrate" <<'SH'
+cat >"$stub_bin/blarchy-migrate" <<'SH'
 #!/bin/bash
 if [[ ${1:-} == "--pending" && ${OMARCHY_TEST_PENDING_MIGRATIONS:-0} == 1 ]]; then
   echo 200-migration.sh
@@ -20,7 +20,7 @@ else
   exit 1
 fi
 SH
-chmod +x "$stub_bin/omarchy-migrate"
+chmod +x "$stub_bin/blarchy-migrate"
 
 cat >"$stub_bin/systemd-run" <<'SH'
 #!/bin/bash
@@ -47,7 +47,7 @@ cat >"$stub_bin/omarchy-notification-wait" <<'SH'
 #!/bin/bash
 [[ ${OMARCHY_TEST_LOCK_DURING_WAIT:-0} == 1 ]] || exit 0
 
-lock="$XDG_RUNTIME_DIR/omarchy-update.lock"
+lock="$XDG_RUNTIME_DIR/blarchy-update.lock"
 : >"$lock"
 # Hold the lock through a bash-allocated descriptor rather than `flock <file>
 # <command>`: bash marks those close-on-exec, so the holder owns the lock alone
@@ -96,7 +96,7 @@ run_notify() {
   OMARCHY_TEST_LOCK_HOLDER_PID="$test_tmp/lock-holder-pid" \
   OMARCHY_TEST_NOTIFY_HOLD="${OMARCHY_TEST_NOTIFY_HOLD:-}" \
   OMARCHY_TEST_NOTIFY_ANSWERED="$test_tmp/notify-answered" \
-    "$ROOT/bin/omarchy-migrate-notify"
+    "$ROOT/bin/blarchy-migrate-notify"
 }
 
 # The notification outlives the notifier, so its arguments land after it exits.
@@ -125,11 +125,10 @@ grep -Fx 'Click to run 1 pending migration.' "$test_tmp/notify-args" >/dev/null 
 grep -Fx '' "$test_tmp/notify-args" >/dev/null || fail "migration notifier includes the large-slot glyph"
 pass "migration notifier uses the actionable notification format"
 
-# `omarchy update` applies migrations itself, so nothing may notify about them
-# while it holds its lock -- a stale trigger firing mid-transaction is exactly
-# how the retired omarchy-update-user-notify.path used to interrupt updates.
+# A BLARCHY source update applies migrations through the installer, so nothing
+# may notify about them while it holds its lock.
 rm -f "$test_tmp/notify-args"
-update_lock="$runtime_dir/omarchy-update.lock"
+update_lock="$runtime_dir/blarchy-update.lock"
 : >"$update_lock"
 exec {update_lock_fd}>"$update_lock"
 flock -n "$update_lock_fd" || fail "test could not hold the update lock"
@@ -138,7 +137,7 @@ run_notify 1 >"$test_tmp/during-update.out" 2>"$test_tmp/during-update.err"
 [[ ! -s $test_tmp/during-update.out ]] || fail "migration notifier stays quiet on stdout during an update"
 [[ ! -s $test_tmp/during-update.err ]] || fail "migration notifier stays quiet on stderr during an update"
 [[ ! -e $test_tmp/notify-args ]] || fail "migration notifier sends no notification during an update"
-pass "migration notifier stays quiet while omarchy update holds its lock"
+pass "migration notifier stays quiet while BLARCHY update holds its lock"
 
 exec {update_lock_fd}>&-
 
@@ -153,7 +152,7 @@ OMARCHY_TEST_LOCK_DURING_WAIT=1 run_notify 1 >"$test_tmp/raced.out" 2>"$test_tmp
 if [[ -s $test_tmp/lock-holder-pid ]]; then
   kill "$(<"$test_tmp/lock-holder-pid")" 2>/dev/null || true
   for _ in {1..200}; do
-    flock -n "$runtime_dir/omarchy-update.lock" true 2>/dev/null && break
+    flock -n "$runtime_dir/blarchy-update.lock" true 2>/dev/null && break
     sleep 0.05
   done
 fi
@@ -164,8 +163,8 @@ pass "migration notifier re-checks for an update after waiting for the notificat
 # The guard must never read a lock outside this user's runtime directory: a
 # shared /tmp path belongs to whoever created it first, so honouring it would
 # let one user silence another user's critical notification.
-rm -f "$test_tmp/notify-args" /tmp/omarchy-update.lock
-foreign_lock="$test_tmp/foreign/omarchy-update.lock"
+rm -f "$test_tmp/notify-args" /tmp/blarchy-update.lock
+foreign_lock="$test_tmp/foreign/blarchy-update.lock"
 mkdir -p "$(dirname "$foreign_lock")"
 : >"$foreign_lock"
 exec {foreign_lock_fd}>"$foreign_lock"

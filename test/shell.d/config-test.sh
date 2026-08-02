@@ -88,7 +88,7 @@ if missing or bad:
 PY
 pass "default bar widget ids resolve to manifests and entry points"
 
-grep -F 'dofile((os.getenv("OMARCHY_PATH") or "/usr/share/omarchy") .. "/default/hypr/bootstrap.lua")' "$ROOT/config/hypr/hyprland.lua" >/dev/null
+grep -F 'os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "/usr/local/share/blarchy"' "$ROOT/config/hypr/hyprland.lua" >/dev/null
 grep -F 'require("default.hypr.omarchy")' "$ROOT/config/hypr/hyprland.lua" >/dev/null
 grep -F 'package.path = home' "$ROOT/default/hypr/bootstrap.lua" >/dev/null
 grep -F '/.local/state/?.lua;' "$ROOT/default/hypr/bootstrap.lua" >/dev/null

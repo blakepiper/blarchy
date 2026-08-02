@@ -147,16 +147,20 @@ assertEqual(
   'menu opens the emoji picker from Trigger'
 )
 assert(
-  defaultById['update.omarchy'].icon === '',
-  'menu system-package update entry uses the refresh glyph'
+  defaultById['update.system'].icon === '',
+  'menu system-package update entry uses the Arch glyph'
 )
 assert(
-  !defaultById['update.omarchy'].iconFont,
+  !defaultById['update.system'].iconFont,
   'menu system-package update entry does not depend on the Omarchy logo font'
 )
 assert(
-  defaultById['update.omarchy'].action.includes('yay -Syu'),
-  'menu updates packages directly with yay'
+  defaultById['update.system'].action.includes('blarchy system update'),
+  'menu updates Arch and AUR packages through the BLARCHY command surface'
+)
+assert(
+  defaultById['update.blarchy'].action.includes('blarchy update'),
+  'menu exposes a distinct BLARCHY environment update'
 )
 assert(
   defaultById['setup.input'].action.includes('input.lua'),

@@ -1,0 +1,11 @@
+[Unit]
+Description=Notify about pending BLARCHY migrations
+ConditionPathIsDirectory=/usr/local/share/blarchy/migrations
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/blarchy-migrate-notify
+
+[Install]
+WantedBy=graphical-session.target

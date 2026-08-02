@@ -4,6 +4,7 @@
 # omarchy:args=[--yes] [--reboot] [--dev] [--channel stable|rc|edge] [--user USER]
 # omarchy:examples=omarchy upgrade to quattro | omarchy upgrade to quattro --dev
 # omarchy:requires-sudo=true
+# omarchy:hidden=true
 
 set -euo pipefail
 

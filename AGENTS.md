@@ -15,25 +15,29 @@ It is not a distribution and does not own the base operating system. The
 supported installation path is a user cloning this repository on an already
 bootable minimal Arch system and running `./install.sh`.
 
-- `install/omarchy-base.packages` is the default package manifest. The inherited
-  filename is intentional.
+- The package manifest selected by `install.sh` is BLARCHY-owned even if a
+  compatibility filename is temporarily retained.
 - `yay -Syu` is the normal system and AUR update path.
-- BLARCHY source updates are explicit: fast-forward the user's clone and rerun
-  `./install.sh`. Package updates must never pull or replace this checkout.
+- `blarchy update` is the BLARCHY environment update path. It may fast-forward
+  only a clean configured checkout tracking `blakepiper/blarchy`, then reruns
+  the installer. Package updates must never pull or replace this checkout.
 - Never add partitioning, formatting, mounting, bootloader, EFI, `/boot`, or
   initramfs ownership to the standalone installer.
 - Do not depend on private Omarchy package repositories, `omarchy-pkgs`,
   `omarchy-settings`, an Omarchy ISO, or `/etc/skel` package seeding.
 - The `omarchy-*` command names, `$OMARCHY_PATH`, `~/.config/omarchy`, plugin
-  IDs, and related internal namespaces are retained compatibility APIs. Do not
-  rename them merely for branding.
-- Some upstream ISO/package code remains for merge compatibility. It is not an
-  alternate supported BLARCHY installation path and must not be wired into
-  `./install.sh` without first adapting it to the standalone ownership boundary.
+  IDs, and related internal namespaces are retained compatibility APIs. New
+  user-facing lifecycle commands use `blarchy`; do not rename inherited APIs
+  merely for branding.
+- Some inherited ISO/package code remains for history and deliberate review. It
+  is not an alternate supported BLARCHY installation path and must not be wired
+  into `./install.sh` without first adapting it to the standalone ownership
+  boundary.
 
 # Command Naming
 
-All commands start with `omarchy-`. Prefixes indicate purpose.
+Most inherited commands start with `omarchy-`; BLARCHY-native lifecycle
+commands use the small `blarchy` command surface. Prefixes indicate purpose.
 
 The authoritative command group list lives in `bin/omarchy` in `GROUP_DESCRIPTIONS`. Keep `GROUP_DESCRIPTIONS` updated when adding a new command prefix.
 
@@ -85,8 +89,16 @@ Example:
 
 # Runtime Environment
 
-- `$OMARCHY_PATH` is set at the top level by the uwsm session environment and is always available to BLARCHY runtime code.
-- Commands in `bin/` and Quickshell QML should rely on `$OMARCHY_PATH` / `Quickshell.env("OMARCHY_PATH")`; do not derive fallback paths from `HOME`, `Quickshell.shellDir`, or re-export/default `OMARCHY_PATH` manually.
+- Source, installed runtime, and user configuration are separate layers. The
+  checkout is development source; `/usr/local/share/blarchy` is the live
+  installed runtime; XDG locations contain user-owned configuration and state.
+- `$BLARCHY_PATH` is set at the top level by the uwsm session environment and
+  points at the installed runtime. Commands and Quickshell should prefer it and
+  default to `/usr/local/share/blarchy`.
+- `$OMARCHY_PATH` remains a legacy compatibility/test override. It may be used
+  as a fallback after `$BLARCHY_PATH`, but production defaults must never point
+  at an Omarchy installation or infer a checkout from `$HOME`. Explicit
+  development links use `/etc/blarchy-dev.conf` to override `$BLARCHY_PATH`.
 
 # Privileged Commands
 
@@ -121,17 +133,20 @@ The active flow is:
 
 - `install.sh` installs packages with yay and orchestrates system and user setup.
 - `install/standalone/system.sh` installs system integration without taking over
-  the machine's boot, storage, or pacman configuration. Its systemd user-unit
-  drop-ins point inherited `/usr/bin/omarchy-*` `ExecStart` paths at the
-  standalone `/usr/local/bin` command links; keep those layers aligned.
+  the machine's boot, storage, or pacman configuration. It publishes a copied
+  runtime at `/usr/local/share/blarchy`; never replace that with symlinks into
+  the Git checkout. Keep systemd command paths aligned with `/usr/local/bin`.
 - `install/standalone/user.sh` seeds missing user files, or overwrites only when
   its explicit `overwrite` mode is requested.
-- `bin/omarchy-finalize-user` handles runtime-dependent per-user setup and
-  sources `install/user/all.sh`.
+- `bin/blarchy-finalize-user` handles runtime-dependent per-user setup and
+  sources `install/user/all.sh`; `omarchy-finalize-user` is a compatibility
+  wrapper.
 - `bin/omarchy-reinstall-configs` is the explicit destructive resync path.
 - sourced leaves under `install/` intentionally omit shebangs and must avoid
   `exit` unless aborting the parent setup is intended.
-- use `$OMARCHY_INSTALL` and `$OMARCHY_PATH` instead of hard-coded checkout paths.
+- use source-specific installer variables while publishing and `$BLARCHY_PATH`
+  for installed runtime assets. Use `$OMARCHY_PATH` only for compatibility or
+  explicit inherited repair work.
 - new root-scoped standalone work belongs in `install/standalone/system.sh` or a
   standalone leaf it sources. Treat `bin/omarchy-setup-system`,
   `install/config/`, `install/hardware/`, and `install/login/` as inherited
@@ -297,7 +312,7 @@ To copy a default config to user config with automatic backup:
 omarchy-refresh-config hypr/hyprland.lua
 ```
 
-This copies `$OMARCHY_PATH/config/hypr/hyprland.lua` to `~/.config/hypr/hyprland.lua`. The argument
+This copies `$BLARCHY_PATH/config/hypr/hyprland.lua` to `~/.config/hypr/hyprland.lua`. The argument
 is interpolated into both paths and only checked with `[[ -e ]]`, so pass a plain relative path: a
 name containing `..` resolves and copies, landing outside `~/.config` rather than being rejected.
 
@@ -305,14 +320,14 @@ name containing `..` resolves and copies, landing outside `~/.config` rather tha
 
 Read `docs/migrations.md` before creating or changing migrations.
 
-Migrations are per-user and run through `omarchy-migrate` when `./install.sh` is
-rerun after a BLARCHY source update, or from the login-time migration
-notification. Normal system updates use `yay -Syu` and do not pull BLARCHY
-source. Put migrations directly under `migrations/<timestamp>.sh`. Pending
-state is per-user under `~/.local/state/omarchy/migrations/`, so every user gets
-a chance to run every migration. Migrations run as the user; privileged work
-should invoke the appropriate helper or privilege prompt, and no-op when
-another user already applied it.
+Migrations are per-user and run through `blarchy migrate` during `blarchy
+update`, an explicit installer rerun, or the login-time migration notification.
+Normal system updates use `yay -Syu` and do not pull BLARCHY source. Put
+migrations directly under `migrations/<timestamp>.sh`. Completion state is
+BLARCHY-owned and may import the retained v0.1 state so every user keeps their
+history. Migrations run as the user; privileged work should invoke the
+appropriate helper or privilege prompt, and no-op when another user already
+applied it.
 
 To create a new migration, run `omarchy-dev-add-migration --no-edit`.
 
@@ -320,7 +335,8 @@ New migration format:
 - File permissions must be `0644` (`-rw-r--r--`); migration runners execute them with `bash -euo pipefail`, not through executable bits
 - No shebang line
 - Start with an `echo` describing what the migration does
-- Use `$OMARCHY_PATH` to reference the BLARCHY checkout
+- Use `$BLARCHY_PATH` to reference installed BLARCHY assets; use
+  `$OMARCHY_PATH` only when repairing inherited state
 - Prefer helper commands such as `omarchy-cmd-present`, `omarchy-cmd-missing`, `omarchy-pkg-present`, and `omarchy-pkg-missing`
 
 `bin/omarchy-upgrade-to-quattro` is retained upstream upgrade code, not part of

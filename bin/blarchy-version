@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if (( $# > 0 )); then
+  echo "Usage: blarchy version" >&2
+  exit 2
+fi
+
+install_config="${BLARCHY_INSTALL_CONFIG:-/etc/blarchy.conf}"
+if [[ -r $install_config ]]; then
+  source "$install_config"
+fi
+
+runtime_path=${BLARCHY_PATH:-/usr/local/share/blarchy}
+version_file="${BLARCHY_VERSION_FILE:-$runtime_path/version}"
+
+if [[ ! -r $version_file ]]; then
+  echo "Unable to read the installed BLARCHY version from $version_file" >&2
+  exit 1
+fi
+
+version=$(<"$version_file")
+[[ -n $version ]] || exit 1
+printf '%s\n' "$version"

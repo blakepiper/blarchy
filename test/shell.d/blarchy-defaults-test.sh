@@ -97,8 +97,8 @@ pass "notification indicator exposes history while retaining a DND control"
 
 grep -Fxq 'exec yay -Syu "$@"' "$ROOT/bin/omarchy-update" ||
   fail "compatibility update route delegates directly to yay"
-grep -Fq "'yay -Syu'" "$ROOT/shell/plugins/bar/widgets/SystemUpdate.qml" ||
-  fail "top-bar update action launches yay directly"
+grep -Fq "'blarchy system update'" "$ROOT/shell/plugins/bar/widgets/SystemUpdate.qml" ||
+  fail "top-bar system update action uses the BLARCHY command surface"
 if rg -q 'omarchy-update-dev|git .*pull' "$ROOT/bin/omarchy-update"; then
   fail "normal package updates pull BLARCHY source"
 fi

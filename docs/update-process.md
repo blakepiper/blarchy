@@ -1,6 +1,7 @@
 # BLARCHY updates
 
-BLARCHY follows normal Arch package-management behavior.
+BLARCHY v0.2 separates Arch package updates from BLARCHY environment updates.
+Neither path consumes Omarchy automatically.
 
 ## System and application packages
 
@@ -8,62 +9,60 @@ Run:
 
 ```bash
 yay -Syu
+# or: blarchy system update
 ```
 
 Yay updates official Arch packages and installed AUR packages. BLARCHY does
-not install an ALPM guard, replace pacman configuration, wrap the `yay` binary,
-run a separate package transaction, or require a BLARCHY-specific update
-command.
+not replace pacman configuration or repositories, and a package transaction
+does not pull or replace BLARCHY source. The installer enables yay's `devel`
+setting so installed VCS packages such as `quickshell-git` participate.
 
-The installer saves yay's `devel` setting so plain `yay -Syu` also checks
-installed VCS packages such as `quickshell-git`.
+Direct pacman commands remain valid Arch administration. Pacman does not update
+AUR packages, which is why `yay -Syu` is the recommended full system update.
 
-The retained `omarchy update` route is only a compatibility alias for
-`yay -Syu`. The menu and update indicator launch `yay -Syu` directly.
+## BLARCHY environment
 
-Direct pacman commands also remain valid Arch administration:
-
-```bash
-sudo pacman -Syu
-```
-
-Pacman does not update AUR packages, which is why `yay -Syu` is the recommended
-single command.
-
-## BLARCHY source
-
-The cloned BLARCHY repository is configuration source, not an installed Arch
-package. Normal package updates therefore leave it pinned to the revision the
-user installed. They never pull Git code or execute newly downloaded repository
-scripts as root.
-
-To update BLARCHY itself:
+Run:
 
 ```bash
-cd ~/blarchy
-git pull --ff-only
-./install.sh
+blarchy update
 ```
 
-The installer is idempotent. On a source upgrade it installs newly introduced
-package defaults, reapplies system integration, preserves existing user files,
-and runs pending standalone-safe migrations.
+The updater requires a clean configured source worktree with a tracked remote
+at `https://github.com/blakepiper/blarchy`. It verifies that ownership before it
+fast-forwards the source and invokes the idempotent installer. The installer
+refreshes the stable runtime under `/usr/local/share/blarchy`, adds newly
+required packages, reapplies system integration, preserves user-owned
+configuration, and runs pending BLARCHY migrations.
 
-This separation remains necessary until `blarchy-git` is published as a real
-AUR package. Yay's development-package updater deliberately ignores locally
-built VCS packages for which it cannot find AUR metadata, so pretending that a
-local package is AUR-managed would make `yay -Syu` silently incomplete.
+The installed desktop does not execute from the Git worktree. Its ordinary
+behavior is therefore unaffected by the checkout's location, active branch, or
+uncommitted development files. A source update becomes live only after the
+installer has successfully refreshed the installed runtime.
+
+The retained `omarchy update` route is a compatibility alias for the system
+package update. It does not update BLARCHY source. Use `blarchy update` when the
+environment itself should change.
 
 ## Repository ownership
 
-The current branch may track the BLARCHY fork as its normal Git upstream.
-Basecamp/Omarchy should remain a separate development remote, conventionally
-named `upstream`:
+The BLARCHY checkout normally tracks `blakepiper/blarchy`. Basecamp/Omarchy may
+remain a separate developer remote named `upstream`, but it is never consulted
+by installation, login, package updates, `blarchy update`, or migration
+discovery.
+
+Developers can inspect it explicitly:
 
 ```bash
 git fetch upstream
-git merge upstream/quattro
+git log --oneline upstream/quattro
 ```
 
-Incorporating upstream changes is a deliberate repository-maintenance action;
-it is unrelated to Arch package updates.
+Useful changes should be reviewed and deliberately ported or cherry-picked.
+Merging an upstream branch is not a user update workflow or a BLARCHY release
+requirement.
+
+The v0.2 installer clears the old `/etc/omarchy.conf` development-path model in
+favor of the installed runtime. Developers who intentionally want live-checkout
+behavior can opt back in with `omarchy dev link <checkout>`; that isolated
+override now lives in `/etc/blarchy-dev.conf`.

@@ -9,7 +9,7 @@ import "ClipboardHistory.js" as ClipboardHistory
 Item {
   id: root
 
-  property string omarchyPath: Quickshell.env("OMARCHY_PATH")
+  property string omarchyPath: Quickshell.env("BLARCHY_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/blarchy"
   property bool opened: false
   property string filterText: ""
   property int selectedIndex: 0

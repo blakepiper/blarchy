@@ -1,0 +1,120 @@
+#!/bin/bash
+
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: blarchy-finalize-user [--force] [--first-install]
+
+Runs BLARCHY per-user setup after defaults have been seeded.
+
+--first-install marks migrations shipped at installation time complete for a
+freshly configured user.
+USAGE
+}
+
+if (( EUID == 0 )); then
+  echo "Error: run blarchy-finalize-user as the user being configured, not as root." >&2
+  exit 1
+fi
+
+force=0
+first_install=0
+while (($#)); do
+  case "$1" in
+    --force)
+      force=1
+      shift
+      ;;
+    --first-install)
+      first_install=1
+      force=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+
+if blarchy-done check finalize-user && (( force == 0 )); then
+  echo "User finalization already complete (rerun with --force to refresh)."
+  exit 0
+fi
+
+install_config="${BLARCHY_INSTALL_CONFIG:-/etc/blarchy.conf}"
+if [[ -r $install_config ]]; then
+  source "$install_config"
+fi
+export BLARCHY_PATH="${BLARCHY_PATH:-${OMARCHY_PATH:-/usr/local/share/blarchy}}"
+export BLARCHY_INSTALL="${BLARCHY_INSTALL:-$BLARCHY_PATH/install}"
+export OMARCHY_PATH="$BLARCHY_PATH"
+export OMARCHY_INSTALL="$BLARCHY_INSTALL"
+export OMARCHY_SETUP_CONTEXT="${OMARCHY_SETUP_CONTEXT:-runtime}"
+export PATH="$BLARCHY_PATH/bin:$PATH"
+
+if (( first_install )); then
+  # Retained compatibility value for sourced inherited setup leaves.
+  export OMARCHY_SETUP_CONTEXT=iso-chroot
+fi
+
+if [[ -n ${OMARCHY_INSTALL_LOG_FILE:-} && -f $BLARCHY_INSTALL/helpers/logging.sh ]]; then
+  source "$BLARCHY_INSTALL/helpers/logging.sh"
+else
+  run_logged() {
+    local script="$1"
+    bash -eE -c 'source "$1"' bash "$script"
+  }
+fi
+
+mkdir -p ~/.agents/skills ~/.claude/skills ~/.codex/skills ~/.pi/agent/skills
+ln -sfn "$BLARCHY_PATH/default/omarchy-skill" ~/.agents/skills/omarchy
+ln -sfn "$BLARCHY_PATH/default/omarchy-skill" ~/.claude/skills/omarchy
+ln -sfn "$BLARCHY_PATH/default/omarchy-skill" ~/.codex/skills/omarchy
+ln -sfn "$BLARCHY_PATH/default/omarchy-skill" ~/.pi/agent/skills/omarchy
+
+mkdir -p ~/Downloads ~/Pictures/Screenshots ~/Videos ~/.config/gtk-3.0
+if [[ ${OMARCHY_PRESERVE_USER_CONFIG:-0} != "1" || ! -f $HOME/.config/user-dirs.dirs ]]; then
+  xdg-user-dirs-update --set TEMPLATES "$HOME"
+  xdg-user-dirs-update --set PUBLICSHARE "$HOME"
+  xdg-user-dirs-update --set DESKTOP "$HOME"
+  rmdir ~/Templates ~/Public ~/Desktop 2>/dev/null || true
+fi
+touch ~/.config/gtk-3.0/bookmarks
+for dir in Downloads Projects Pictures Videos; do
+  bookmark="file://$HOME/$dir $dir"
+  grep -qxF "$bookmark" ~/.config/gtk-3.0/bookmarks || echo "$bookmark" >>~/.config/gtk-3.0/bookmarks
+done
+
+source "$BLARCHY_INSTALL/user/all.sh"
+
+omarchy-refresh-applications
+if [[ ${OMARCHY_PRESERVE_USER_CONFIG:-0} != "1" ]]; then
+  xdg-mime default firefox.desktop x-scheme-handler/http
+  xdg-mime default firefox.desktop x-scheme-handler/https
+  xdg-mime default org.gnome.Nautilus.desktop inode/directory
+fi
+if [[ ${OMARCHY_PRESERVE_USER_CONFIG:-0} != "1" || ! -s $HOME/.config/xdg-terminals.list ]]; then
+  omarchy-default-terminal alacritty
+fi
+if [[ ${OMARCHY_PRESERVE_USER_CONFIG:-0} != "1" || ! -s $HOME/.local/state/omarchy/defaults/editor ]]; then
+  omarchy-default-editor codium
+fi
+
+if (( first_install )); then
+  migration_state="${BLARCHY_MIGRATION_STATE:-$HOME/.local/state/blarchy/migrations}"
+  mkdir -p "$migration_state"
+  for migration in "$BLARCHY_PATH"/migrations/*.sh; do
+    [[ -f $migration ]] && touch "$migration_state/${migration##*/}"
+  done
+  touch "$migration_state/.legacy-imported"
+fi
+
+blarchy-done mark finalize-user
+echo "User finalization complete."

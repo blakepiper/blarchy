@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Compatibility wrapper for omarchy-migrate-notify.
+# omarchy:summary=Compatibility wrapper for blarchy-migrate-notify
 # omarchy:hidden=true
 
-exec omarchy-migrate-notify "$@"
+exec "$(dirname -- "${BASH_SOURCE[0]}")/blarchy-migrate-notify" "$@"

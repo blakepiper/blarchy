@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "id": "omarchy.system-update",
-  "name": "BLARCHY update",
+  "name": "System updates",
   "version": "1.0.0",
   "author": "Omarchy",
-  "description": "Indicates available BLARCHY updates",
+  "description": "Indicates available Arch and AUR package updates",
   "kinds": [
     "bar-widget"
   ],
@@ -12,8 +12,8 @@
     "barWidget": "SystemUpdate.qml"
   },
   "barWidget": {
-    "displayName": "BLARCHY update",
-    "description": "Indicates available BLARCHY updates",
+    "displayName": "System updates",
+    "description": "Indicates available Arch and AUR package updates",
     "category": "System",
     "allowMultiple": false
   }

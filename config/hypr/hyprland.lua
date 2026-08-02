@@ -1,7 +1,9 @@
 -- Learn how to configure Hyprland: https://wiki.hypr.land/Configuring/Start/
 
--- BLARCHY's bootstrap keeps path setup out of this user config.
-dofile((os.getenv("OMARCHY_PATH") or "/usr/share/omarchy") .. "/default/hypr/bootstrap.lua")
+-- BLARCHY's bootstrap keeps path setup out of this user config. OMARCHY_PATH
+-- remains a compatibility override for older installs and test harnesses.
+local blarchy_path = os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "/usr/local/share/blarchy"
+dofile(blarchy_path .. "/default/hypr/bootstrap.lua")
 
 -- Disable all BLARCHY default bindings. Add your own in hypr/bindings.lua.
 -- omarchy_default_bindings = false

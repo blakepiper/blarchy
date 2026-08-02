@@ -18,11 +18,12 @@ if (( $# < 1 || $# > 2 )) || [[ $1 == "-h" || $1 == "--help" ]]; then
   cat <<USAGE
 Usage: omarchy dev link <path-to-checkout> [--no-reboot]
 
-Writes /etc/omarchy.conf so OMARCHY_PATH resolves to <path-to-checkout>
-after reboot. This intentionally does not rewrite the running Hyprland,
+Writes /etc/blarchy-dev.conf so BLARCHY_PATH resolves to <path-to-checkout>
+after reboot. OMARCHY_PATH follows it as a compatibility alias. This
+intentionally does not rewrite the running Hyprland,
 systemd, shell, or app-launcher environment; reboot to make every layer agree.
 
-Affects only \$OMARCHY_PATH-resolved trees: bin/, default/, shell/, themes/,
+Affects only runtime-resolved trees: bin/, default/, shell/, themes/,
 applications/, and config/. It does not reinstall fixed system integration
 under /etc or /usr/lib. To validate those paths, run that checkout's
 idempotent ./install.sh in a disposable Arch VM.
@@ -41,7 +42,7 @@ if (( $# == 2 )); then
   fi
 fi
 
-omarchy_conf_quote() {
+blarchy_conf_quote() {
   local value="$1"
   value=${value//\\/\\\\}
   value=${value//\"/\\\"}
@@ -62,10 +63,10 @@ for required in bin default shell; do
 done
 
 {
-  printf 'export OMARCHY_PATH='
-  omarchy_conf_quote "$target"
-  printf '\n'
-} | sudo tee /etc/omarchy.conf >/dev/null
+  printf 'export BLARCHY_PATH='
+  blarchy_conf_quote "$target"
+  printf '\nexport OMARCHY_PATH="$BLARCHY_PATH"\n'
+} | sudo tee /etc/blarchy-dev.conf >/dev/null
 
 echo "Pointed BLARCHY at $target"
 echo

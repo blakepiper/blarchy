@@ -3,15 +3,15 @@
 set -euo pipefail
 
 mode=${1:-preserve}
-repo_path=${OMARCHY_PATH:-}
+runtime_path=${BLARCHY_PATH:-${OMARCHY_PATH:-}}
 
 if [[ $mode != "preserve" && $mode != "overwrite" ]]; then
   echo "Usage: user.sh [preserve|overwrite]" >&2
   exit 1
 fi
 
-if [[ -z $repo_path || ! -d $repo_path/config ]]; then
-  echo "Error: OMARCHY_PATH must point to the BLARCHY checkout." >&2
+if [[ -z $runtime_path || ! -d $runtime_path/config ]]; then
+  echo "Error: BLARCHY_PATH must point to the installed BLARCHY runtime." >&2
   exit 1
 fi
 
@@ -41,15 +41,15 @@ copy_tree() {
   done < <(find "$source_dir" \( -type f -o -type l \) -print0)
 }
 
-copy_tree "$repo_path/config" "$HOME/.config"
-copy_item "$repo_path/etc/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
-copy_item "$repo_path/default/applications/mimeapps.list" "$HOME/.config/mimeapps.list"
-copy_tree "$repo_path/default/nautilus-python/extensions" \
+copy_tree "$runtime_path/config" "$HOME/.config"
+copy_item "$runtime_path/etc/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
+copy_item "$runtime_path/default/applications/mimeapps.list" "$HOME/.config/mimeapps.list"
+copy_tree "$runtime_path/default/nautilus-python/extensions" \
   "$HOME/.local/share/nautilus-python/extensions"
-copy_item "$repo_path/default/hypr/toggles/flags.lua" \
+copy_item "$runtime_path/default/hypr/toggles/flags.lua" \
   "$HOME/.local/state/omarchy/toggles/hypr/flags.lua"
-copy_item "$repo_path/logo.txt" "$HOME/.config/omarchy/branding/about.txt"
-copy_item "$repo_path/logo.txt" "$HOME/.config/omarchy/branding/screensaver.txt"
+copy_item "$runtime_path/logo.txt" "$HOME/.config/omarchy/branding/about.txt"
+copy_item "$runtime_path/logo.txt" "$HOME/.config/omarchy/branding/screensaver.txt"
 
 if [[ $mode == "overwrite" ]]; then
   rm -f "$HOME/.config/autostart/limine-snapper-notify.desktop"
@@ -61,9 +61,9 @@ if ! grep -Fq '# >>> BLARCHY >>>' "$bashrc"; then
   cat >>"$bashrc" <<'BASHRC'
 
 # >>> BLARCHY >>>
-if [[ -r /usr/share/omarchy/default/bash/env-bootstrap ]]; then
-  source /usr/share/omarchy/default/bash/env-bootstrap
-  source "$OMARCHY_PATH/default/bash/rc"
+if [[ -r /usr/local/share/blarchy/default/bash/env-bootstrap ]]; then
+  source /usr/local/share/blarchy/default/bash/env-bootstrap
+  source "$BLARCHY_PATH/default/bash/rc"
 fi
 # <<< BLARCHY <<<
 BASHRC

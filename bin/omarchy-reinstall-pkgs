@@ -4,6 +4,15 @@
 
 set -euo pipefail
 
-# Keep package aliases, AUR handling, and system integration in one place.
-# The standalone installer is idempotent and prompts for sudo only where needed.
-exec "$OMARCHY_PATH/install.sh"
+install_config="${BLARCHY_INSTALL_CONFIG:-/etc/blarchy.conf}"
+if [[ -r $install_config ]]; then
+  source "$install_config"
+fi
+
+source_path=${BLARCHY_SOURCE_PATH:-}
+if [[ -z $source_path || ! -f $source_path/install.sh ]]; then
+  echo "BLARCHY_SOURCE_PATH is not configured; run install.sh from your BLARCHY checkout." >&2
+  exit 1
+fi
+
+exec bash "$source_path/install.sh"

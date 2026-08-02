@@ -1,7 +1,7 @@
 # BLARCHY theming
 
-BLARCHY themes live under `themes/<name>/` in the source tree (available at
-`/usr/share/omarchy/themes/<name>/`), with optional user themes under
+BLARCHY themes live under `themes/<name>/` in the source tree (installed at
+`/usr/local/share/blarchy/themes/<name>/`), with optional user themes under
 `~/.config/omarchy/themes/<name>/`. A theme normally starts with a
 `colors.toml`; BLARCHY generates the active theme files from
 `default/themed/*.tpl` when `omarchy-theme-set <name>` runs.

@@ -151,21 +151,29 @@ sudo env BLARCHY_REPO_PATH="$repo_path" \
   bash "$repo_path/install/standalone/system.sh"
 
 echo "Seed BLARCHY user defaults without overwriting existing files"
-HOME="$HOME" OMARCHY_PATH="$repo_path" \
-  bash "$repo_path/install/standalone/user.sh" preserve
+export BLARCHY_PATH=/usr/local/share/blarchy
+export BLARCHY_INSTALL="$BLARCHY_PATH/install"
+export BLARCHY_SOURCE_PATH="$repo_path"
+export BLARCHY_PRESERVE_USER_CONFIG=1
+export BLARCHY_USER_NAME="$(git config --global user.name 2>/dev/null || true)"
+export BLARCHY_USER_EMAIL="$(git config --global user.email 2>/dev/null || true)"
+export PATH="/usr/local/bin:$PATH"
 
-export OMARCHY_PATH="$repo_path"
-export OMARCHY_INSTALL="$repo_path/install"
-export OMARCHY_PRESERVE_USER_CONFIG=1
-export OMARCHY_USER_NAME="$(git config --global user.name 2>/dev/null || true)"
-export OMARCHY_USER_EMAIL="$(git config --global user.email 2>/dev/null || true)"
-export PATH="$repo_path/bin:$PATH"
+HOME="$HOME" BLARCHY_PATH="$BLARCHY_PATH" \
+  bash "$BLARCHY_INSTALL/standalone/user.sh" preserve
 
-if omarchy-done check finalize-user; then
-  omarchy-finalize-user
-  omarchy-migrate
+# Compatibility for inherited setup leaves during the v0.2 transition.
+export OMARCHY_PATH="$BLARCHY_PATH"
+export OMARCHY_INSTALL="$BLARCHY_INSTALL"
+export OMARCHY_PRESERVE_USER_CONFIG="$BLARCHY_PRESERVE_USER_CONFIG"
+export OMARCHY_USER_NAME="$BLARCHY_USER_NAME"
+export OMARCHY_USER_EMAIL="$BLARCHY_USER_EMAIL"
+
+if blarchy-done check finalize-user; then
+  blarchy-finalize-user
+  blarchy-migrate
 else
-  omarchy-finalize-user --first-install
+  blarchy-finalize-user --first-install
 fi
 
 cat <<'DONE'

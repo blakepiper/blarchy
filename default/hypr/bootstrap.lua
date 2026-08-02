@@ -29,11 +29,13 @@ for _, module in ipairs(modules_to_reload) do
 end
 
 -- Load generated state from ~/.local/state, user modules from ~/.config, and
--- BLARCHY defaults from $OMARCHY_PATH.
+-- BLARCHY defaults from the installed runtime. OMARCHY_PATH remains a
+-- compatibility override for older installs and test harnesses.
+local blarchy_path = os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "/usr/local/share/blarchy"
 package.path = home
   .. "/.local/state/?.lua;"
   .. home
   .. "/.config/?.lua;"
-  .. (os.getenv("OMARCHY_PATH") or "/usr/share/omarchy")
+  .. blarchy_path
   .. "/?.lua;"
   .. package.path

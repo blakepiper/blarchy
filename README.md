@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version 0.1.0" src="https://img.shields.io/badge/version-0.1.0-8bd450?style=for-the-badge&labelColor=111111">
+  <img alt="Version 0.2.0" src="https://img.shields.io/badge/version-0.2.0-8bd450?style=for-the-badge&labelColor=111111">
   <img alt="Arch Linux" src="https://img.shields.io/badge/Arch_Linux-1793D1?style=for-the-badge&logo=archlinux&logoColor=white">
   <img alt="Hyprland" src="https://img.shields.io/badge/Hyprland-58E1FF?style=for-the-badge&logo=wayland&logoColor=111111">
   <a href="./LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-8bd450?style=for-the-badge&labelColor=111111"></a>
@@ -26,16 +26,20 @@
 
 ---
 
-BLARCHY is my personal Arch Linux + Hyprland environment, built on the proven
-infrastructure of [Omarchy](https://github.com/basecamp/omarchy). It is not a
-separate Linux distribution: Arch owns the operating system and packages;
-BLARCHY owns the desktop defaults, configuration, scripts, branding, and update
-behavior.
+BLARCHY (Blake's Arch + Hyprland Environment) is a customized Arch + Hyprland
+desktop environment based on [Omarchy](https://github.com/basecamp/omarchy).
+It began as a personal Omarchy configuration and still retains ideas, code, and
+compatibility names from that project. BLARCHY releases are now maintained
+independently: installed systems do not automatically track Omarchy upstream.
+
+BLARCHY is not a separate Linux distribution. Arch owns the operating system
+and packages; BLARCHY owns the desktop defaults, installed runtime,
+configuration, scripts, branding, migrations, and environment updates.
 
 > [!NOTE]
-> BLARCHY is currently a personal v0.1 environment. It keeps internal
-> `omarchy-*` command names intentionally so useful upstream changes remain
-> practical to merge.
+> BLARCHY v0.2 keeps selected `omarchy-*`, `omarchy.*`, and
+> `~/.config/omarchy` names as compatibility APIs. Those names acknowledge its
+> ancestry; they do not make Omarchy an installed dependency.
 
 ## Install on an existing Arch system
 
@@ -59,11 +63,13 @@ cd ~/blarchy
 ```
 
 The installer enables Arch multilib for Steam, bootstraps yay when needed,
-installs the desktop packages, links this checkout as the BLARCHY runtime,
-installs session integration, and seeds missing user configuration. It is safe
-to rerun: package operations use `--needed`, managed system files and symlinks
-converge on the same state, existing user configuration is preserved, and
-one-time finalization uses completion markers.
+installs the desktop packages, copies a stable BLARCHY runtime to
+`/usr/local/share/blarchy`, installs session integration, and seeds missing
+user configuration. The Git checkout remains source rather than the live
+desktop. It is safe to rerun: package operations use `--needed`, managed system
+files converge on the same state, existing user configuration is preserved,
+missing application defaults are initialized without replacing existing
+preferences, and one-time finalization uses completion markers.
 
 It never partitions, formats, mounts, edits bootloader configuration, writes
 EFI entries, installs a bootloader, or directly rebuilds the initramfs. Normal
@@ -129,37 +135,44 @@ No title bars are required.
 
 ## Updates
 
+System packages and the BLARCHY environment have separate update paths.
+
+Update Arch and AUR packages with:
+
 ```bash
 yay -Syu
+# or: blarchy system update
 ```
 
-That is the complete normal update path. BLARCHY does not block pacman, wrap
-yay, replace the user's package configuration, pull Git source during a package
-transaction, or globally update npm packages. `omarchy update` remains only as
-a compatibility alias for `yay -Syu`. The installer enables yay's development
-package checks so installed `*-git` packages participate too.
+BLARCHY does not block pacman, wrap yay, replace the user's package
+configuration, pull Git source during a package transaction, or globally update
+npm packages. The installer enables yay's development-package checks so
+installed `*-git` packages participate too.
 
-BLARCHY source is intentionally pinned to the checked-out revision. Until a
-real `blarchy-git` package is published to the AUR, update BLARCHY itself
-explicitly and rerun the idempotent installer:
+Update the independently maintained BLARCHY runtime, defaults, packages, and
+migrations with:
 
 ```bash
-cd ~/blarchy
-git pull --ff-only
-./install.sh
+blarchy update
 ```
+
+The updater requires a clean configured source checkout whose tracked remote is
+`github.com/blakepiper/blarchy`. It does not fetch or merge Omarchy. See
+[the update model](./docs/update-process.md) for details.
 
 ## Working with upstream
 
-Basecamp/Omarchy remains a development remote named `upstream`:
+Omarchy remains a useful source of ideas. A developer may keep it as a separate
+remote and inspect changes manually:
 
 ```bash
 git fetch upstream
-git merge upstream/quattro
+git log --oneline upstream/quattro
 ```
 
-Rebase or cherry-pick instead when that better fits the change. Upstream is
-incorporated deliberately; it is never involved in `yay -Syu`.
+Port or cherry-pick a useful change only after reviewing it against BLARCHY's
+ownership model. This optional development workflow is never part of
+`yay -Syu`, `blarchy update`, installation, login, or migration execution.
 
 ## Repository map
 

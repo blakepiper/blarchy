@@ -13,7 +13,7 @@ Panel {
   ipcTarget: "omarchy.dropbox"
   manageIpc: false
 
-  property string omarchyPath: Quickshell.env("OMARCHY_PATH")
+  property string omarchyPath: Quickshell.env("BLARCHY_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/blarchy"
   property string focusSection: "login"
   property int fileIndex: 0
   property bool cursorActive: false

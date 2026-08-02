@@ -7,7 +7,12 @@ point for CLIs and forwards to the already-running shell; it does not start an
 additional Quickshell process.
 
 The `omarchy-shell`, `omarchy.*`, and `~/.config/omarchy` names are retained
-compatibility APIs and should not be renamed for branding alone.
+compatibility APIs and should not be renamed for branding alone. The built-in
+shell code and assets are loaded from the installed BLARCHY runtime identified
+by `$BLARCHY_PATH` (normally `/usr/local/share/blarchy`), not from the Git
+worktree or an Omarchy installation. `$OMARCHY_PATH` remains a compatibility
+fallback for older installations and test harnesses. Explicit development
+links override `$BLARCHY_PATH` through `/etc/blarchy-dev.conf`.
 
 ## Plugin manifest
 

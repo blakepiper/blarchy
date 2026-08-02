@@ -1,1 +1,1 @@
-[ -r /usr/share/omarchy/default/bash/env-bootstrap ] && . /usr/share/omarchy/default/bash/env-bootstrap
+[ -r /usr/local/share/blarchy/default/bash/env-bootstrap ] && . /usr/local/share/blarchy/default/bash/env-bootstrap

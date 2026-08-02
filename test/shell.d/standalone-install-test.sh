@@ -45,11 +45,17 @@ for provider in rust rustup cargo; do
 done
 grep -Fq 'yay -Y --devel --save' "$ROOT/install.sh" ||
   fail "standalone installer enables VCS package updates for plain yay -Syu"
-grep -Fq 'omarchy-migrate' "$ROOT/install.sh" ||
+grep -Fq 'blarchy-migrate' "$ROOT/install.sh" ||
   fail "explicit BLARCHY source upgrades apply pending migrations"
-if grep -Fq 'xdg-settings set' "$ROOT/bin/omarchy-finalize-user"; then
+if grep -Fq 'xdg-settings set' "$ROOT/bin/blarchy-finalize-user"; then
   fail "console finalization does not require a live desktop session"
 fi
+grep -Fq 'OMARCHY_PRESERVE_USER_CONFIG' "$ROOT/bin/blarchy-finalize-user" ||
+  fail "normal finalization preserves existing application preferences"
+grep -Fq '! -s $HOME/.config/xdg-terminals.list' "$ROOT/bin/blarchy-finalize-user" ||
+  fail "normal finalization keeps an existing terminal preference"
+grep -Fq '! -s $HOME/.local/state/omarchy/defaults/editor' "$ROOT/bin/blarchy-finalize-user" ||
+  fail "normal finalization keeps an existing editor preference"
 for default_command in omarchy-default-terminal omarchy-default-editor; do
   grep -Eq 'omarchy-notification-send .* \|\| true$' "$ROOT/bin/$default_command" ||
     fail "console finalization ignores unavailable desktop notifications" "$default_command"
@@ -100,7 +106,7 @@ printf '%s\n' 'keep-my-binding' >"$test_home/.config/hypr/bindings.lua"
 printf '%s\n' '# existing shell config' >"$test_home/.bashrc"
 
 for _ in 1 2; do
-  HOME="$test_home" OMARCHY_PATH="$ROOT" \
+  HOME="$test_home" BLARCHY_PATH="$ROOT" \
     bash "$ROOT/install/standalone/user.sh" preserve
 done
 
@@ -114,7 +120,10 @@ grep -Fxq 'keep-my-binding' "$test_home/.config/hypr/bindings.lua" ||
   fail "normal install excludes the Limine snapshot notifier"
 pass "user defaults are idempotent and preserve existing files"
 
-HOME="$test_home" OMARCHY_PATH="$ROOT" \
+grep -Fq '/usr/local/share/blarchy/default/bash/env-bootstrap' "$test_home/.bashrc" ||
+  fail "new Bash integration loads the installed BLARCHY runtime"
+
+HOME="$test_home" BLARCHY_PATH="$ROOT" \
   bash "$ROOT/install/standalone/user.sh" overwrite
 grep -Fq 'Application launcher' "$test_home/.config/hypr/bindings.lua" ||
   fail "explicit config reset overwrites BLARCHY user defaults"
@@ -129,25 +138,81 @@ for _ in 1 2; do
     bash "$ROOT/install/standalone/system.sh"
 done
 
-[[ $(readlink "$test_root/usr/share/omarchy") == "$ROOT" ]] ||
-  fail "system integration links the active checkout"
-[[ $(readlink "$test_root/usr/local/bin/omarchy") == "$ROOT/bin/omarchy" ]] ||
-  fail "system integration exposes BLARCHY commands"
+stale_checkout_command="$ROOT/bin/blarchy-stale-test"
+stale_previous_command=/opt/previous-blarchy/bin/omarchy-previous-test
+third_party_command=/opt/third-party/bin/omarchy-third-party-test
+ln -s /usr/local/share/blarchy/bin/omarchy-stale-test \
+  "$test_root/usr/local/bin/omarchy-stale-test"
+ln -s "$stale_checkout_command" "$test_root/usr/local/bin/blarchy-stale-test"
+ln -s "$stale_previous_command" "$test_root/usr/local/bin/omarchy-previous-test"
+ln -s "$third_party_command" "$test_root/usr/local/bin/omarchy-third-party-test"
+printf "export BLARCHY_SOURCE_PATH='/opt/previous-blarchy'\n" >>"$test_root/etc/blarchy.conf"
+touch "$test_root/usr/local/bin/omarchy-user-command"
+
+BLARCHY_REPO_PATH="$ROOT" \
+  BLARCHY_INSTALL_ROOT="$test_root" \
+  BLARCHY_INSTALL_SKIP_SERVICES=1 \
+  bash "$ROOT/install/standalone/system.sh"
+
+for stale_link in \
+  "$test_root/usr/local/bin/omarchy-stale-test" \
+  "$test_root/usr/local/bin/blarchy-stale-test" \
+  "$test_root/usr/local/bin/omarchy-previous-test"; do
+  [[ ! -L $stale_link ]] ||
+    fail "system integration removes stale BLARCHY-owned command links" "$stale_link"
+done
+[[ $(readlink "$test_root/usr/local/bin/omarchy-third-party-test") == "$third_party_command" ]] ||
+  fail "system integration preserves third-party command links"
+[[ -f $test_root/usr/local/bin/omarchy-user-command && ! -L $test_root/usr/local/bin/omarchy-user-command ]] ||
+  fail "system integration preserves non-symlink commands"
+
+runtime="$test_root/usr/local/share/blarchy"
+[[ -d $runtime && ! -L $runtime ]] ||
+  fail "system integration installs a standalone runtime snapshot"
+[[ $(stat -c %a "$runtime") == "755" ]] ||
+  fail "installed runtime is traversable by desktop users"
+grep -Fq 'cp -a --no-preserve=ownership' "$ROOT/install/standalone/system.sh" ||
+  fail "system integration does not preserve user ownership in system paths"
+[[ -f $runtime/bin/omarchy && -f $runtime/bin/blarchy ]] ||
+  fail "runtime snapshot includes compatibility and BLARCHY command surfaces"
+[[ $(readlink "$test_root/usr/share/omarchy") == /usr/local/share/blarchy ]] ||
+  fail "Omarchy compatibility path resolves to the installed BLARCHY runtime"
+[[ $(readlink "$test_root/usr/local/bin/omarchy") == /usr/local/share/blarchy/bin/omarchy ]] ||
+  fail "compatibility commands resolve through the installed runtime"
+[[ $(readlink "$test_root/usr/local/bin/blarchy") == /usr/local/share/blarchy/bin/blarchy ]] ||
+  fail "BLARCHY commands resolve through the installed runtime"
+if find "$test_root/usr/local/bin" -type l -lname "$ROOT/*" -print -quit | grep -q .; then
+  fail "installed commands do not link into the source checkout"
+fi
 [[ -f $test_root/usr/share/wayland-sessions/omarchy.desktop ]] ||
   fail "system integration installs the BLARCHY session"
 [[ -f $test_root/usr/share/pixmaps/omarchy.png ]] ||
-  fail "system integration installs the stable Fastfetch logo asset"
+  fail "system integration retains the compatibility logo asset"
+[[ -f $test_root/usr/share/pixmaps/blarchy.png ]] ||
+  fail "system integration installs the BLARCHY Fastfetch logo asset"
 [[ -f $test_root/etc/firefox/policies/policies.json ]] ||
   fail "system integration installs the Firefox policy"
 [[ -f $test_root/etc/pam.d/omarchy-lock-password ]] ||
   fail "system integration installs lock-screen authentication"
-grep -Fxq 'BLARCHY_INSTALL_MODE=standalone' "$test_root/etc/blarchy.conf" ||
+grep -Fxq "export BLARCHY_PATH='/usr/local/share/blarchy'" "$test_root/etc/blarchy.conf" ||
+  fail "system integration records the installed runtime"
+grep -Fxq "export BLARCHY_INSTALL='/usr/local/share/blarchy/install'" "$test_root/etc/blarchy.conf" ||
+  fail "system integration records the installed setup path"
+grep -Fxq "export BLARCHY_SOURCE_PATH='$ROOT'" "$test_root/etc/blarchy.conf" ||
+  fail "system integration records the explicit update source"
+grep -Fxq "export BLARCHY_INSTALL_MODE='standalone'" "$test_root/etc/blarchy.conf" ||
   fail "system integration records standalone ownership"
+grep -Fxq "export BLARCHY_VERSION='$(<"$ROOT/version")'" "$test_root/etc/blarchy.conf" ||
+  fail "system integration records the installed BLARCHY version"
+grep -Fq 'export OMARCHY_PATH="${BLARCHY_PATH:-/usr/local/share/blarchy}"' \
+  "$test_root/etc/omarchy.conf" ||
+  fail "legacy environment is only a compatibility alias"
 while IFS=' ' read -r unit command; do
   override="$test_root/etc/systemd/user/$unit.d/10-blarchy-standalone.conf"
   grep -Fxq "ExecStart=/usr/local/bin/$command" "$override" ||
     fail "standalone user service resolves its command" "$unit"
 done <<'UNITS'
+blarchy-migrate-notify.service blarchy-migrate-notify
 omarchy-migrate-notify.service omarchy-migrate-notify
 omarchy-recover-internal-monitor.service omarchy-hw-recover-internal-monitor
 omarchy-sleep-lock.service omarchy-system-sleep-monitor
@@ -157,12 +222,13 @@ UNITS
   fail "system integration creates no boot files"
 pass "system integration is idempotent and bootloader-agnostic"
 
-migration_config="$test_root/etc/blarchy.conf"
 pending_migrations=$(
-  BLARCHY_INSTALL_CONFIG="$migration_config" \
+  BLARCHY_INSTALL_CONFIG="$test_root/etc/missing-blarchy.conf" \
+    BLARCHY_INSTALL_MODE=standalone \
+    BLARCHY_MIGRATION_STATE="$migration_state" \
     OMARCHY_MIGRATION_STATE="$migration_state" \
-    OMARCHY_PATH="$ROOT" \
-    bash "$ROOT/bin/omarchy-migrate" --pending
+    BLARCHY_PATH="$runtime" \
+    bash "$ROOT/bin/blarchy-migrate" --pending
 )
 if grep -Fq '1784917531.sh' <<<"$pending_migrations"; then
   fail "standalone migration checks include a boot-owned migration"
@@ -182,7 +248,7 @@ if rg -q 'omarchy-refresh-(limine|plymouth)' "$ROOT/bin/omarchy-reinstall-config
 fi
 pass "update and reset paths preserve user-owned package and boot configuration"
 
-grep -Fq 'exec "$OMARCHY_PATH/install.sh"' "$ROOT/bin/omarchy-reinstall-pkgs" ||
+grep -Fq 'exec bash "$source_path/install.sh"' "$ROOT/bin/omarchy-reinstall-pkgs" ||
   fail "package reinstall does not reuse the standalone package resolver"
 grep -Fxq 'exec yay -Syu "$@"' "$ROOT/bin/omarchy-update" ||
   fail "normal update path does not use yay directly"

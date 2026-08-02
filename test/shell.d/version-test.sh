@@ -7,57 +7,20 @@ source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/base-test.sh"
 test_tmp=$(mktemp -d)
 trap 'rm -rf "$test_tmp"' EXIT
 
-stub_bin="$test_tmp/bin"
-mkdir -p "$stub_bin"
+printf '0.2.0\n' >"$test_tmp/version"
 
-# The edge channel installs omarchy-dev. Older builds did not declare
-# provides=(omarchy), so a query for plain omarchy finds nothing there.
-cat >"$stub_bin/pacman" <<'STUB'
-#!/bin/bash
-[[ $1 == "-Q" ]] || exit 1
-shift
-for package in "$@"; do
-  case ",${OMARCHY_TEST_PACKAGES:-}," in
-    *",$package,"*)
-      echo "$package ${OMARCHY_TEST_VERSION:-4.0.0-1}"
-      exit 0
-      ;;
-  esac
-done
-echo "error: package '$1' was not found" >&2
-exit 1
-STUB
-chmod +x "$stub_bin/pacman"
+actual=$(BLARCHY_VERSION_FILE="$test_tmp/version" "$ROOT/bin/blarchy-version")
+[[ $actual == "0.2.0" ]] || fail "native version reports installed BLARCHY metadata" "actual: $actual"
+pass "native version reports installed BLARCHY metadata"
 
-version() {
-  OMARCHY_TEST_PACKAGES="$1" \
-    OMARCHY_PATH="${2:-/usr/share/omarchy}" \
-    PATH="$stub_bin:$PATH" \
-    "$ROOT/bin/omarchy-version"
-}
+actual=$(BLARCHY_VERSION_FILE="$test_tmp/version" "$ROOT/bin/omarchy-version")
+[[ $actual == "0.2.0" ]] || fail "legacy version command delegates to BLARCHY" "actual: $actual"
+pass "legacy version command delegates to BLARCHY"
 
-[[ $(version omarchy) == "4.0.0-1" ]] || fail "version reports the stable package"
-pass "version reports the stable package"
-
-[[ $(version omarchy-dev) == "4.0.0-1" ]] || fail "version reports the edge package"
-pass "version reports the edge package"
-
-# A checkout reports its hash instead, so packages are irrelevant there.
-[[ $(version "" "$test_tmp/checkout") == "dev" ]] || fail "version reports a dev checkout"
-pass "version reports a dev checkout"
-
-if version "" >/dev/null 2>&1; then
-  fail "version fails when no Omarchy package is installed"
+if BLARCHY_VERSION_FILE="$test_tmp/missing" "$ROOT/bin/blarchy-version" >/dev/null 2>&1; then
+  fail "version succeeds without installed metadata"
 fi
-pass "version fails when no Omarchy package is installed"
+pass "version fails clearly without installed metadata"
 
-# The snapshot description is only a label, so a failed lookup must not abort
-# the update under set -e.
-snapshot_desc=$(
-  set -e
-  PATH="$stub_bin:$PATH" OMARCHY_TEST_PACKAGES="" OMARCHY_PATH=/usr/share/omarchy \
-    bash -c 'DESC="$(omarchy-version 2>/dev/null || echo unknown)"; echo "$DESC"' 2>/dev/null
-) || fail "snapshot survives an unknown version"
-
-[[ $snapshot_desc == "unknown" ]] || fail "snapshot labels an unknown version" "actual: $snapshot_desc"
-pass "snapshot survives an unknown version"
+[[ $(<"$ROOT/version") == "0.2.0" ]] || fail "repository version is BLARCHY 0.2.0"
+pass "repository version is BLARCHY 0.2.0"

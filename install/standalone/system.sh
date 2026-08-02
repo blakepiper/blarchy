@@ -5,6 +5,7 @@ set -euo pipefail
 repo_path=${BLARCHY_REPO_PATH:-}
 root_prefix=${BLARCHY_INSTALL_ROOT:-}
 skip_services=${BLARCHY_INSTALL_SKIP_SERVICES:-0}
+runtime_path=/usr/local/share/blarchy
 
 if [[ -z $repo_path ]]; then
   echo "Error: BLARCHY_REPO_PATH is required." >&2
@@ -43,7 +44,80 @@ copy_tree() {
 
   target=$(target_path "$destination")
   mkdir -p "$target"
-  cp -a "$source_dir/." "$target/"
+  # The source checkout is user-owned. Files published under system paths must
+  # be owned by the account running this root-scoped installer (root in normal
+  # installs), not retain checkout ownership.
+  cp -a --no-preserve=ownership "$source_dir/." "$target/"
+}
+
+shell_quote() {
+  local value="$1"
+
+  printf "'%s'" "${value//\'/\'\\\'\'}"
+}
+
+cleanup_runtime_install() {
+  [[ -z ${runtime_stage:-} ]] || rm -rf -- "$runtime_stage"
+
+  if [[ -n ${runtime_previous:-} && ( -e $runtime_previous || -L $runtime_previous ) ]]; then
+    if [[ -n ${runtime_target:-} && ! -e $runtime_target && ! -L $runtime_target ]]; then
+      mv "$runtime_previous" "$runtime_target"
+    else
+      rm -rf -- "$runtime_previous"
+    fi
+  fi
+}
+
+install_runtime_snapshot() {
+  local runtime_parent runtime_target runtime_stage runtime_previous
+  local runtime_item
+  local runtime_items=(
+    applications
+    bin
+    config
+    default
+    docs
+    etc
+    etc-overrides
+    install
+    migrations
+    shell
+    themes
+    LICENSE
+    README.md
+    icon.png
+    logo.svg
+    logo.txt
+    version
+  )
+
+  runtime_parent=$(target_path /usr/local/share)
+  runtime_target=$(target_path "$runtime_path")
+  mkdir -p "$runtime_parent"
+  runtime_stage=$(mktemp -d "$runtime_parent/.blarchy-runtime.XXXXXX")
+  runtime_previous="$runtime_parent/.blarchy-runtime.previous.$$"
+  trap cleanup_runtime_install RETURN
+
+  for runtime_item in "${runtime_items[@]}"; do
+    [[ -e $repo_path/$runtime_item ]] || continue
+    cp -a --no-preserve=ownership "$repo_path/$runtime_item" "$runtime_stage/"
+  done
+  chmod 0755 "$runtime_stage"
+
+  if [[ -e $runtime_target || -L $runtime_target ]]; then
+    mv "$runtime_target" "$runtime_previous"
+  fi
+  if ! mv "$runtime_stage" "$runtime_target"; then
+    [[ ! -e $runtime_previous && ! -L $runtime_previous ]] ||
+      mv "$runtime_previous" "$runtime_target"
+    return 1
+  fi
+  [[ ! -e $runtime_previous && ! -L $runtime_previous ]] ||
+    rm -rf -- "$runtime_previous"
+  runtime_stage=""
+  runtime_previous=""
+  runtime_target=""
+  trap - RETURN
 }
 
 install_user_command_override() {
@@ -57,39 +131,83 @@ install_user_command_override() {
   chmod 0644 "$target"
 }
 
+install_runtime_snapshot
+
 runtime_link=$(target_path /usr/share/omarchy)
 mkdir -p "$(dirname "$runtime_link")"
+previous_compat_target=""
+if [[ -L $runtime_link ]]; then
+  previous_compat_target=$(readlink "$runtime_link")
+fi
 if [[ -e $runtime_link && ! -L $runtime_link ]]; then
   echo "Error: $runtime_link already exists and is not a symlink." >&2
   echo "Remove upstream Omarchy packages before installing BLARCHY." >&2
   exit 1
 fi
-ln -sfn "$repo_path" "$runtime_link"
+ln -sfn "$runtime_path" "$runtime_link"
 
-conf_target=$(target_path /etc/omarchy.conf)
+conf_target=$(target_path /etc/blarchy.conf)
 mkdir -p "$(dirname "$conf_target")"
-escaped_repo=${repo_path//\\/\\\\}
-escaped_repo=${escaped_repo//\"/\\\"}
-escaped_repo=${escaped_repo//\$/\\\$}
-escaped_repo=${escaped_repo//\`/\\\`}
-printf 'export OMARCHY_PATH="%s"\n' "$escaped_repo" >"$conf_target"
+previous_source_path=""
+if [[ -r $conf_target ]]; then
+  previous_source_path=$(
+    BLARCHY_SOURCE_PATH=""
+    source "$conf_target"
+    printf '%s' "${BLARCHY_SOURCE_PATH:-}"
+  )
+fi
+blarchy_version=$(<"$repo_path/version")
+{
+  printf 'export BLARCHY_PATH=%s\n' "$(shell_quote "$runtime_path")"
+  printf 'export BLARCHY_INSTALL=%s\n' "$(shell_quote "$runtime_path/install")"
+  printf 'export BLARCHY_SOURCE_PATH=%s\n' "$(shell_quote "$repo_path")"
+  printf 'export BLARCHY_INSTALL_MODE=%s\n' "$(shell_quote standalone)"
+  printf 'export BLARCHY_VERSION=%s\n' "$(shell_quote "$blarchy_version")"
+} >"$conf_target"
 chmod 0644 "$conf_target"
 
-install_mode_target=$(target_path /etc/blarchy.conf)
-printf 'BLARCHY_INSTALL_MODE=standalone\n' >"$install_mode_target"
-chmod 0644 "$install_mode_target"
+compat_conf_target=$(target_path /etc/omarchy.conf)
+cat >"$compat_conf_target" <<'COMPAT_CONF'
+# Compatibility environment for commands retaining the Omarchy namespace.
+if [ -r /etc/blarchy.conf ]; then
+  . /etc/blarchy.conf
+fi
+export OMARCHY_PATH="${BLARCHY_PATH:-/usr/local/share/blarchy}"
+export OMARCHY_INSTALL="${BLARCHY_INSTALL:-${OMARCHY_PATH%/}/install}"
+COMPAT_CONF
+chmod 0644 "$compat_conf_target"
 
 bin_dir=$(target_path /usr/local/bin)
 mkdir -p "$bin_dir"
-for source_file in "$repo_path"/bin/omarchy*; do
+shopt -s nullglob
+for destination in "$bin_dir"/blarchy* "$bin_dir"/omarchy*; do
+  [[ -L $destination ]] || continue
+  command_name=$(basename "$destination")
+  [[ ! -e $(target_path "$runtime_path/bin/$command_name") ]] || continue
+
+  link_target=$(readlink "$destination")
+  runtime_command="$runtime_path/bin/$command_name"
+  source_command="$repo_path/bin/$command_name"
+  previous_source_command="${previous_source_path:+$previous_source_path/bin/$command_name}"
+  previous_compat_command="${previous_compat_target:+$previous_compat_target/bin/$command_name}"
+  if [[ $link_target == $runtime_command || $link_target == $source_command ||
+    ( -n $previous_source_command && $link_target == $previous_source_command ) ||
+    ( -n $previous_compat_command && $link_target == $previous_compat_command ) ]]; then
+    rm -- "$destination"
+  fi
+done
+for source_file in \
+  "$(target_path "$runtime_path")"/bin/blarchy* \
+  "$(target_path "$runtime_path")"/bin/omarchy*; do
   [[ -f $source_file && -x $source_file ]] || continue
   destination="$bin_dir/$(basename "$source_file")"
   if [[ -e $destination && ! -L $destination ]]; then
     echo "Error: refusing to replace non-symlink command: $destination" >&2
     exit 1
   fi
-  ln -sfn "$source_file" "$destination"
+  ln -sfn "$runtime_path/bin/$(basename "$source_file")" "$destination"
 done
+shopt -u nullglob
 
 install_file "$repo_path/etc/profile.d/omarchy.sh" /etc/profile.d/omarchy.sh
 install_file "$repo_path/default/uwsm/env.d/10-omarchy" /usr/share/uwsm/env.d/10-omarchy
@@ -108,8 +226,9 @@ copy_tree "$repo_path/default/systemd/user" /usr/lib/systemd/user
 copy_tree "$repo_path/default/systemd/user@.service.d" /usr/lib/systemd/user@.service.d
 
 # The inherited units target package-owned commands in /usr/bin. Standalone
-# installs intentionally expose the checkout through /usr/local/bin instead.
+# installs expose commands from the installed runtime through /usr/local/bin.
 install_user_command_override omarchy-migrate-notify.service omarchy-migrate-notify
+install_user_command_override blarchy-migrate-notify.service blarchy-migrate-notify
 install_user_command_override omarchy-recover-internal-monitor.service omarchy-hw-recover-internal-monitor
 install_user_command_override omarchy-sleep-lock.service omarchy-system-sleep-monitor
 install_user_command_override omarchy-tailscale-receive.service omarchy-tailscale-receive
@@ -130,7 +249,9 @@ install_file "$repo_path/etc/sddm.conf.d/10-wayland.conf" /etc/sddm.conf.d/90-bl
 install_file "$repo_path/etc/sddm.conf.d/20-login.conf" /etc/sddm.conf.d/99-blarchy-login.conf
 
 install_file "$repo_path/icon.png" /usr/share/pixmaps/omarchy.png
+install_file "$repo_path/icon.png" /usr/share/pixmaps/blarchy.png
 install_file "$repo_path/icon.png" /usr/share/icons/hicolor/256x256/apps/omarchy.png
+install_file "$repo_path/icon.png" /usr/share/icons/hicolor/256x256/apps/blarchy.png
 install_file "$repo_path/applications/icons/imv.png" \
   /usr/share/icons/hicolor/256x256/apps/imv.png
 install_file "$repo_path/applications/icons/Disk Usage.png" \

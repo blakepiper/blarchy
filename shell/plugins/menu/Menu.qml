@@ -10,7 +10,7 @@ Item {
   id: root
 
   // Injected by omarchy-shell when this plugin is summoned.
-  property string omarchyPath: Quickshell.env("OMARCHY_PATH")
+  property string omarchyPath: Quickshell.env("BLARCHY_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/blarchy"
   property var shell: null
   property var manifest: null
 

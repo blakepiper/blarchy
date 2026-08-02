@@ -34,18 +34,31 @@ grep -rlE '^(Path[A-Za-z]+|DirectoryNotEmpty)=.*/usr/share/omarchy/migrations' "
   fail "a user unit watches the migration directory again; the notifier must stay login-only"
 pass "no unit watches the migration directory, so package updates cannot trigger the notifier"
 
-notify_service="$ROOT/default/systemd/user/omarchy-migrate-notify.service"
-grep -Fx 'ExecStart=/usr/bin/omarchy-migrate-notify' "$notify_service" >/dev/null
+notify_service="$ROOT/default/systemd/user/blarchy-migrate-notify.service"
+grep -Fx 'ExecStart=/usr/bin/blarchy-migrate-notify' "$notify_service" >/dev/null
 grep -Fx 'WantedBy=graphical-session.target' "$notify_service" >/dev/null
 grep -Fx 'After=graphical-session.target' "$notify_service" >/dev/null ||
   fail "migration notifier can deadlock UWSM by blocking graphical-session.target"
 pass "migration notifier checks once per login after the graphical session is ready"
 
-grep -F 'omarchy-migrate-notify.service' "$first_run_units" >/dev/null ||
+grep -F 'blarchy-migrate-notify.service' "$first_run_units" >/dev/null ||
   fail "first-run does not enable the login migration notifier"
+grep -F 'disable --now omarchy-migrate-notify.service' "$first_run_units" >/dev/null ||
+  fail "first-run does not retire the legacy migration notifier"
 grep -F 'omarchy-update-user-notify' "$first_run_units" >/dev/null &&
   fail "first-run still enables the retired notifier units"
 pass "first-run enables the login-only migration notifier"
+
+native_notifier_migration="$ROOT/migrations/1785700840.sh"
+grep -F 'rm -f' "$native_notifier_migration" >/dev/null ||
+  fail "v0.2 migration does not remove legacy notifier wants links"
+grep -F 'ln -sfn /usr/lib/systemd/user/blarchy-migrate-notify.service' "$native_notifier_migration" >/dev/null ||
+  fail "v0.2 migration lacks a TTY-safe notifier enable fallback"
+grep -F '77d8b0ebe02a43f97d4a8c78bd0b7cc1f1f07d5039da17192b3d1702375f4e8d' "$native_notifier_migration" >/dev/null ||
+  fail "v0.2 migration does not recognize the stock v0.1 Fastfetch config"
+grep -F 'cp "$BLARCHY_PATH/etc/fastfetch/config.jsonc" "$fastfetch_config"' "$native_notifier_migration" >/dev/null ||
+  fail "v0.2 migration does not install the native Fastfetch default"
+pass "v0.2 migration transitions notifier and stock Fastfetch state conservatively"
 
 fcitx_service="$ROOT/default/systemd/user/omarchy-fcitx5.service"
 grep -Fx 'ExecStart=/usr/bin/fcitx5 --disable notificationitem' "$fcitx_service" >/dev/null

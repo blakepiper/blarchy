@@ -7,7 +7,7 @@ source "$(dirname "$0")/base-test.sh"
 test_tmp=$(mktemp -d)
 trap 'rm -rf "$test_tmp"' EXIT
 
-test_root="$test_tmp/omarchy"
+test_root="$test_tmp/blarchy"
 test_home="$test_tmp/home"
 mkdir -p "$test_root/migrations" "$test_home"
 
@@ -22,7 +22,7 @@ SH
 
 calls="$test_tmp/calls"
 
-if ! HOME="$test_home" OMARCHY_PATH="$test_root" "$ROOT/bin/omarchy-migrate" --pending >"$test_tmp/pending.out"; then
+if ! HOME="$test_home" BLARCHY_PATH="$test_root" "$ROOT/bin/blarchy-migrate" --pending >"$test_tmp/pending.out"; then
   fail "migration runner reports pending migrations before state exists"
 fi
 grep -q '^100-first\.sh$' "$test_tmp/pending.out" || fail "migration runner lists first pending migration filename"
@@ -30,30 +30,30 @@ grep -q '^200-second\.sh$' "$test_tmp/pending.out" || fail "migration runner lis
 pass "migration runner detects pending migrations"
 
 HOME="$test_home" \
-OMARCHY_PATH="$test_root" \
+BLARCHY_PATH="$test_root" \
 TEST_EXPECTED_OMARCHY_PATH="$test_root" \
 TEST_CALLS="$calls" \
-  "$ROOT/bin/omarchy-migrate" >"$test_tmp/first-run.out"
+  "$ROOT/bin/blarchy-migrate" >"$test_tmp/first-run.out"
 [[ $(sed -n '1p' "$calls") == "first" ]] || fail "migration runner runs first migration"
 [[ $(sed -n '2p' "$calls") == "second" ]] || fail "migration runner runs second migration"
-[[ -f $test_home/.local/state/omarchy/migrations/100-first.sh ]] || fail "migration runner records first migration marker"
-[[ -f $test_home/.local/state/omarchy/migrations/200-second.sh ]] || fail "migration runner records second migration marker"
+[[ -f $test_home/.local/state/blarchy/migrations/100-first.sh ]] || fail "migration runner records first migration marker"
+[[ -f $test_home/.local/state/blarchy/migrations/200-second.sh ]] || fail "migration runner records second migration marker"
 pass "migration runner runs all migrations"
 
 HOME="$test_home" \
-OMARCHY_PATH="$test_root" \
+BLARCHY_PATH="$test_root" \
 TEST_EXPECTED_OMARCHY_PATH="$test_root" \
 TEST_CALLS="$calls" \
-  "$ROOT/bin/omarchy-migrate" >"$test_tmp/second-run.out"
+  "$ROOT/bin/blarchy-migrate" >"$test_tmp/second-run.out"
 [[ $(wc -l <"$calls") -eq 2 ]] || fail "migration runner skips completed migrations"
 pass "migration runner skips completed migrations"
 
-if HOME="$test_home" OMARCHY_PATH="$test_root" "$ROOT/bin/omarchy-migrate" --pending >"$test_tmp/not-pending.out"; then
+if HOME="$test_home" BLARCHY_PATH="$test_root" "$ROOT/bin/blarchy-migrate" --pending >"$test_tmp/not-pending.out"; then
   fail "migration runner reports no pending migrations after state exists"
 fi
 pass "migration runner detects no pending migrations"
 
-failure_root="$test_tmp/failure-omarchy"
+failure_root="$test_tmp/failure-blarchy"
 failure_home="$test_tmp/failure-home"
 mkdir -p "$failure_root/migrations" "$failure_home"
 
@@ -65,13 +65,27 @@ SH
 
 set +e
 HOME="$failure_home" \
-OMARCHY_PATH="$failure_root" \
+BLARCHY_PATH="$failure_root" \
 TEST_CALLS="$calls" \
-  "$ROOT/bin/omarchy-migrate" >"$test_tmp/failure.out" 2>"$test_tmp/failure.err"
+  "$ROOT/bin/blarchy-migrate" >"$test_tmp/failure.out" 2>"$test_tmp/failure.err"
 failure_status=$?
 set -e
 [[ $failure_status -ne 0 ]] || fail "migration runner exits non-zero when a migration fails"
-[[ ! -f $failure_home/.local/state/omarchy/migrations/500-fail.sh ]] || fail "migration runner does not mark failed migration complete"
+[[ ! -f $failure_home/.local/state/blarchy/migrations/500-fail.sh ]] || fail "migration runner does not mark failed migration complete"
 grep -q '^before-fail$' "$calls" || fail "migration runner started failing migration"
 ! grep -q '^after-fail$' "$calls" || fail "migration runner stops failing migration under strict mode"
 pass "migration runner does not mark failed migrations complete"
+
+legacy_home="$test_tmp/legacy-home"
+mkdir -p "$legacy_home/.local/state/omarchy/migrations"
+touch "$legacy_home/.local/state/omarchy/migrations/100-first.sh"
+if ! HOME="$legacy_home" BLARCHY_PATH="$test_root" "$ROOT/bin/blarchy-migrate" --pending >"$test_tmp/legacy-pending.out"; then
+  fail "legacy import leaves migrations without old markers pending"
+fi
+! grep -Fx '100-first.sh' "$test_tmp/legacy-pending.out" >/dev/null ||
+  fail "migration runner replays a completed legacy migration"
+grep -Fx '200-second.sh' "$test_tmp/legacy-pending.out" >/dev/null ||
+  fail "migration runner preserves genuinely pending migrations"
+[[ -f $legacy_home/.local/state/blarchy/migrations/100-first.sh ]] ||
+  fail "migration runner imports legacy completion markers"
+pass "migration runner imports legacy completion state once"

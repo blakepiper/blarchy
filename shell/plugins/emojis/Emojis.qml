@@ -9,7 +9,7 @@ import "EmojiSearch.js" as EmojiSearch
 Item {
   id: root
 
-  property string omarchyPath: Quickshell.env("OMARCHY_PATH")
+  property string omarchyPath: Quickshell.env("BLARCHY_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/blarchy"
   property var shell: null
   property var manifest: null
 

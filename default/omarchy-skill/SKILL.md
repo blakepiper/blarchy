@@ -77,6 +77,17 @@ Git checkout. Any direct changes will be:
 
 If the request is to develop BLARCHY itself, this skill is out of scope. Follow repository development instructions instead of this skill.
 
+## Repository Sync Rule
+
+When an end-user customization also requires a corresponding change in the
+BLARCHY repository—such as a default, installer, migration, script, or asset
+that should survive reinstall/update—make that source change as part of the
+same task. After validation, automatically commit and push it to the
+configured repository remote. Stage only files related to the task, preserve
+unrelated worktree changes, and report the commit and push result. If the
+remote or push is unavailable, leave the validated commit in place and report
+the blocker.
+
 ## Privilege Escalation
 
 For an interactive script or command run in a visible terminal, use `sudo` for

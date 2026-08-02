@@ -72,7 +72,7 @@ etc/fastfetch/config.jsonc             -> ~/.config/fastfetch/config.jsonc
 default/applications/mimeapps.list     -> ~/.config/mimeapps.list
 default/nautilus-python/extensions/**  -> ~/.local/share/nautilus-python/extensions/**
 default/hypr/toggles/flags.lua         -> ~/.local/state/omarchy/toggles/hypr/flags.lua
-icon.txt and logo.txt                  -> ~/.config/omarchy/branding/**
+logo.txt                                -> ~/.config/omarchy/branding/**
 ```
 
 It also appends one marker-delimited BLARCHY bootstrap block to `~/.bashrc`.

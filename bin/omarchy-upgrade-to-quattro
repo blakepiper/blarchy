@@ -1872,7 +1872,7 @@ for extension in localsend.py transcode.py; do
 done
 
 mkdir -p "$HOME/.config/omarchy/branding"
-[[ -f $root/icon.txt ]] && cp "$root/icon.txt" "$HOME/.config/omarchy/branding/about.txt"
+[[ -f $root/logo.txt ]] && cp "$root/logo.txt" "$HOME/.config/omarchy/branding/about.txt"
 [[ -f $root/logo.txt ]] && cp "$root/logo.txt" "$HOME/.config/omarchy/branding/screensaver.txt"
 
 mkdir -p "$HOME/Downloads" "$HOME/Pictures" "$HOME/Videos" "$HOME/Projects" "$HOME/.config/gtk-3.0"

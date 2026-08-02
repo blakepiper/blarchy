@@ -48,7 +48,7 @@ copy_tree "$repo_path/default/nautilus-python/extensions" \
   "$HOME/.local/share/nautilus-python/extensions"
 copy_item "$repo_path/default/hypr/toggles/flags.lua" \
   "$HOME/.local/state/omarchy/toggles/hypr/flags.lua"
-copy_item "$repo_path/icon.txt" "$HOME/.config/omarchy/branding/about.txt"
+copy_item "$repo_path/logo.txt" "$HOME/.config/omarchy/branding/about.txt"
 copy_item "$repo_path/logo.txt" "$HOME/.config/omarchy/branding/screensaver.txt"
 
 if [[ $mode == "overwrite" ]]; then

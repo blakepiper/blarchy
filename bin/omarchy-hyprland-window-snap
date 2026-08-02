@@ -41,17 +41,28 @@ monitor_geometry=$(hyprctl monitors -j | jq -r --argjson monitor "$monitor_id" '
 read -r monitor_x monitor_y monitor_width monitor_height reserved_left reserved_top reserved_right reserved_bottom \
   <<<"$monitor_geometry"
 
+gaps_out=$(hyprctl getoption general:gaps_out -j | jq -r 'if .css then .css else (.int // .float // 0) end')
+read -r gap_top gap_right gap_bottom gap_left < <(
+  awk '{
+    if (NF == 1) print $1, $1, $1, $1
+    else if (NF == 2) print $1, $2, $1, $2
+    else if (NF == 3) print $1, $2, $3, $2
+    else print $1, $2, $3, $4
+  }' <<<"$gaps_out"
+)
+border_size=$(hyprctl getoption general:border_size -j | jq -r '.int // 0')
+
+usable_x=$((monitor_x + reserved_left + gap_left + border_size))
+usable_y=$((monitor_y + reserved_top + gap_top + border_size))
+usable_width=$((monitor_width - reserved_left - reserved_right - gap_left - gap_right - border_size * 2))
+usable_height=$((monitor_height - reserved_top - reserved_bottom - gap_top - gap_bottom - border_size * 2))
+
 hypr_dispatch() {
   local lua="$1"
   shift
 
   hyprctl dispatch "$lua" >/dev/null 2>&1 || hyprctl dispatch "$@" >/dev/null
 }
-
-usable_x=$((monitor_x + reserved_left))
-usable_y=$((monitor_y + reserved_top))
-usable_width=$((monitor_width - reserved_left - reserved_right))
-usable_height=$((monitor_height - reserved_top - reserved_bottom))
 
 case "$direction" in
 left)

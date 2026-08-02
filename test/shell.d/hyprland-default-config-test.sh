@@ -123,6 +123,11 @@ grep -Fq 'o.bind("SUPER + CTRL + DOWN", "Focus window below", hl.dsp.focus({ dir
   fail "BLARCHY bindings focus the window below"
 pass "BLARCHY directional focus bindings override inherited behavior"
 
+grep -Fq 'o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ mode = "maximized" }))' \
+  "$ROOT/config/hypr/bindings.lua" ||
+  fail "fullscreen binding preserves bar and outer padding"
+pass "fullscreen binding preserves bar and outer padding"
+
 grep -F 'hl.dsp.send_key_state({ mods = mods, key = key, state = "down" })' "$ROOT/default/hypr/bindings/clipboard.lua" >/dev/null ||
   fail "universal clipboard shortcuts send explicit mods to the focused surface"
 pass "universal clipboard shortcuts send explicit mods to the focused surface"

@@ -34,7 +34,7 @@ o.bind("SUPER + B", "Browser", { omarchy = "browser" })
 o.bind("SUPER + Q", "Close window", hl.dsp.window.close())
 o.bind("SUPER + L", "Lock system", "omarchy-system-lock")
 o.bind("SUPER + SHIFT + S", "Region screenshot", "omarchy-capture-screenshot region")
-o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
+o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ mode = "maximized" }))
 o.bind("SUPER + TAB", "Former workspace", hl.dsp.focus({ workspace = "previous" }))
 
 o.bind("SUPER + LEFT", "Snap window left", "omarchy-hyprland-window-snap left")

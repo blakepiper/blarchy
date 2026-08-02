@@ -41,6 +41,13 @@ monitor_geometry=$(hyprctl monitors -j | jq -r --argjson monitor "$monitor_id" '
 read -r monitor_x monitor_y monitor_width monitor_height reserved_left reserved_top reserved_right reserved_bottom \
   <<<"$monitor_geometry"
 
+hypr_dispatch() {
+  local lua="$1"
+  shift
+
+  hyprctl dispatch "$lua" >/dev/null 2>&1 || hyprctl dispatch "$@" >/dev/null
+}
+
 usable_x=$((monitor_x + reserved_left))
 usable_y=$((monitor_y + reserved_top))
 usable_width=$((monitor_width - reserved_left - reserved_right))
@@ -76,12 +83,14 @@ esac
 (( width > 0 && height > 0 )) || exit 1
 
 if (( fullscreen > 0 )); then
-  hyprctl dispatch fullscreen 0 >/dev/null
+  hypr_dispatch 'hl.dsp.window.fullscreen_state({ internal = 0, client = 0 })' fullscreenstate 0 0
 fi
 
 if [[ $floating != "true" ]]; then
-  hyprctl dispatch setfloating "address:$address" >/dev/null
+  hypr_dispatch "hl.dsp.window.float({ window = \"address:$address\", action = \"toggle\" })" togglefloating "address:$address"
 fi
 
-hyprctl dispatch resizewindowpixel "exact $width $height,address:$address" >/dev/null
-hyprctl dispatch movewindowpixel "exact $x $y,address:$address" >/dev/null
+hypr_dispatch "hl.dsp.window.resize({ window = \"address:$address\", x = $width, y = $height })" \
+  resizewindowpixel "exact $width $height,address:$address"
+hypr_dispatch "hl.dsp.window.move({ window = \"address:$address\", x = $x, y = $y })" \
+  movewindowpixel "exact $x $y,address:$address"

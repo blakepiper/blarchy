@@ -24,7 +24,11 @@ case "$1" in
     printf '[{"id":7,"x":1920,"y":0,"width":3840,"height":2160,"scale":2,"transform":%s,"reserved":[10,40,20,30]}]\n' "${TEST_MONITOR_TRANSFORM:-0}"
     ;;
   dispatch)
-    printf '%s\n' "$*" >>"$TEST_HYPRCTL_LOG"
+    if [[ ${TEST_HYPRCTL_LUA:-1} == 1 && $2 == hl.dsp.* ]]; then
+      printf 'lua %s\n' "$*" >>"$TEST_HYPRCTL_LOG"
+    else
+      printf '%s\n' "$*" >>"$TEST_HYPRCTL_LOG"
+    fi
     ;;
   *)
     exit 1
@@ -35,30 +39,30 @@ chmod +x "$mock_bin/hyprctl"
 
 run_snap() {
   : >"$log"
-  TEST_HYPRCTL_LOG="$log" PATH="$mock_bin:$PATH" \
+  TEST_HYPRCTL_LOG="$log" TEST_HYPRCTL_LUA=1 PATH="$mock_bin:$PATH" \
     "$ROOT/bin/omarchy-hyprland-window-snap" "$1"
 }
 
 run_snap left
-grep -Fxq 'dispatch fullscreen 0' "$log" || fail "snap exits fullscreen first"
-grep -Fxq 'dispatch setfloating address:0xabc' "$log" || fail "snap floats a tiled window"
-grep -Fxq 'dispatch resizewindowpixel exact 945 1010,address:0xabc' "$log" ||
+grep -Fq 'lua dispatch hl.dsp.window.fullscreen_state({ internal = 0, client = 0 })' "$log" || fail "snap exits fullscreen first"
+grep -Fq 'lua dispatch hl.dsp.window.float({ window = "address:0xabc", action = "toggle" })' "$log" || fail "snap floats a tiled window"
+grep -Fq 'lua dispatch hl.dsp.window.resize({ window = "address:0xabc", x = 945, y = 1010 })' "$log" ||
   fail "left snap uses half the monitor work area" "$(cat "$log")"
-grep -Fxq 'dispatch movewindowpixel exact 1930 40,address:0xabc' "$log" ||
+grep -Fq 'lua dispatch hl.dsp.window.move({ window = "address:0xabc", x = 1930, y = 40 })' "$log" ||
   fail "left snap respects monitor origin and reserved edges" "$(cat "$log")"
 pass "left snap uses scaled monitor geometry and reserved work area"
 
 run_snap right
-grep -Fxq 'dispatch resizewindowpixel exact 945 1010,address:0xabc' "$log" ||
+grep -Fq 'lua dispatch hl.dsp.window.resize({ window = "address:0xabc", x = 945, y = 1010 })' "$log" ||
   fail "right snap uses half the monitor work area" "$(cat "$log")"
-grep -Fxq 'dispatch movewindowpixel exact 2875 40,address:0xabc' "$log" ||
+grep -Fq 'lua dispatch hl.dsp.window.move({ window = "address:0xabc", x = 2875, y = 40 })' "$log" ||
   fail "right snap aligns with the usable right edge" "$(cat "$log")"
 pass "right snap aligns predictably on the current monitor"
 
 run_snap down
-grep -Fxq 'dispatch resizewindowpixel exact 1890 505,address:0xabc' "$log" ||
+grep -Fq 'lua dispatch hl.dsp.window.resize({ window = "address:0xabc", x = 1890, y = 505 })' "$log" ||
   fail "down snap uses half the monitor height" "$(cat "$log")"
-grep -Fxq 'dispatch movewindowpixel exact 1930 545,address:0xabc' "$log" ||
+grep -Fq 'lua dispatch hl.dsp.window.move({ window = "address:0xabc", x = 1930, y = 545 })' "$log" ||
   fail "down snap aligns with the usable bottom edge" "$(cat "$log")"
 pass "vertical snapping respects the usable monitor geometry"
 

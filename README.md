@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./logo.svg" alt="BLARCHY logo" width="180">
+  <img src="./logo.txt" alt="BLARCHY logo" width="180">
 </p>
 
 <h1 align="center">BLARCHY</h1>

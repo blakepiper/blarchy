@@ -1,14 +1,16 @@
-<pre align="center">
- ▄██████▄   ███         ▄███████   ▄███████   ▄███████   ▄█   █▄    ▄█   █▄
-███   ███  ███        ███   ███  ███   ███  ███   ███  ███   ███  ███   ███
-███   ███  ███        ███   ███  ███   ███  ███   █▀   ███   ███  ███   ███
-███▄▄▄██▀  ███       ▄███▄▄▄███ ▄███▄▄▄██▀  ███       ▄███▄▄▄███▄ ███▄▄▄███
-███▀▀▀██▄  ███       ▀███▀▀▀███ ▀███▀▀▀▀    ███      ▀▀███▀▀▀███  ▀▀▀▀▀▀███
-███   ███  ███        ███   ███ ██████████  ███   █▄   ███   ███  ▄██   ███
-███   ███  ███        ███   ███  ███   ███  ███   ███  ███   ███  ███   ███
- ▀██████▀   ████████   ███   █▀   ███   ███  ███████▀   ███   █▀    ▀█████▀
-                                  ███   █▀
-</pre>
+<div align="center">
+  <samp>
+&nbsp;▄██████▄&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▄███████&nbsp;&nbsp;&nbsp;▄███████&nbsp;&nbsp;&nbsp;▄███████&nbsp;&nbsp;&nbsp;▄█&nbsp;&nbsp;&nbsp;█▄&nbsp;&nbsp;&nbsp;&nbsp;▄█&nbsp;&nbsp;&nbsp;█▄<br>
+███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███<br>
+███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;█▀&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███<br>
+███▄▄▄██▀&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▄███▄▄▄███&nbsp;▄███▄▄▄██▀&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▄███▄▄▄███▄&nbsp;███▄▄▄███<br>
+███▀▀▀██▄&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▀███▀▀▀███&nbsp;▀███▀▀▀▀&nbsp;&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▀▀███▀▀▀███&nbsp;&nbsp;▀▀▀▀▀▀███<br>
+███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;██████████&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;█▄&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;▄██&nbsp;&nbsp;&nbsp;███<br>
+███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███<br>
+&nbsp;▀██████▀&nbsp;&nbsp;&nbsp;████████&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;█▀&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███████▀&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;█▀&nbsp;&nbsp;&nbsp;&nbsp;▀█████▀<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;█▀
+  </samp>
+</div>
 
 <p align="center">
   <strong>Blake's Arch + Hyprland Environment</strong><br>

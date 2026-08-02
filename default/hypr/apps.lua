@@ -5,7 +5,6 @@
 -- can exceed Hyprland's Lua execution budget on a cold start or reload.
 -- User extensions can still be loaded by adding a require below.
 require("default.hypr.apps.1password")
-require("default.hypr.apps.battlenet")
 require("default.hypr.apps.bitwarden")
 require("default.hypr.apps.browser")
 require("default.hypr.apps.davinci-resolve")

@@ -127,6 +127,7 @@ copy_tree "$repo_path/default/sddm/omarchy" /usr/share/sddm/themes/omarchy
 install_file "$repo_path/default/sddm/hyprland.lua" /usr/share/sddm/hyprland.lua
 install_file "$repo_path/etc/sddm.conf.d/10-theme.conf" /etc/sddm.conf.d/90-blarchy-theme.conf
 install_file "$repo_path/etc/sddm.conf.d/10-wayland.conf" /etc/sddm.conf.d/90-blarchy-wayland.conf
+install_file "$repo_path/etc/sddm.conf.d/20-login.conf" /etc/sddm.conf.d/99-blarchy-login.conf
 
 install_file "$repo_path/icon.png" /usr/share/pixmaps/omarchy.png
 install_file "$repo_path/icon.png" /usr/share/icons/hicolor/256x256/apps/omarchy.png

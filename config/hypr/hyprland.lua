@@ -13,7 +13,7 @@ dofile(blarchy_path .. "/default/hypr/bootstrap.lua")
 package.path = blarchy_path .. "/?.lua;" .. package.path
 
 -- Disable all BLARCHY default bindings. Add your own in hypr/bindings.lua.
--- omarchy_default_bindings = false
+omarchy_default_bindings = false
 --
 -- Or disable only bindings for BLARCHY's preinstalled apps while
 -- keeping core window-manager bindings:

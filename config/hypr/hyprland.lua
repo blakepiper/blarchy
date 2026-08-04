@@ -12,8 +12,9 @@ end
 dofile(blarchy_path .. "/default/hypr/bootstrap.lua")
 package.path = blarchy_path .. "/?.lua;" .. package.path
 
--- Disable all BLARCHY default bindings. Add your own in hypr/bindings.lua.
-omarchy_default_bindings = false
+-- Keep BLARCHY's default bindings (including workspace number shortcuts).
+-- Personal overrides in ~/.config/hypr/bindings.lua are loaded afterward.
+omarchy_default_bindings = true
 --
 -- Or disable only bindings for BLARCHY's preinstalled apps while
 -- keeping core window-manager bindings:

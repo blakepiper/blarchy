@@ -23,6 +23,8 @@ local blarchy_path = os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "
 local blarchy_bin = blarchy_path .. "/bin/"
 o.bind("SUPER + ALT + SPACE", "BLARCHY menu", blarchy_bin .. "omarchy-menu toggle root")
 o.bind("SUPER + L", "Lock system", blarchy_bin .. "omarchy-system-lock")
+o.bind("SUPER + ALT + code:65", "BLARCHY menu (physical Space key)", blarchy_bin .. "omarchy-menu toggle root")
+o.bind("SUPER + code:46", "Lock system (physical L key)", blarchy_bin .. "omarchy-system-lock")
 
 o.bind("SUPER + LEFT", "Snap window left", "omarchy-hyprland-window-snap left")
 o.bind("SUPER + RIGHT", "Snap window right", "omarchy-hyprland-window-snap right")

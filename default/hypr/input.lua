@@ -9,11 +9,10 @@ local non_latin_layouts =
 -- the session environment, because file I/O can exceed Hyprland's Lua budget.
 local kb_layout = os.getenv("OMARCHY_XKB_LAYOUT") or "us"
 local kb_variant = os.getenv("OMARCHY_XKB_VARIANT") or ""
--- CapsLock is the compose key, so Caps Lock itself has to live somewhere else.
--- Both Shifts together is the usual home for it, but it's easy to hit by
--- accident while typing. The _cancel variant sets Caps Lock the same way and
--- releases it on the next lone Shift, so a misfire clears itself.
-local kb_options = "compose:caps,shift:both_capslock_cancel"
+-- CapsLock is the compose key. Keep the option set minimal: the former
+-- shift:both_capslock_cancel option conflicts with the active XKB keymap on
+-- some BLARCHY sessions and can break modifier chords globally.
+local kb_options = "compose:caps"
 
 -- Hyprland resolves keybindings against the first entry in kb_layout, not the
 -- layout that's currently active, so BLARCHY's Latin-keysym bindings (SUPER + W

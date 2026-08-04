@@ -280,6 +280,35 @@ echo "Theme changed to: $THEME_NAME"
 # Add custom actions here
 ```
 
+## Terminal Steam game launchers
+
+When a user asks for a direct terminal command that launches a Steam game, use
+the shared `omarchy launch steam-game` helper and create a thin, user-owned
+wrapper command. Do not hardcode a Steam library path, a Steam executable path,
+or a specific game name in the shared helper.
+
+The wrapper should use the user's chosen command name and the game's numeric
+Steam AppID:
+
+```bash
+#!/bin/bash
+exec omarchy launch steam-game <steam-app-id>
+```
+
+Install the wrapper at `~/.local/bin/<command-name>` and make it executable.
+Confirm that `~/.local/bin` is on the user's PATH; add the shell integration
+only if it is missing.
+
+The shared helper starts Steam with `steam -applaunch <steam-app-id>` in a
+detached session. On Hyprland it records the active window before launching,
+checks that the window belongs to the invoking shell's process tree, and then
+closes that exact terminal through the current Lua dispatcher. If the command
+is run outside Hyprland or the originating window cannot be identified, it must
+still launch the game without closing an unrelated window.
+
+Validate a generated wrapper with `bash -n`, verify `command -v <command-name>`
+in a fresh shell, and run the command from the intended terminal/workspace.
+
 ### Pattern 4: Reset to Defaults -- ALWAYS SEEK USER CONFIRMATION BEFORE RUNNING
 
 When customizations go wrong:

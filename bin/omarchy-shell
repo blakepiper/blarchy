@@ -37,7 +37,13 @@ USAGE
 fi
 
 (( $# >= 2 )) || fail "Usage: omarchy-shell <target> <method> [args...]"
-[[ -n ${OMARCHY_PATH:-} ]] || fail "OMARCHY_PATH is not set"
+# BLARCHY uses BLARCHY_PATH, while OMARCHY_PATH remains the compatibility
+# name used by older callers.  Hyprland may start without either variable, so
+# derive the checkout/install root from this executable as a final fallback.
+if [[ -z ${OMARCHY_PATH:-} ]]; then
+  OMARCHY_PATH=${BLARCHY_PATH:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}
+  export OMARCHY_PATH
+fi
 [[ -f $OMARCHY_PATH/shell/shell.qml ]] || fail "omarchy-shell config not found: $OMARCHY_PATH/shell/shell.qml"
 
 # qs matches instances by display, and a caller from outside the session (an

@@ -19,7 +19,7 @@ o.bind("SUPER + TAB", "Former workspace", hl.dsp.focus({ workspace = "previous" 
 
 -- Resolve critical shell actions from the active BLARCHY checkout. Hyprland
 -- can retain an older PATH after the Omarchy -> BLARCHY migration.
-local blarchy_path = os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "/usr/local/share/blarchy"
+local blarchy_path = os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "/home/przvl/blarchy"
 local blarchy_bin = blarchy_path .. "/bin/"
 o.bind("SUPER + ALT + SPACE", "BLARCHY menu", blarchy_bin .. "omarchy-menu toggle root")
 o.bind("SUPER + L", "Lock system", blarchy_bin .. "omarchy-system-lock")

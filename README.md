@@ -1,5 +1,6 @@
 <div align="center">
-  <samp>
+  <img src="./logo.svg" alt="BLARCHY" width="1095" style="display: block; max-width: 100%; height: auto; filter: invert(1);">
+  <samp style="display: none;">
 &nbsp;▄██████▄&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▄███████&nbsp;&nbsp;&nbsp;▄███████&nbsp;&nbsp;&nbsp;▄███████&nbsp;&nbsp;&nbsp;▄█&nbsp;&nbsp;&nbsp;█▄&nbsp;&nbsp;&nbsp;&nbsp;▄█&nbsp;&nbsp;&nbsp;█▄<br>
 ███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███<br>
 ███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;█▀&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███&nbsp;&nbsp;███&nbsp;&nbsp;&nbsp;███<br>

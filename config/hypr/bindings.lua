@@ -21,10 +21,12 @@ o.bind("SUPER + TAB", "Former workspace", hl.dsp.focus({ workspace = "previous" 
 -- can retain an older PATH after the Omarchy -> BLARCHY migration.
 local blarchy_path = os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "/home/przvl/blarchy"
 local blarchy_bin = blarchy_path .. "/bin/"
-o.bind("SUPER + ALT + SPACE", "BLARCHY menu", blarchy_bin .. "omarchy-menu toggle root")
 o.bind("SUPER + L", "Lock system", blarchy_bin .. "omarchy-system-lock")
-o.bind("SUPER + ALT + code:65", "BLARCHY menu (physical Space key)", blarchy_bin .. "omarchy-menu toggle root")
-o.bind("SUPER + code:46", "Lock system (physical L key)", blarchy_bin .. "omarchy-system-lock")
+-- Use physical keycodes for these critical bindings. On a US layout, the
+-- symbolic and physical forms both match the same key, so registering both
+-- would toggle the menu twice (or issue the lock action twice) per press.
+o.bind("SUPER + ALT + code:65", "BLARCHY menu", blarchy_bin .. "omarchy-menu toggle root")
+o.bind("SUPER + code:46", "Lock system", blarchy_bin .. "omarchy-system-lock")
 
 o.bind("SUPER + LEFT", "Snap window left", "omarchy-hyprland-window-snap left")
 o.bind("SUPER + RIGHT", "Snap window right", "omarchy-hyprland-window-snap right")

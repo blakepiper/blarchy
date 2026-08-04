@@ -123,6 +123,16 @@ grep -Fq 'o.bind("SUPER + CTRL + DOWN", "Focus window below", hl.dsp.focus({ dir
   fail "BLARCHY bindings focus the window below"
 pass "BLARCHY directional focus bindings override inherited behavior"
 
+if grep -Fq 'o.bind("SUPER + ALT + SPACE"' "$ROOT/config/hypr/bindings.lua"; then
+  fail "BLARCHY menu does not register both symbolic and physical Space bindings"
+fi
+grep -Fq 'o.bind("SUPER + ALT + code:65", "BLARCHY menu"' "$ROOT/config/hypr/bindings.lua" ||
+  fail "BLARCHY menu keeps one physical Space binding"
+if grep -Fq 'o.bind("SUPER + code:46", "Lock system (physical L key)"' "$ROOT/config/hypr/bindings.lua"; then
+  fail "lock binding does not register a duplicate physical L fallback"
+fi
+pass "critical physical key bindings do not toggle twice"
+
 grep -Fq 'o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ mode = "maximized" }))' \
   "$ROOT/config/hypr/bindings.lua" ||
   fail "fullscreen binding preserves bar and outer padding"

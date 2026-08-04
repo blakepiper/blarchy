@@ -8,10 +8,14 @@
 # can continue to provide /etc/omarchy.conf when /etc/blarchy.conf is absent.
 if [ -f /etc/blarchy.conf ]; then
   . /etc/blarchy.conf
-elif [ -f /etc/omarchy.conf ]; then
+fi
+
+if [ -z "${BLARCHY_PATH:-}" ] && [ -f /etc/omarchy.conf ]; then
   . /etc/omarchy.conf
   : "${BLARCHY_PATH:=${OMARCHY_PATH:-/usr/share/omarchy}}"
-else
+fi
+
+if [ -z "${BLARCHY_PATH:-}" ]; then
   BLARCHY_PATH=/usr/local/share/blarchy
 fi
 

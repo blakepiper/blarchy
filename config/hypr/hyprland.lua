@@ -2,8 +2,15 @@
 
 -- BLARCHY's bootstrap keeps path setup out of this user config. OMARCHY_PATH
 -- remains a compatibility override for older installs and test harnesses.
-local blarchy_path = os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "/usr/local/share/blarchy"
+local blarchy_path = os.getenv("BLARCHY_PATH")
+if not blarchy_path or blarchy_path == "" then
+  blarchy_path = os.getenv("OMARCHY_PATH")
+end
+if not blarchy_path or blarchy_path == "" then
+  blarchy_path = "/usr/share/omarchy"
+end
 dofile(blarchy_path .. "/default/hypr/bootstrap.lua")
+package.path = blarchy_path .. "/?.lua;" .. package.path
 
 -- Disable all BLARCHY default bindings. Add your own in hypr/bindings.lua.
 -- omarchy_default_bindings = false

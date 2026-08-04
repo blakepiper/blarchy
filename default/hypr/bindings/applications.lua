@@ -6,8 +6,6 @@ o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)", { omarchy = "nautilus-cw
 o.bind("SUPER + SHIFT + B", "Browser", { omarchy = "browser" })
 o.bind("SUPER + SHIFT + ALT + B", "Browser (private)", { omarchy = "browser --private" })
 o.bind("SUPER + SHIFT + N", "Editor", { omarchy = "editor" })
-o.bind("SUPER + G", "Steam", { launch = "steam" })
-
 if o.preinstalled_bindings_enabled() then
   -- Bindings inherited for optional applications and TUIs.
   o.bind("SUPER + ALT + RETURN", "Tmux", { omarchy = "terminal-tmux" })

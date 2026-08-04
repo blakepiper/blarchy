@@ -1,5 +1,5 @@
 <svg fill="none" height="285" viewBox="0 0 1095 285" width="1095" xmlns="http://www.w3.org/2000/svg">
-  <g fill="#000">
+  <g fill="#f1f5f9">
     <!-- uppercase B: full-height stem with upper and lower bowls -->
     <path clip-rule="evenodd" fill-rule="evenodd" d="M0 15h90v15h15v15h15v60h-15v15H90v15h15v15h15v75h-15v15H90v15H0V15zm45 30v60h30V45H45zm0 105v75h45v-75H45z"/>
     <!-- L: narrower and aligned to the same 15px grid as the rest of the wordmark -->

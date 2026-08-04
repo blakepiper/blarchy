@@ -8,13 +8,11 @@ for _, keys in ipairs({
   "SUPER + SHIFT + LEFT", "SUPER + SHIFT + RIGHT", "SUPER + SHIFT + UP", "SUPER + SHIFT + DOWN",
 }) do hl.unbind(keys) end
 o.bind("SUPER + SPACE", "Application launcher", "omarchy-menu toggle apps")
-o.bind("SUPER + ALT + SPACE", "BLARCHY menu", "omarchy-menu toggle root")
 o.bind("SUPER + RETURN", "Terminal", { omarchy = "terminal" })
 o.bind("SUPER + F", "Files", { omarchy = "nautilus" })
 o.bind("SUPER + B", "Browser", { omarchy = "browser" })
 o.bind("SUPER + G", "Steam", { launch = "steam" })
 o.bind("SUPER + Q", "Close window", hl.dsp.window.close())
-o.bind("SUPER + L", "Lock system", "omarchy-system-lock")
 o.bind("SUPER + SHIFT + S", "Region screenshot", "omarchy-capture-screenshot region")
 o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ mode = "maximized" }))
 o.bind("SUPER + TAB", "Former workspace", hl.dsp.focus({ workspace = "previous" }))

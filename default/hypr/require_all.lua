@@ -1,8 +1,9 @@
 -- Require every *.lua file in a directory in sorted order.
--- Used for BLARCHY extension-style folders such as default/hypr/apps,
--- default/hypr/bindings, and ~/.local/state/omarchy/toggles/hypr.
+-- Used for dynamic user-state folders such as workspace layouts. Built-in
+-- folders are loaded with explicit require calls so config reloads avoid
+-- blocking directory discovery.
 -- Pass a module prefix for normal package.path modules, e.g.
---   require_all.files(paths.omarchy_path .. "/default/hypr/apps", "default.hypr.apps")
+--   require_all.files(layouts_dir, "omarchy.workspace-layouts")
 -- Pass nil as the prefix when the directory itself has been added to package.path.
 
 local M = {}

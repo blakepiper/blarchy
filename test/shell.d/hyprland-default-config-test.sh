@@ -108,6 +108,11 @@ if grep -Fq 'ChatGPT' <<<"$fresh_output"; then
 fi
 pass "default application bindings load from package defaults"
 
+browser_rule_count=$(grep -c '^o\.window' "$ROOT/default/hypr/apps/browser.lua")
+[[ $browser_rule_count -eq 1 ]] ||
+  fail "browser window rules stay within Hyprland's Lua reload budget"
+pass "browser window rules stay within Hyprland's Lua reload budget"
+
 unbind_block=$(sed -n '/for _, keys in ipairs({/,/}) do/p' "$ROOT/config/hypr/bindings.lua")
 for direction in LEFT RIGHT UP DOWN; do
   grep -Fq "\"SUPER + CTRL + $direction\"" <<<"$unbind_block" ||

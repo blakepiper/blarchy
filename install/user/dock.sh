@@ -6,6 +6,7 @@ if [[ ! -e $dock_pins ]]; then
   cat >"$dock_pins" <<'PINS'
 firefox
 org.gnome.Nautilus
+gimp
 Alacritty
 Spotify
 steam

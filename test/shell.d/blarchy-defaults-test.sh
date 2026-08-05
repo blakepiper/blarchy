@@ -86,7 +86,7 @@ pass "Node.js and npm remain owned by Arch packages"
 
 grep -Fq 'nwg-dock-hyprland -d -p bottom -a center' "$ROOT/config/hypr/autostart.lua" ||
   fail "BLARCHY autostarts the bottom-center autohide dock"
-for pin in firefox org.gnome.Nautilus Alacritty Spotify steam; do
+for pin in firefox org.gnome.Nautilus gimp Alacritty Spotify steam; do
   grep -Fxq "$pin" "$ROOT/install/user/dock.sh" || fail "dock pins $pin"
 done
 pass "BLARCHY dock is autohidden and seeds the requested pins"

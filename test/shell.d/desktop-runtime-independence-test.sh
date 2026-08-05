@@ -35,15 +35,15 @@ native_path=$(BLARCHY_PATH=/tmp/installed-runtime OMARCHY_PATH=/tmp/legacy-runti
 pass "desktop runtime path selection is deterministic"
 
 jq -e '
-  .logo.type == "chafa" and
-  .logo.source == "/usr/share/pixmaps/blarchy.png" and
+  .logo.type == "builtin" and
+  .logo.source == "arch" and
   any(.modules[]; type == "object" and .type == "os" and .key == " OS") and
   any(.modules[]; type == "object" and .type == "custom" and .format == "BLARCHY") and
   any(.modules[]; type == "object" and .type == "command" and .text == "blarchy version") and
   all(.modules[]; type != "object" or ((.text // "") | contains("omarchy-version-channel") | not)) and
   all(.modules[]; type != "object" or ((.text // "") | contains("omarchy-version-branch") | not))
 ' "$fastfetch_config" >/dev/null || fail "Fastfetch reports Arch and BLARCHY from stable assets"
-pass "Fastfetch uses the BLARCHY Chafa logo and native version command"
+pass "Fastfetch uses the default Arch logo and native version command"
 
 grep -Fq "'blarchy system update'" "$menu_config" ||
   fail "menu exposes the Arch/AUR update route"

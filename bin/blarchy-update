@@ -13,8 +13,23 @@ if [[ -r $install_config ]]; then
 fi
 
 source_path=${BLARCHY_SOURCE_PATH:-}
+
+# Legacy development installs may run this command directly from a source
+# checkout before /etc/blarchy.conf has been refreshed. Recover that checkout
+# from the resolved command path, but only when it is actually a Git worktree.
 if [[ -z $source_path ]]; then
-  echo "BLARCHY_SOURCE_PATH is not configured; rerun the BLARCHY installer from your source checkout." >&2
+  updater_path=$(realpath -- "${BASH_SOURCE[0]}" 2>/dev/null || true)
+  if [[ -n $updater_path ]]; then
+    checkout_candidate=$(cd -- "$(dirname -- "$updater_path")/.." && pwd -P)
+    if git -C "$checkout_candidate" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      source_path=$checkout_candidate
+    fi
+  fi
+fi
+
+if [[ -z $source_path ]]; then
+  echo "BLARCHY_SOURCE_PATH is not configured and no source checkout was found." >&2
+  echo "Run the BLARCHY installer from a Git checkout, then retry." >&2
   exit 1
 fi
 source_path=${source_path%/}

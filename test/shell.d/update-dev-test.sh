@@ -63,6 +63,23 @@ grep -Fx -- "-C $checkout pull --ff-only origin main" "$git_log" >/dev/null ||
 grep -Fx installed "$test_tmp/install.log" >/dev/null || fail "BLARCHY update reruns the source installer"
 pass "BLARCHY update refreshes from the owned repository"
 
+mkdir -p "$checkout/bin"
+cp "$ROOT/bin/blarchy-update" "$checkout/bin/blarchy-update"
+chmod +x "$checkout/bin/blarchy-update"
+: >"$git_log"
+BLARCHY_INSTALL_CONFIG="$test_tmp/missing-blarchy.conf" \
+  BLARCHY_SOURCE_PATH= \
+  XDG_RUNTIME_DIR="$runtime_dir" \
+  TEST_GIT_LOG="$git_log" \
+  TEST_INSTALL_LOG="$test_tmp/fallback-install.log" \
+  PATH="$stub_bin:$PATH" \
+    "$checkout/bin/blarchy-update" >/dev/null
+grep -Fx -- "-C $checkout pull --ff-only origin main" "$git_log" >/dev/null ||
+  fail "BLARCHY update discovers a source checkout beside its executable" "$(cat "$git_log")"
+grep -Fx installed "$test_tmp/fallback-install.log" >/dev/null ||
+  fail "BLARCHY update installs after discovering its source checkout"
+pass "BLARCHY update recovers legacy source-checkout metadata"
+
 for unsafe in https://github.com/basecamp/omarchy.git git@github.com:someone/blarchy.git; do
   : >"$git_log"
   if TEST_GIT_REMOTE_URL="$unsafe" run_update >"$test_tmp/unsafe.out" 2>"$test_tmp/unsafe.err"; then

@@ -7,16 +7,44 @@ Rectangle {
   height: 480
   color: "#1a1b26"
 
-  property string currentUser: userModel.lastUser
+  function userName(index) {
+    return (userModel.data(userModel.index(index, 0), Qt.UserRole + 1) || "").toString()
+  }
+
+  property string currentUser: {
+    if (userModel.lastUser && userName(userModel.lastIndex) === userModel.lastUser)
+      return userModel.lastUser
+    if (userModel.rowCount() > 0)
+      return userName(0)
+    return ""
+  }
   property bool loginFailed: false
-  property int sessionIndex: {
+  function sessionFile(index) {
+    return (sessionModel.data(sessionModel.index(index, 0), Qt.UserRole + 2) || "").toString()
+  }
+
+  function sessionExec(index) {
+    return (sessionModel.data(sessionModel.index(index, 0), Qt.UserRole + 5) || "").toString()
+  }
+
+  function preferredSessionIndex() {
+    var lastIndex = sessionModel.lastIndex
+    if (sessionFile(lastIndex) === "omarchy.desktop")
+      return lastIndex
+
     for (var i = 0; i < sessionModel.rowCount(); i++) {
-      var name = (sessionModel.data(sessionModel.index(i, 0), Qt.DisplayRole) || "").toString()
-      if (name.indexOf("uwsm") !== -1)
+      if (sessionFile(i) === "omarchy.desktop")
         return i
     }
-    return sessionModel.lastIndex
+
+    for (var j = 0; j < sessionModel.rowCount(); j++) {
+      if (sessionExec(j).indexOf("uwsm start -g -1 -e -D Hyprland") === 0)
+        return j
+    }
+    return lastIndex
   }
+
+  property int sessionIndex: preferredSessionIndex()
 
   Connections {
     target: sddm
@@ -103,7 +131,8 @@ Rectangle {
 
           Keys.onPressed: {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-              sddm.login(root.currentUser, password.text, root.sessionIndex)
+              if (root.currentUser !== "")
+                sddm.login(root.currentUser, password.text, root.sessionIndex)
               event.accepted = true
             }
           }

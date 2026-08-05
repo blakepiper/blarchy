@@ -6,6 +6,7 @@ repo_path=${BLARCHY_REPO_PATH:-}
 root_prefix=${BLARCHY_INSTALL_ROOT:-}
 skip_services=${BLARCHY_INSTALL_SKIP_SERVICES:-0}
 runtime_path=/usr/local/share/blarchy
+install_user=${BLARCHY_INSTALL_USER:-${SUDO_USER:-}}
 
 if [[ -z $repo_path ]]; then
   echo "Error: BLARCHY_REPO_PATH is required." >&2
@@ -131,6 +132,63 @@ install_user_command_override() {
   chmod 0644 "$target"
 }
 
+install_sddm_state() {
+  local state_target state_dir session_dir selected_session session_file
+  local state_user state_session state_tmp
+
+  if [[ -z $install_user || $install_user == "root" ]]; then
+    echo "Warning: no invoking user was supplied; preserving SDDM's existing remembered login state." >&2
+    return
+  fi
+  if ! getent passwd "$install_user" >/dev/null 2>&1; then
+    echo "Error: invoking user does not exist: $install_user" >&2
+    return 1
+  fi
+
+  state_dir=$(target_path /var/lib/sddm)
+  state_target="$state_dir/state.conf"
+  session_dir=$(target_path /usr/share/wayland-sessions)
+  selected_session=""
+  for session_file in "$session_dir"/*.desktop; do
+    [[ -f $session_file ]] || continue
+    if grep -Fxq 'Exec=uwsm start -g -1 -e -D Hyprland hyprland.desktop' "$session_file"; then
+      selected_session=$(basename "$session_file")
+      break
+    fi
+  done
+  if [[ -z $selected_session ]]; then
+    echo "Error: could not find an installed BLARCHY UWSM Wayland session." >&2
+    return 1
+  fi
+
+  state_user=""
+  state_session=$selected_session
+  if [[ -f $state_target ]]; then
+    state_user=$(awk -F= '
+      /^\[Last\]$/ { in_last=1; next }
+      /^\[/ { in_last=0 }
+      in_last && $1 == "User" { print substr($0, index($0, "=") + 1); exit }
+    ' "$state_target")
+  fi
+
+  if [[ -z $state_user ]] || ! getent passwd "$state_user" >/dev/null 2>&1; then
+    state_user=$install_user
+  fi
+  mkdir -p "$state_dir"
+  state_tmp=$(mktemp "$state_target.XXXXXX")
+  {
+    printf '[Last]\n'
+    printf 'User=%s\n' "$state_user"
+    printf 'Session=%s\n' "$state_session"
+  } >"$state_tmp"
+  chmod 0600 "$state_tmp"
+  if (( EUID == 0 )) && getent passwd sddm >/dev/null 2>&1 &&
+    getent group sddm >/dev/null 2>&1; then
+    chown sddm:sddm "$state_tmp"
+  fi
+  mv -f "$state_tmp" "$state_target"
+}
+
 install_runtime_snapshot
 
 runtime_link=$(target_path /usr/share/omarchy)
@@ -247,6 +305,7 @@ install_file "$repo_path/default/sddm/hyprland.lua" /usr/share/sddm/hyprland.lua
 install_file "$repo_path/etc/sddm.conf.d/10-theme.conf" /etc/sddm.conf.d/90-blarchy-theme.conf
 install_file "$repo_path/etc/sddm.conf.d/10-wayland.conf" /etc/sddm.conf.d/90-blarchy-wayland.conf
 install_file "$repo_path/etc/sddm.conf.d/20-login.conf" /etc/sddm.conf.d/99-blarchy-login.conf
+install_sddm_state
 
 install_file "$repo_path/icon.png" /usr/share/pixmaps/omarchy.png
 install_file "$repo_path/icon.png" /usr/share/pixmaps/blarchy.png

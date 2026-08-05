@@ -26,7 +26,7 @@ if xargs rg -n '/boot(/|[[:space:]])' <<<"$installer_sources"; then
 fi
 pass "standalone installer has no disk, bootloader, EFI, or initramfs operations"
 
-grep -Fq 'pacman -Syu --needed --noconfirm base-devel git' "$ROOT/install.sh" ||
+grep -Fq 'build_prerequisites=(base-devel git)' "$ROOT/install.sh" ||
   fail "standalone installer updates Arch and installs build prerequisites"
 if grep -Fxq git "$ROOT/install/omarchy-base.packages"; then
   fail "standalone manifest duplicates the required Git prerequisite"
@@ -36,15 +36,23 @@ grep -Fq 'pacman -S --needed --noconfirm "${repo_packages[@]}"' "$ROOT/install.s
   fail "standalone installer installs repository packages before AUR builds"
 grep -Fq 'yay -S --needed --noconfirm "${aur_packages[@]}"' "$ROOT/install.sh" ||
   fail "standalone installer installs AUR packages idempotently"
-grep -Fq 'base-devel git rust' "$ROOT/install.sh" ||
-  fail "standalone installer uses Arch rust as its fresh-install AUR toolchain"
-for provider in rust rustup cargo; do
+grep -Fq 'build_prerequisites+=(rustup)' "$ROOT/install.sh" ||
+  fail "standalone installer uses rustup as its fresh-install AUR toolchain"
+grep -Fq 'native_rust_installed' "$ROOT/install.sh" ||
+  fail "standalone installer handles an existing Arch Rust provider"
+grep -Fq 'pacman_options=(--needed --noconfirm)' "$ROOT/install.sh" ||
+  fail "standalone installer uses pacman's supported transaction options"
+for provider in rust rustup cargo rustfmt; do
   if grep -Fxq "$provider" "$ROOT/install/omarchy-base.packages"; then
     fail "package manifest duplicates the installer-owned Rust provider" "$provider"
   fi
 done
 grep -Fq 'yay -Y --devel --save' "$ROOT/install.sh" ||
   fail "standalone installer enables VCS package updates for plain yay -Syu"
+grep -Fq 'Retry AUR package:' "$ROOT/install.sh" ||
+  fail "standalone installer retries failed AUR packages individually"
+grep -Fq 'tee "$aur_log_dir/' "$ROOT/install.sh" ||
+  fail "standalone installer records per-package AUR logs"
 grep -Fq 'blarchy-migrate' "$ROOT/install.sh" ||
   fail "explicit BLARCHY source upgrades apply pending migrations"
 if grep -Fq 'xdg-settings set' "$ROOT/bin/blarchy-finalize-user"; then
@@ -134,9 +142,17 @@ pass "explicit user reset remains scoped to BLARCHY-owned defaults"
 for _ in 1 2; do
   BLARCHY_REPO_PATH="$ROOT" \
     BLARCHY_INSTALL_ROOT="$test_root" \
+    BLARCHY_INSTALL_USER="$(id -un)" \
     BLARCHY_INSTALL_SKIP_SERVICES=1 \
     bash "$ROOT/install/standalone/system.sh"
 done
+printf '[Last]\nUser=%s\nSession=hyprland.desktop\n' "$(id -un)" \
+  >"$test_root/var/lib/sddm/state.conf"
+BLARCHY_REPO_PATH="$ROOT" \
+  BLARCHY_INSTALL_ROOT="$test_root" \
+  BLARCHY_INSTALL_USER="$(id -un)" \
+  BLARCHY_INSTALL_SKIP_SERVICES=1 \
+  bash "$ROOT/install/standalone/system.sh"
 
 stale_checkout_command="$ROOT/bin/blarchy-stale-test"
 stale_previous_command=/opt/previous-blarchy/bin/omarchy-previous-test
@@ -186,6 +202,18 @@ if find "$test_root/usr/local/bin" -type l -lname "$ROOT/*" -print -quit | grep 
 fi
 [[ -f $test_root/usr/share/wayland-sessions/omarchy.desktop ]] ||
   fail "system integration installs the BLARCHY session"
+grep -Fxq '[Users]' "$ROOT/etc/sddm.conf.d/20-login.conf" ||
+  fail "SDDM login defaults use remembered-user mode"
+if grep -Fq '[Autologin]' "$ROOT/etc/sddm.conf.d/20-login.conf"; then
+  fail "SDDM login defaults do not enable autologin"
+fi
+grep -Fxq "User=$(id -un)" "$test_root/var/lib/sddm/state.conf" ||
+  fail "system integration seeds the invoking SDDM user"
+grep -Fxq 'Session=omarchy.desktop' "$test_root/var/lib/sddm/state.conf" ||
+  fail "system integration seeds the installed BLARCHY session"
+if rg -q 'Qt\.DisplayRole' "$ROOT/default/sddm/omarchy/Main.qml"; then
+  fail "SDDM theme reads explicit user/session model roles"
+fi
 [[ -f $test_root/usr/share/pixmaps/omarchy.png ]] ||
   fail "system integration retains the compatibility logo asset"
 [[ -f $test_root/usr/share/pixmaps/blarchy.png ]] ||

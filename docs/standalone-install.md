@@ -20,6 +20,8 @@ The installer may:
 - expose BLARCHY commands through `/usr/local/bin`;
 - install the BLARCHY UWSM session, SDDM theme, fonts, systemd user units, and
   environment integration;
+- configure SDDM to remember the invoking user's login and the installed BLARCHY
+  UWSM session without enabling autologin;
 - install the Firefox policy and dedicated BLARCHY lock-screen PAM service;
 - enable SDDM only when another display manager is not already selected;
 - enable NetworkManager only when another network stack is not already enabled;
@@ -73,5 +75,7 @@ downloads or merges Basecamp/Omarchy.
 The BLARCHY package manifest is the canonical desired package list. Every entry
 resolves through normal Arch repositories or the AUR. BLARCHY does not add or
 trust an Omarchy package repository or keyring. In particular, the unattended
-installer owns one Rust provider and does not request conflicting `rust` and
-`rustup` packages.
+installer owns the `rustup` provider required by its AUR build set. If an
+existing Arch `rust`, `cargo`, or `rustfmt` package is present, pacman replaces it
+with `rustup` in the same transaction rather than leaving a broken intermediate
+state.

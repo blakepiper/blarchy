@@ -4,6 +4,7 @@ set -euo pipefail
 
 repo_path=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 yay_build_dir=""
+aur_log_dir=""
 
 cleanup() {
   if [[ -n $yay_build_dir && -d $yay_build_dir ]]; then
@@ -35,6 +36,13 @@ fi
 
 if (( EUID == 0 )); then
   echo "Error: run ./install.sh as the user who will run BLARCHY, not as root." >&2
+  exit 1
+fi
+
+install_user=$(id -un)
+install_home=$(getent passwd "$install_user" | cut -d: -f6)
+if [[ -z $install_home || ! -d $install_home ]]; then
+  echo "Error: could not determine the home directory for $install_user." >&2
   exit 1
 fi
 
@@ -107,47 +115,145 @@ load_packages() {
 }
 
 split_packages() {
-  local package_name
+  local package_name package_info
 
   repo_packages=()
   aur_packages=()
   for package_name in "${packages[@]}"; do
-    if pacman -Si -- "$package_name" >/dev/null 2>&1; then
+    if package_info=$(LC_ALL=C pacman -Si -- "$package_name" 2>&1); then
       repo_packages+=("$package_name")
-    else
+    elif grep -Fq "error: package '$package_name' was not found" <<<"$package_info"; then
       aur_packages+=("$package_name")
+    else
+      echo "Error: could not determine the package source for $package_name." >&2
+      printf '%s\n' "$package_info" >&2
+      return 1
     fi
   done
+}
+
+validate_package_manifest() {
+  local package_name
+
+  for package_name in "${packages[@]}"; do
+    case $package_name in
+      cargo|rust|rustfmt|rustup)
+        echo "Error: the package manifest must not contain a Rust provider: $package_name" >&2
+        return 1
+        ;;
+    esac
+  done
+}
+
+install_aur_packages() {
+  local package_name log_name package_status batch_status
+  local installed_packages
+  local -a failed_packages=()
+  local -A failed_status=()
+
+  aur_log_dir=$(mktemp -d "${TMPDIR:-/tmp}/blarchy-aur.XXXXXX")
+  if yay -S --needed --noconfirm "${aur_packages[@]}" \
+    > >(tee "$aur_log_dir/batch.log") 2>&1; then
+    rm -rf -- "$aur_log_dir"
+    aur_log_dir=""
+    return
+  else
+    batch_status=$?
+  fi
+
+  echo "The batch AUR install failed with exit status $batch_status; retrying each package individually." >&2
+  echo "Batch output is recorded in $aur_log_dir/batch.log" >&2
+  installed_packages=$(pacman -Qq)
+  for package_name in "${aur_packages[@]}"; do
+    if grep -Fxq "$package_name" <<<"$installed_packages"; then
+      echo "AUR package already installed; skip retry: $package_name"
+      continue
+    fi
+    log_name=${package_name//[^[:alnum:]._-]/_}
+    echo "Retry AUR package: $package_name"
+    if yay -S --needed --noconfirm "$package_name" \
+      > >(tee "$aur_log_dir/$log_name.log") 2>&1; then
+      continue
+    else
+      package_status=$?
+    fi
+    failed_packages+=("$package_name")
+    failed_status["$package_name"]=$package_status
+  done
+
+  if (( ${#failed_packages[@]} )); then
+    echo "Failed to install the following AUR packages:" >&2
+    for package_name in "${failed_packages[@]}"; do
+      log_name=${package_name//[^[:alnum:]._-]/_}
+      echo "  $package_name (exit status ${failed_status[$package_name]}, log: $aur_log_dir/$log_name.log)" >&2
+    done
+    return 1
+  fi
+
+  rm -rf -- "$aur_log_dir"
+  aur_log_dir=""
 }
 
 sudo -v
 enable_multilib
 
 echo "Update Arch and install build prerequisites"
-if pacman -Q rustup >/dev/null 2>&1; then
-  if ! rustup default >/dev/null 2>&1; then
-    echo "Initialize the installed rustup provider for AUR builds"
-    rustup default stable
-  fi
-  sudo pacman -Syu --needed --noconfirm base-devel git
-else
-  sudo pacman -Syu --needed --noconfirm base-devel git rust
+rustup_installed=0
+native_rust_installed=0
+installed_packages=$(pacman -Qq)
+if grep -Fxq rustup <<<"$installed_packages"; then
+  rustup_installed=1
 fi
+for package_name in cargo rust rustfmt; do
+  if grep -Fxq "$package_name" <<<"$installed_packages"; then
+    native_rust_installed=1
+  fi
+done
+
+if (( rustup_installed && native_rust_installed )); then
+  echo "Error: both rustup and an Arch Rust provider are installed; resolve the conflict before rerunning BLARCHY." >&2
+  exit 1
+fi
+
+build_prerequisites=(base-devel git)
+pacman_options=(--needed --noconfirm)
+use_rustup=0
+if (( rustup_installed )); then
+  use_rustup=1
+  echo "Use the existing rustup provider for AUR builds"
+elif (( native_rust_installed )); then
+  use_rustup=1
+  build_prerequisites+=(rustup)
+  echo "Replace the existing Arch Rust provider with rustup in one pacman transaction"
+else
+  use_rustup=1
+  build_prerequisites+=(rustup)
+fi
+
+sudo pacman -Syu "${pacman_options[@]}" "${build_prerequisites[@]}"
+
+if (( use_rustup )) && ! rustup default >/dev/null 2>&1; then
+  echo "Initialize the installed rustup provider for AUR builds"
+  rustup default stable
+fi
+
 install_yay
 
 mapfile -t packages < <(load_packages)
+validate_package_manifest
 split_packages
 
 echo "Install BLARCHY repository packages"
 sudo pacman -S --needed --noconfirm "${repo_packages[@]}"
 if (( ${#aur_packages[@]} )); then
   echo "Build and install BLARCHY AUR packages"
-  yay -S --needed --noconfirm "${aur_packages[@]}"
+  install_aur_packages
 fi
 yay -Y --devel --save
 
 echo "Install BLARCHY system integration"
 sudo env BLARCHY_REPO_PATH="$repo_path" \
+  BLARCHY_INSTALL_USER="$install_user" \
   bash "$repo_path/install/standalone/system.sh"
 
 echo "Seed BLARCHY user defaults without overwriting existing files"
@@ -159,7 +265,7 @@ export BLARCHY_USER_NAME="$(git config --global user.name 2>/dev/null || true)"
 export BLARCHY_USER_EMAIL="$(git config --global user.email 2>/dev/null || true)"
 export PATH="/usr/local/bin:$PATH"
 
-HOME="$HOME" BLARCHY_PATH="$BLARCHY_PATH" \
+HOME="$install_home" BLARCHY_PATH="$BLARCHY_PATH" \
   bash "$BLARCHY_INSTALL/standalone/user.sh" preserve
 
 # Compatibility for inherited setup leaves during the v0.2 transition.

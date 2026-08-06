@@ -14,6 +14,7 @@ Item {
   readonly property string home: Quickshell.env("HOME")
   readonly property string stayAwakeStateDir: home + "/.local/state/omarchy/indicators"
   readonly property string stayAwakeStatePath: stayAwakeStateDir + "/stay-awake"
+  readonly property string agentStayAwakeStatePath: stayAwakeStateDir + "/agent-keep-awake"
   readonly property int defaultScreensaverSeconds: 150
   readonly property int defaultLockSeconds: 300
   readonly property var idleConfig: shell && shell.shellConfig && shell.shellConfig.idle ? shell.shellConfig.idle : ({})
@@ -22,11 +23,13 @@ Item {
   readonly property int firstIdleTimeoutSeconds: Math.min(screensaverTimeoutSeconds, lockTimeoutSeconds)
   readonly property int screensaverDelaySeconds: Math.max(0, screensaverTimeoutSeconds - firstIdleTimeoutSeconds)
   readonly property int lockDelaySeconds: Math.max(0, lockTimeoutSeconds - firstIdleTimeoutSeconds)
-  readonly property bool idleEnabled: stayAwakeStateLoaded && !stayAwake
+  readonly property bool idleEnabled: stayAwakeStateLoaded && agentStayAwakeStateLoaded && !stayAwake && !agentStayAwake
   readonly property string screensaverClass: "org.omarchy.screensaver"
 
   property bool stayAwake: false
   property bool stayAwakeStateLoaded: false
+  property bool agentStayAwake: false
+  property bool agentStayAwakeStateLoaded: false
   property bool hasPendingStayAwakePersist: false
   property bool pendingStayAwakePersist: false
   property bool idledThisCycle: false
@@ -183,6 +186,9 @@ Item {
       stayAwake: root.stayAwake,
       stayAwakeStateLoaded: root.stayAwakeStateLoaded,
       stayAwakeStatePath: root.stayAwakeStatePath,
+      agentStayAwake: root.agentStayAwake,
+      agentStayAwakeStateLoaded: root.agentStayAwakeStateLoaded,
+      agentStayAwakeStatePath: root.agentStayAwakeStatePath,
       idle: idleMonitor.isIdle,
       inIdleCycle: root.idledThisCycle,
       screensaverStarted: root.screensaverStartedThisCycle,
@@ -223,6 +229,7 @@ Item {
 
   function refreshStayAwakeState() {
     if (!stayAwakeStateProbe.running) stayAwakeStateProbe.running = true
+    if (!agentStayAwakeStateProbe.running) agentStayAwakeStateProbe.running = true
   }
 
   function applyStayAwake(value, persist, reason) {
@@ -303,6 +310,25 @@ Item {
     command: ["bash", "-c", "mkdir -p \"$HOME/.local/state/omarchy/indicators\"; if [[ -f $HOME/.local/state/omarchy/indicators/stay-awake ]]; then echo yes; else echo no; fi"]
     stdout: SplitParser {
       onRead: function(line) { root.applyStayAwake(String(line).trim() === "yes", false, "state-file") }
+    }
+    onExited: function() { stayAwakeStateDirWatcher.reload() }
+  }
+
+  Process {
+    id: agentStayAwakeStateProbe
+    command: ["bash", "-c", "if [[ -f $HOME/.local/state/omarchy/indicators/agent-keep-awake ]]; then echo yes; else echo no; fi"]
+    stdout: SplitParser {
+      onRead: function(line) {
+        var enabled = String(line).trim() === "yes"
+        var changed = !root.agentStayAwakeStateLoaded || root.agentStayAwake !== enabled
+        root.agentStayAwake = enabled
+        root.agentStayAwakeStateLoaded = true
+        if (changed) {
+          root.logEvent("agent-stay-awake", enabled ? "enabled" : "disabled")
+          if (enabled) root.cancelIdleCycle("agent-stay-awake")
+          else Qt.callLater(root.handleIdleChanged)
+        }
+      }
     }
     onExited: function() { stayAwakeStateDirWatcher.reload() }
   }

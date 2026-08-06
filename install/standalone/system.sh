@@ -291,6 +291,17 @@ install_user_command_override omarchy-recover-internal-monitor.service omarchy-h
 install_user_command_override omarchy-sleep-lock.service omarchy-system-sleep-monitor
 install_user_command_override omarchy-tailscale-receive.service omarchy-tailscale-receive
 
+agent_keep_awake_override=$(target_path "/etc/systemd/user/blarchy-agent-keep-awake.service.d/10-blarchy-standalone.conf")
+mkdir -p "$(dirname "$agent_keep_awake_override")"
+cat >"$agent_keep_awake_override" <<'EOF'
+[Service]
+ExecStart=
+ExecStart=/usr/local/bin/blarchy-agent-keep-awake
+ExecStopPost=
+ExecStopPost=/usr/local/bin/blarchy-agent-keep-awake --clear
+EOF
+chmod 0644 "$agent_keep_awake_override"
+
 install_file "$repo_path/default/fonts/omarchy/omarchy.ttf" \
   /usr/share/fonts/omarchy/omarchy.ttf
 install_file "$repo_path/default/fontconfig/conf.avail/50-omarchy.conf" \

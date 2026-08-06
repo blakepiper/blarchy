@@ -16,9 +16,16 @@ sleep_service="$ROOT/default/systemd/user/omarchy-sleep-lock.service"
 grep -Fx 'ExecStart=/usr/bin/omarchy-system-sleep-monitor' "$sleep_service" >/dev/null
 pass "sleep lock service uses the package-backed monitor path"
 
+agent_keep_awake_service="$ROOT/default/systemd/user/blarchy-agent-keep-awake.service"
+grep -Fx 'ExecStart=/usr/bin/blarchy-agent-keep-awake' "$agent_keep_awake_service" >/dev/null
+grep -F -- '--what="$inhibit_what"' "$ROOT/bin/blarchy-agent-keep-awake" >/dev/null
+grep -Fx 'WantedBy=graphical-session.target' "$agent_keep_awake_service" >/dev/null
+pass "coding-agent service blocks idle, sleep, and lid actions"
+
 first_run_units="$ROOT/install/user/first-run/enable-user-units.sh"
 grep -Fx 'systemctl --user daemon-reload' "$first_run_units" >/dev/null
 grep -F 'omarchy-sleep-lock.service' "$first_run_units" >/dev/null
+grep -F 'blarchy-agent-keep-awake.service' "$first_run_units" >/dev/null
 pass "first-run reloads and enables the sleep lock service"
 
 upgrade_to_quattro="$ROOT/bin/omarchy-upgrade-to-quattro"

@@ -23,6 +23,11 @@ grep -F 'inhibit_what="idle:handle-lid-switch:handle-suspend-key:handle-hibernat
 grep -Fx 'WantedBy=graphical-session.target' "$agent_keep_awake_service" >/dev/null
 pass "coding-agent service blocks idle and hardware sleep triggers while permitting explicit suspend"
 
+suspend_migration=$(rg -l 'Allow explicit suspend while coding agents run' "$ROOT/migrations" | head -n 1 || true)
+[[ -n $suspend_migration ]] || fail "existing installs receive the explicit-suspend inhibitor fix"
+grep -F 'systemctl --user restart blarchy-agent-keep-awake.service' "$suspend_migration" >/dev/null
+pass "the explicit-suspend inhibitor fix restarts existing user services"
+
 first_run_units="$ROOT/install/user/first-run/enable-user-units.sh"
 grep -Fx 'systemctl --user daemon-reload' "$first_run_units" >/dev/null
 grep -F 'omarchy-sleep-lock.service' "$first_run_units" >/dev/null

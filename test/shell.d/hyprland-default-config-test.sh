@@ -112,6 +112,9 @@ browser_rule_count=$(grep -c '^o\.window' "$ROOT/default/hypr/apps/browser.lua")
 [[ $browser_rule_count -eq 1 ]] ||
   fail "browser window rules stay within Hyprland's Lua reload budget"
 pass "browser window rules stay within Hyprland's Lua reload budget"
+grep -Fq 'idle_inhibit = "focus"' "$ROOT/default/hypr/apps/browser.lua" ||
+  fail "focused browsers inhibit idle screensaver"
+pass "focused browsers inhibit idle screensaver"
 
 unbind_block=$(sed -n '/for _, keys in ipairs({/,/}) do/p' "$ROOT/config/hypr/bindings.lua")
 for direction in LEFT RIGHT UP DOWN; do

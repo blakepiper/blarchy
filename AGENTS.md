@@ -110,6 +110,7 @@ Example:
 
 - Commits should be atomic: include only one coherent change or fix, and do not mix unrelated work.
 - Commit messages should be succinct and describe the change being made.
+- This machine uses SSH-only GitHub access. Use SSH remotes and transport (`git@github.com:...`) for GitHub fetches and pushes; do not use HTTPS credential flows.
 
 # Install Scripts
 

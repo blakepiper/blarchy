@@ -83,8 +83,8 @@ BLARCHY data, not references to an external Omarchy installation.
 
 ## Updates and migrations
 
-`yay -Syu` updates Arch and AUR packages. `blarchy update` requires a clean
-configured worktree, updates source from
+`yay -Syu` updates Arch and AUR packages. `blarchy update` runs `yay -Syu`,
+then requires a clean configured worktree, updates source from
 `blakepiper/blarchy`, republishes the installed runtime, installs newly required
 packages, and invokes the BLARCHY-owned migration runner. Completion markers are
 per-user; fresh installs establish a baseline so historical migrations are not

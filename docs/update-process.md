@@ -1,11 +1,11 @@
 # BLARCHY updates
 
-BLARCHY v0.2 separates Arch package updates from BLARCHY environment updates.
-Neither path consumes Omarchy automatically.
+BLARCHY's full update path updates Arch/AUR packages and the BLARCHY environment
+in one command. Neither path consumes Omarchy automatically.
 
 ## System and application packages
 
-Run:
+For the package-only path, run:
 
 ```bash
 yay -Syu
@@ -13,14 +13,13 @@ yay -Syu
 ```
 
 Yay updates official Arch packages and installed AUR packages. BLARCHY does
-not replace pacman configuration or repositories, and a package transaction
-does not pull or replace BLARCHY source. The installer enables yay's `devel`
-setting so installed VCS packages such as `quickshell-git` participate.
+not replace pacman configuration or repositories. The installer enables yay's
+`devel` setting so installed VCS packages such as `quickshell-git` participate.
 
 Direct pacman commands remain valid Arch administration. Pacman does not update
 AUR packages, which is why `yay -Syu` is the recommended full system update.
 
-## BLARCHY environment
+## Full update
 
 Run:
 
@@ -28,12 +27,23 @@ Run:
 blarchy update
 ```
 
-The updater requires a clean configured source worktree with a tracked remote
-at `https://github.com/blakepiper/blarchy`. It verifies that ownership before it
+This runs `yay -Syu` first, updating all installed packages owned by Arch
+repositories or the AUR, then updates BLARCHY. The BLARCHY phase requires a
+clean configured source worktree with a tracked remote at
+`https://github.com/blakepiper/blarchy`. It verifies that ownership before it
 fast-forwards the source and invokes the idempotent installer. The installer
 refreshes the stable runtime under `/usr/local/share/blarchy`, adds newly
 required packages, reapplies system integration, preserves user-owned
 configuration, and runs pending BLARCHY migrations.
+
+If the package transaction succeeds but the source checkout is unavailable,
+dirty, or untrusted, the command reports the BLARCHY failure after completing
+the package update. Use `blarchy system update` when only the package phase is
+desired.
+
+This does not update software installed through unrelated package managers such
+as Flatpak, npm, mise, or rustup, and it does not perform device firmware
+updates through `fwupd`. Those tools have separate update commands.
 
 The installed desktop does not execute from the Git worktree. Its ordinary
 behavior is therefore unaffected by the checkout's location, active branch, or
@@ -41,8 +51,8 @@ uncommitted development files. A source update becomes live only after the
 installer has successfully refreshed the installed runtime.
 
 The retained `omarchy update` route is a compatibility alias for the system
-package update. It does not update BLARCHY source. Use `blarchy update` when the
-environment itself should change.
+package update. It does not update BLARCHY source. Use `blarchy update` for the
+combined package and environment update.
 
 ## Repository ownership
 

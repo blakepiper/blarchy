@@ -65,10 +65,11 @@ user's boot or snapshot stack.
 
 ## Updates after installation
 
-Use `yay -Syu` for Arch/AUR packages and `blarchy update` for the BLARCHY
-environment. The latter updates only from `blakepiper/blarchy`, refreshes the
-installed runtime, and applies pending BLARCHY-owned migrations. Neither path
-downloads or merges Basecamp/Omarchy.
+Use `yay -Syu` or `blarchy system update` for package-only updates. `blarchy
+update` runs that full Arch/AUR package update and then updates the BLARCHY
+environment from `blakepiper/blarchy`, refreshes the installed runtime, and
+applies pending BLARCHY-owned migrations. Neither path downloads or merges
+Basecamp/Omarchy.
 
 ## Package resolution
 

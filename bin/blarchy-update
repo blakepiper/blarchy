@@ -27,20 +27,35 @@ if [[ -z $source_path ]]; then
   fi
 fi
 
+source_path=${source_path%/}
+
+lock_dir=${XDG_RUNTIME_DIR:-$HOME/.local/state/blarchy}
+mkdir -p "$lock_dir"
+exec {update_lock_fd}>"$lock_dir/blarchy-update.lock"
+if ! flock -n "$update_lock_fd"; then
+  echo "A BLARCHY update is already running." >&2
+  exit 1
+fi
+
+echo "Update Arch and AUR packages"
+yay -Syu
+
 if [[ -z $source_path ]]; then
   echo "BLARCHY_SOURCE_PATH is not configured and no source checkout was found." >&2
+  echo "Arch and AUR packages were updated, but BLARCHY could not be updated." >&2
   echo "Run the BLARCHY installer from a Git checkout, then retry." >&2
   exit 1
 fi
-source_path=${source_path%/}
 
 if ! git -C "$source_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "BLARCHY_SOURCE_PATH is not a Git checkout: $source_path" >&2
+  echo "Arch and AUR packages were updated, but BLARCHY could not be updated." >&2
   exit 1
 fi
 
 if [[ -n $(git -C "$source_path" status --porcelain) ]]; then
   echo "Refusing to update a BLARCHY source checkout with local changes: $source_path" >&2
+  echo "Arch and AUR packages were updated, but BLARCHY could not be updated." >&2
   echo "Commit, stash, or discard those changes, then retry." >&2
   exit 1
 fi
@@ -48,6 +63,7 @@ fi
 upstream=$(git -C "$source_path" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)
 if [[ -z $upstream ]]; then
   echo "The current BLARCHY branch has no tracked upstream." >&2
+  echo "Arch and AUR packages were updated, but BLARCHY could not be updated." >&2
   exit 1
 fi
 
@@ -59,18 +75,11 @@ case "$remote_url" in
     ;;
   *)
     echo "Refusing to update BLARCHY from an untrusted remote: ${remote_url:-<missing>}" >&2
+    echo "Arch and AUR packages were updated, but BLARCHY could not be updated." >&2
     echo "The update remote must be github.com/blakepiper/blarchy." >&2
     exit 1
     ;;
 esac
-
-lock_dir=${XDG_RUNTIME_DIR:-$HOME/.local/state/blarchy}
-mkdir -p "$lock_dir"
-exec {update_lock_fd}>"$lock_dir/blarchy-update.lock"
-if ! flock -n "$update_lock_fd"; then
-  echo "A BLARCHY update is already running." >&2
-  exit 1
-fi
 
 echo "Update BLARCHY from $upstream"
 git -C "$source_path" pull --ff-only "$remote" "$branch"

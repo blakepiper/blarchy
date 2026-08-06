@@ -125,7 +125,8 @@ No title bars are required.
 
 ## Updates
 
-System packages and the BLARCHY environment have separate update paths.
+The full BLARCHY update path covers both system packages and the BLARCHY
+environment.
 
 Update Arch and AUR packages with:
 
@@ -134,10 +135,10 @@ yay -Syu
 # or: blarchy system update
 ```
 
-BLARCHY does not block pacman, wrap yay, replace the user's package
-configuration, pull Git source during a package transaction, or globally update
-npm packages. The installer enables yay's development-package checks so
-installed `*-git` packages participate too.
+The package-only route does not block pacman, replace the user's package
+configuration, pull Git source, or globally update npm packages. The installer
+enables yay's development-package checks so installed `*-git` packages
+participate too.
 
 Update the independently maintained BLARCHY runtime, defaults, packages, and
 migrations with:
@@ -146,9 +147,12 @@ migrations with:
 blarchy update
 ```
 
-The updater requires a clean configured source checkout whose tracked remote is
-`github.com/blakepiper/blarchy`. It does not fetch or merge Omarchy. See
-[the update model](./docs/update-process.md) for details.
+This first runs `yay -Syu` for all installed Arch/AUR packages, then updates the
+BLARCHY runtime. It requires a clean configured source checkout whose tracked
+remote is `github.com/blakepiper/blarchy`. It does not fetch or merge Omarchy.
+Use `blarchy system update` when only packages should be updated. See [the
+update model](./docs/update-process.md) for details and for software managed by
+other package managers.
 
 ## Working with upstream
 

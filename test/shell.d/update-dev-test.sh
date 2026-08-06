@@ -48,9 +48,11 @@ SH
 chmod +x "$stub_bin/yay"
 
 run_update() {
+  BLARCHY_INSTALL_CONFIG="$test_tmp/missing-blarchy.conf" \
   BLARCHY_SOURCE_PATH="$checkout" \
   XDG_RUNTIME_DIR="$runtime_dir" \
   TEST_GIT_LOG="$git_log" \
+  TEST_YAY_LOG="$test_tmp/yay.log" \
   TEST_INSTALL_LOG="$test_tmp/install.log" \
   PATH="$stub_bin:$PATH" \
     "$ROOT/bin/blarchy-update"
@@ -58,6 +60,8 @@ run_update() {
 
 : >"$git_log"
 run_update >/dev/null
+grep -Fx -- '-Syu' "$test_tmp/yay.log" >/dev/null ||
+  fail "BLARCHY update runs the complete Arch and AUR package update"
 grep -Fx -- "-C $checkout pull --ff-only origin main" "$git_log" >/dev/null ||
   fail "BLARCHY update pulls its tracked branch with fast-forward only" "$(cat "$git_log")"
 grep -Fx installed "$test_tmp/install.log" >/dev/null || fail "BLARCHY update reruns the source installer"
@@ -71,6 +75,7 @@ BLARCHY_INSTALL_CONFIG="$test_tmp/missing-blarchy.conf" \
   BLARCHY_SOURCE_PATH= \
   XDG_RUNTIME_DIR="$runtime_dir" \
   TEST_GIT_LOG="$git_log" \
+  TEST_YAY_LOG="$test_tmp/fallback-yay.log" \
   TEST_INSTALL_LOG="$test_tmp/fallback-install.log" \
   PATH="$stub_bin:$PATH" \
     "$checkout/bin/blarchy-update" >/dev/null

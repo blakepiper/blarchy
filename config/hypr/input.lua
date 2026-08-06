@@ -1,6 +1,13 @@
 -- Keep only your personal input overrides here. Uncommented settings below
 -- replace BLARCHY's defaults.
 
+-- Use natural scrolling for all pointer devices, including external mice.
+hl.config({
+  input = {
+    natural_scroll = true,
+  },
+})
+
 -- Keyboard layout and options.
 -- See https://wiki.hypr.land/Configuring/Basics/Variables/#input
 -- hl.config({

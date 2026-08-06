@@ -18,9 +18,10 @@ pass "sleep lock service uses the package-backed monitor path"
 
 agent_keep_awake_service="$ROOT/default/systemd/user/blarchy-agent-keep-awake.service"
 grep -Fx 'ExecStart=/usr/bin/blarchy-agent-keep-awake' "$agent_keep_awake_service" >/dev/null
-grep -F -- '--what="$inhibit_what"' "$ROOT/bin/blarchy-agent-keep-awake" >/dev/null
+grep -F 'inhibit_what="idle:handle-lid-switch:handle-suspend-key:handle-hibernate-key"' \
+  "$ROOT/bin/blarchy-agent-keep-awake" >/dev/null
 grep -Fx 'WantedBy=graphical-session.target' "$agent_keep_awake_service" >/dev/null
-pass "coding-agent service blocks idle, sleep, and lid actions"
+pass "coding-agent service blocks idle and hardware sleep triggers while permitting explicit suspend"
 
 first_run_units="$ROOT/install/user/first-run/enable-user-units.sh"
 grep -Fx 'systemctl --user daemon-reload' "$first_run_units" >/dev/null

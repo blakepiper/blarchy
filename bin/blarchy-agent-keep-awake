@@ -8,7 +8,9 @@ set -euo pipefail
 state_dir="${BLARCHY_AGENT_KEEP_AWAKE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/indicators}"
 state_file="${BLARCHY_AGENT_KEEP_AWAKE_STATE_FILE:-$state_dir/agent-keep-awake}"
 poll_seconds="${BLARCHY_AGENT_KEEP_AWAKE_POLL_SECONDS:-2}"
-inhibit_what="idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key"
+# Keep idle and hardware-triggered sleep from interrupting a coding session,
+# while allowing an explicit System > Suspend request to proceed normally.
+inhibit_what="idle:handle-lid-switch:handle-suspend-key:handle-hibernate-key"
 
 # Match executable names and path components, including common Node/Python
 # wrappers. The boundary characters keep names such as "myomp" from matching

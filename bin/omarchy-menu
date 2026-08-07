@@ -9,6 +9,9 @@
 
 set -euo pipefail
 
+bin_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+shell_bin="$bin_dir/omarchy-shell"
+
 verb="${1-toggle}"
 route="${2-root}"
 
@@ -18,16 +21,16 @@ menu_payload() {
 
 case "$verb" in
   toggle)
-    exec omarchy-shell shell toggle omarchy.menu "$(menu_payload "$route")"
+    exec "$shell_bin" shell toggle omarchy.menu "$(menu_payload "$route")"
     ;;
   summon)
-    exec omarchy-shell shell summon omarchy.menu "$(menu_payload "$route")"
+    exec "$shell_bin" shell summon omarchy.menu "$(menu_payload "$route")"
     ;;
   close)
-    exec omarchy-shell shell hide omarchy.menu
+    exec "$shell_bin" shell hide omarchy.menu
     ;;
   refresh | ping)
-    exec omarchy-shell shell call omarchy.menu "$verb" "{}"
+    exec "$shell_bin" shell call omarchy.menu "$verb" "{}"
     ;;
   -h | --help | help)
     cat <<USAGE

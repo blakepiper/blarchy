@@ -11,6 +11,12 @@ set -euo pipefail
 
 bin_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
 shell_bin="$bin_dir/omarchy-shell"
+runtime_path=$(cd -- "$bin_dir/.." && pwd)
+
+# Keep the menu command and its shell IPC endpoint in the same runtime tree,
+# even when Hyprland retained an environment from a different installation.
+export BLARCHY_PATH="$runtime_path"
+export OMARCHY_PATH="$runtime_path"
 
 verb="${1-toggle}"
 route="${2-root}"

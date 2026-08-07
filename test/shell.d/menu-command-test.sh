@@ -24,8 +24,10 @@ chmod +x "$stub_bin/qs"
 ln -s "$ROOT/bin/omarchy-menu" "$stub_bin/omarchy-menu"
 
 PATH="$stub_bin:/usr/bin:/bin" \
+BLARCHY_PATH=/tmp/installed-runtime \
+OMARCHY_PATH=/tmp/installed-runtime \
 OMARCHY_TEST_QS_ARGS="$qs_args" \
-  env -u BLARCHY_PATH -u OMARCHY_PATH "$stub_bin/omarchy-menu" ping >/dev/null
+  "$stub_bin/omarchy-menu" ping >/dev/null
 
 grep -F -- "-p $ROOT/shell" "$qs_args" >/dev/null ||
   fail "menu wrapper sends IPC to the runtime tree containing the wrapper" "$(<"$qs_args")"

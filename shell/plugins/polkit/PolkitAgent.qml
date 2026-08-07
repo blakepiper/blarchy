@@ -109,6 +109,10 @@ Item {
   function submitResponse() {
     var flow = polkitAgent.flow
     if (!flow || !flow.isResponseRequired) return
+    if (passwordInput.text.length === 0) {
+      passwordInput.forceActiveFocus()
+      return
+    }
     submitted = true
     errorFlash = false
     flow.submit(passwordInput.text)
@@ -172,6 +176,8 @@ Item {
     stdout: StdioCollector { id: laptopClosedOut; waitForEnd: true }
     onExited: root.laptopClosed = String(laptopClosedOut.text || "").trim() === "closed"
   }
+
+  onLaptopClosedChanged: Qt.callLater(root.refocus)
 
   PolkitAgent {
     id: polkitAgent
@@ -254,7 +260,7 @@ Item {
       Item {
         id: keyCatcher
         anchors.fill: parent
-        focus: true
+        focus: root.fingerprintMode
 
         Keys.priority: Keys.BeforeItem
         Keys.onPressed: function(event) {

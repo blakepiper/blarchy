@@ -109,6 +109,11 @@ test_root=$(mktemp -d)
 migration_state=$(mktemp -d)
 trap 'rm -rf -- "$test_home" "$test_root" "$migration_state"' EXIT
 
+legacy_user_manager_dropin="$test_root/usr/lib/systemd/user@.service.d/faster-shutdown.conf"
+mkdir -p "$(dirname "$legacy_user_manager_dropin")"
+cp "$ROOT/default/systemd/user@.service.d/faster-shutdown.conf" \
+  "$legacy_user_manager_dropin"
+
 mkdir -p "$test_home/.config/hypr"
 printf '%s\n' 'keep-my-binding' >"$test_home/.config/hypr/bindings.lua"
 printf '%s\n' '# existing shell config' >"$test_home/.bashrc"
@@ -222,6 +227,18 @@ fi
   fail "system integration installs the Firefox policy"
 [[ -f $test_root/etc/pam.d/omarchy-lock-password ]] ||
   fail "system integration installs lock-screen authentication"
+[[ -f $test_root/etc/systemd/system.conf.d/10-faster-shutdown.conf ]] ||
+  fail "system integration installs the faster system shutdown timeout"
+grep -Fxq 'DefaultTimeoutStopSec=5s' \
+  "$test_root/etc/systemd/system.conf.d/10-faster-shutdown.conf" ||
+  fail "system integration configures a five-second system shutdown timeout"
+[[ -f $test_root/usr/lib/systemd/system/user@.service.d/faster-shutdown.conf ]] ||
+  fail "system integration installs the faster user-manager shutdown timeout"
+grep -Fxq 'TimeoutStopSec=5s' \
+  "$test_root/usr/lib/systemd/system/user@.service.d/faster-shutdown.conf" ||
+  fail "system integration configures a five-second user-manager shutdown timeout"
+[[ ! -e $test_root/usr/lib/systemd/user@.service.d/faster-shutdown.conf ]] ||
+  fail "system integration does not place the user-manager drop-in outside the system unit tree"
 grep -Fxq "export BLARCHY_PATH='/usr/local/share/blarchy'" "$test_root/etc/blarchy.conf" ||
   fail "system integration records the installed runtime"
 grep -Fxq "export BLARCHY_INSTALL='/usr/local/share/blarchy/install'" "$test_root/etc/blarchy.conf" ||

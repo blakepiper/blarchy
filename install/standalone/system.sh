@@ -279,9 +279,21 @@ install_file "$repo_path/default/firefox/policies.json" \
   /etc/firefox/policies/policies.json
 install_file "$repo_path/default/pam/omarchy-lock-password" \
   /etc/pam.d/omarchy-lock-password
+install_file "$repo_path/etc/systemd/system.conf.d/10-faster-shutdown.conf" \
+  /etc/systemd/system.conf.d/10-faster-shutdown.conf
 
 copy_tree "$repo_path/default/systemd/user" /usr/lib/systemd/user
-copy_tree "$repo_path/default/systemd/user@.service.d" /usr/lib/systemd/user@.service.d
+copy_tree "$repo_path/default/systemd/user@.service.d" /usr/lib/systemd/system/user@.service.d
+
+# Older standalone installs placed this system-unit drop-in outside systemd's
+# unit search path. Remove only the exact BLARCHY-owned copy while migrating it
+# to the correct location; preserve anything else a user may have put there.
+legacy_user_manager_dropin=$(target_path /usr/lib/systemd/user@.service.d/faster-shutdown.conf)
+if [[ -f $legacy_user_manager_dropin ]] &&
+  cmp -s "$repo_path/default/systemd/user@.service.d/faster-shutdown.conf" \
+    "$legacy_user_manager_dropin"; then
+  rm -- "$legacy_user_manager_dropin"
+fi
 
 # The inherited units target package-owned commands in /usr/bin. Standalone
 # installs expose commands from the installed runtime through /usr/local/bin.

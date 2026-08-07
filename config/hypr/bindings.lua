@@ -1,7 +1,7 @@
 -- BLARCHY's user-facing defaults live in this small override layer so the
 -- inherited default bindings can continue to receive upstream improvements.
 for _, keys in ipairs({
-  "SUPER + SPACE", "SUPER + RETURN", "SUPER + F", "SUPER + B", "SUPER + G",
+  "SUPER + SPACE", "SUPER + RETURN", "SUPER + F", "SUPER + B", "SUPER + G", "SUPER + S",
   "SUPER + Q", "SUPER + L", "SUPER + SHIFT + S", "SUPER + SHIFT + F", "SUPER + TAB",
   "SUPER + LEFT", "SUPER + RIGHT", "SUPER + UP", "SUPER + DOWN",
   "SUPER + CTRL + LEFT", "SUPER + CTRL + RIGHT", "SUPER + CTRL + UP", "SUPER + CTRL + DOWN",
@@ -12,6 +12,7 @@ o.bind("SUPER + RETURN", "Terminal", { omarchy = "terminal" })
 o.bind("SUPER + F", "Files", { omarchy = "nautilus" })
 o.bind("SUPER + B", "Browser", { omarchy = "browser" })
 o.bind("SUPER + G", "Steam", { launch = "steam" })
+o.bind("SUPER + S", "Spotify", { omarchy = "spotify" })
 o.bind("SUPER + Q", "Close window", hl.dsp.window.close())
 o.bind("SUPER + SHIFT + S", "Region screenshot", "omarchy-capture-screenshot region")
 o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ mode = "maximized" }))

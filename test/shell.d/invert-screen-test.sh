@@ -23,24 +23,33 @@ test_tmp=$(mktemp -d)
 trap 'rm -rf "$test_tmp"' EXIT
 
 fake_bin="$test_tmp/bin"
-state_file="$test_tmp/shader-state"
+shader_state="$test_tmp/shader-state"
+damage_state="$test_tmp/damage-state"
+toggle_state="$test_tmp/toggle-state"
 mkdir -p "$fake_bin"
-printf '[[EMPTY]]\n' >"$state_file"
+printf '[[EMPTY]]\n' >"$shader_state"
+printf '2\n' >"$damage_state"
 cat >"$fake_bin/hyprctl" <<'HYPRCTL'
 #!/bin/bash
 
 set -euo pipefail
 
-state_file=${BLARCHY_INVERT_TEST_STATE:?}
+shader_state=${BLARCHY_INVERT_TEST_SHADER_STATE:?}
+damage_state=${BLARCHY_INVERT_TEST_DAMAGE_STATE:?}
 case "$1 $2" in
   "getoption decoration:screen_shader")
-    jq -cn --arg shader "$(<"$state_file")" '{str:$shader}'
+    jq -cn --arg shader "$(<"$shader_state")" '{str:$shader}'
     ;;
-  "eval hl.config({ decoration = { screen_shader = \"$BLARCHY_INVERT_TEST_SHADER\" } })")
-    printf '%s\n' "$BLARCHY_INVERT_TEST_SHADER" >"$state_file"
+  "getoption debug:damage_tracking")
+    jq -cn --argjson damage "$(<"$damage_state")" '{int:$damage}'
     ;;
-  "eval hl.config({ decoration = { screen_shader = \"\" } })")
-    printf '\n' >"$state_file"
+  "eval hl.config({ decoration = { screen_shader = \"$BLARCHY_INVERT_TEST_SHADER\" }, debug = { damage_tracking = 0 } })")
+    printf '%s\n' "$BLARCHY_INVERT_TEST_SHADER" >"$shader_state"
+    printf '0\n' >"$damage_state"
+    ;;
+  "eval hl.config({ decoration = { screen_shader = \"\" }, debug = { damage_tracking = 2 } })")
+    printf '\n' >"$shader_state"
+    printf '2\n' >"$damage_state"
     ;;
   *)
     exit 1
@@ -49,10 +58,20 @@ esac
 HYPRCTL
 chmod +x "$fake_bin/hyprctl"
 
-PATH="$fake_bin:$PATH" BLARCHY_PATH="$ROOT" BLARCHY_INVERT_TEST_STATE="$state_file" \
-  BLARCHY_INVERT_TEST_SHADER="$shader" "$toggle" >/dev/null
-[[ $(<"$state_file") == $shader ]] || fail "screen inversion command enables the shader"
-PATH="$fake_bin:$PATH" BLARCHY_PATH="$ROOT" BLARCHY_INVERT_TEST_STATE="$state_file" \
-  BLARCHY_INVERT_TEST_SHADER="$shader" "$toggle" >/dev/null
-[[ -z $(<"$state_file") ]] || fail "screen inversion command disables the shader"
-pass "screen inversion command toggles between inverted and normal colors"
+run_toggle() {
+  PATH="$fake_bin:$PATH" BLARCHY_PATH="$ROOT" BLARCHY_INVERT_STATE_DIR="$toggle_state" \
+    BLARCHY_INVERT_TEST_SHADER_STATE="$shader_state" BLARCHY_INVERT_TEST_DAMAGE_STATE="$damage_state" \
+    BLARCHY_INVERT_TEST_SHADER="$shader" "$toggle" >/dev/null
+}
+
+run_toggle
+[[ $(<"$shader_state") == $shader ]] || fail "screen inversion command enables the shader"
+[[ $(<"$damage_state") == 0 ]] || fail "screen inversion disables partial-damage rendering"
+[[ $(<"$toggle_state/invert-screen-damage-tracking") == 2 ]] ||
+  fail "screen inversion saves the previous damage tracking mode"
+
+run_toggle
+[[ -z $(<"$shader_state") ]] || fail "screen inversion command disables the shader"
+[[ $(<"$damage_state") == 2 ]] || fail "screen inversion restores full damage tracking"
+[[ ! -e $toggle_state/invert-screen-damage-tracking ]] || fail "screen inversion removes saved state when disabled"
+pass "screen inversion toggles safely without partial-damage flicker"

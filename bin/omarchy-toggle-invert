@@ -6,17 +6,36 @@ set -euo pipefail
 
 blarchy_path=${BLARCHY_PATH:-${OMARCHY_PATH:-/usr/local/share/blarchy}}
 shader_path="$blarchy_path/config/hypr/shaders/invert-colors.glsl"
+state_dir=${BLARCHY_INVERT_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/blarchy}
+damage_state="$state_dir/invert-screen-damage-tracking"
 
 if [[ ! -f $shader_path ]]; then
   echo "Inversion shader not found: $shader_path" >&2
   exit 1
 fi
 
+mkdir -p "$state_dir"
+exec {lock_fd}>"$state_dir/invert-screen.lock"
+flock "$lock_fd"
+
 current_shader=$(hyprctl getoption decoration:screen_shader -j | jq -r '.str')
 if [[ $current_shader == $shader_path ]]; then
-  hyprctl eval 'hl.config({ decoration = { screen_shader = "" } })' >/dev/null
+  previous_damage=2
+  if [[ -f $damage_state ]]; then
+    saved_damage=$(<"$damage_state")
+    if [[ $saved_damage =~ ^[012]$ ]]; then
+      previous_damage=$saved_damage
+    fi
+  fi
+
+  hyprctl eval "hl.config({ decoration = { screen_shader = \"\" }, debug = { damage_tracking = $previous_damage } })" >/dev/null
+  rm -f "$damage_state"
   echo "Monitor colors normal"
 else
-  hyprctl eval "hl.config({ decoration = { screen_shader = \"$shader_path\" } })" >/dev/null
+  current_damage=$(hyprctl getoption debug:damage_tracking -j | jq -r '.int')
+  printf '%s\n' "$current_damage" >"$damage_state"
+  # Hyprland 0.56 can apply the final shader to stale partial-damage output
+  # buffers. Disable damage tracking so every presented buffer is fully drawn.
+  hyprctl eval "hl.config({ decoration = { screen_shader = \"$shader_path\" }, debug = { damage_tracking = 0 } })" >/dev/null
   echo "Monitor colors inverted"
 fi

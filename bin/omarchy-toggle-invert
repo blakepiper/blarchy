@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# omarchy:summary=Toggle inverted monitor colors
+
+set -euo pipefail
+
+blarchy_path=${BLARCHY_PATH:-${OMARCHY_PATH:-/usr/local/share/blarchy}}
+shader_path="$blarchy_path/config/hypr/shaders/invert-colors.glsl"
+
+if [[ ! -f $shader_path ]]; then
+  echo "Inversion shader not found: $shader_path" >&2
+  exit 1
+fi
+
+current_shader=$(hyprctl getoption decoration:screen_shader -j | jq -r '.str')
+if [[ $current_shader == $shader_path ]]; then
+  hyprctl eval 'hl.config({ decoration = { screen_shader = "" } })' >/dev/null
+  echo "Monitor colors normal"
+else
+  hyprctl eval "hl.config({ decoration = { screen_shader = \"$shader_path\" } })" >/dev/null
+  echo "Monitor colors inverted"
+fi

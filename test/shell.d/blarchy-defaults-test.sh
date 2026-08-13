@@ -8,7 +8,7 @@ packages="$ROOT/install/omarchy-base.packages"
 
 for package_name in \
   alacritty firefox gimp nautilus nodejs npm nwg-dock-hyprland python \
-  python-pip spotify steam vscodium-bin; do
+  oh-my-pi-bin python-pip spotify steam vscodium-bin; do
   grep -Fxq "$package_name" "$packages" || fail "BLARCHY package manifest includes $package_name"
 done
 pass "BLARCHY package manifest includes every package-managed default"
@@ -78,6 +78,9 @@ pass "visible boot, bar, and editor branding is BLARCHY-owned"
 grep -Fxq 'omarchy-mise-install codex' "$ROOT/install/user/mise.sh" || fail "Codex has a mise installation path"
 grep -Fxq 'omarchy-mise-install claude' "$ROOT/install/user/mise.sh" || fail "Claude Code has a mise installation path"
 pass "Codex and Claude Code use the existing idempotent mise wrappers"
+
+grep -Fxq 'oh-my-pi-bin' "$packages" || fail "Oh My Pi is installed from its native binary package"
+pass "Oh My Pi uses its native binary package"
 
 if grep -Fq 'mise use -g node' "$ROOT/install/user/mise-work.sh"; then
   fail "Node.js is not replaced by a mise-managed version"

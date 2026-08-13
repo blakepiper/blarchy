@@ -69,7 +69,7 @@ verify_runtime_tools() {
   pass "Fastfetch can read system information"
 
   local command
-  for command in alacritty firefox gimp git nautilus node npm pip python codium codex claude spotify steam; do
+  for command in alacritty firefox gimp git nautilus node npm pip python codium codex claude omp spotify steam; do
     command -v "$command" >/dev/null || fail "BLARCHY default commands are installed" "$command is missing"
   done
   tmux -V >/dev/null || fail "Tmux is installed and runnable"

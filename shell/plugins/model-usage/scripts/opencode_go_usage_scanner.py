@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Read OpenCode Go usage from OpenCode's local SQLite history.
+"""Read OpenCode Go limits and local token history.
 
-OpenCode does not expose the Go subscription quota through its CLI. The local
-database does record the billed cost for each completed assistant response,
-which lets the bar show a useful, read-only estimate without touching the
-running OpenCode process or its credentials.
+The usage endpoint is authoritative for the subscription limits. OpenCode's
+local SQLite database supplies the token and model history shown below it.
 """
 
 from __future__ import annotations
@@ -12,17 +10,21 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import math
 import os
 import sqlite3
-import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
 
+USAGE_URL = "https://opencode.ai/zen/go/v1/usage"
+
 WINDOWS = (
-  ("5-hour window", 12.0, 5 * 60 * 60),
-  ("Weekly window", 30.0, 7 * 24 * 60 * 60),
-  ("Monthly window", 60.0, 30 * 24 * 60 * 60),
+  ("5-hour window", "rolling", 12.0),
+  ("Weekly window", "weekly", 30.0),
+  ("Monthly window", "monthly", 60.0),
 )
 
 
@@ -75,12 +77,37 @@ def message_tokens(data: dict[str, Any]) -> tuple[int, int, int, int]:
   return input_tokens, output_tokens, cache_read, cache_write
 
 
-def has_go_auth(auth_path: Path) -> bool:
+def read_go_api_key(auth_path: Path) -> str:
   try:
     data = json.loads(auth_path.read_text(encoding="utf-8"))
   except (OSError, ValueError):
-    return False
-  return isinstance(data, dict) and isinstance(data.get("opencode-go"), dict)
+    return ""
+  if not isinstance(data, dict) or not isinstance(data.get("opencode-go"), dict):
+    return ""
+  key = data["opencode-go"].get("key")
+  return str(key).strip() if key else ""
+
+
+def fetch_remote_usage(api_key: str, usage_url: str) -> dict[str, Any] | None:
+  if not api_key:
+    return None
+
+  request = urllib.request.Request(
+    usage_url,
+    headers={
+      "Accept": "application/json",
+      "Authorization": f"Bearer {api_key}",
+      "User-Agent": "BLARCHY-model-usage/1.0",
+    },
+  )
+  try:
+    with urllib.request.urlopen(request, timeout=5) as response:
+      payload = json.load(response)
+  except (OSError, ValueError, urllib.error.URLError):
+    return None
+
+  usage = payload.get("usage") if isinstance(payload, dict) else None
+  return usage if isinstance(usage, dict) else None
 
 
 def read_messages(database_path: Path) -> list[dict[str, Any]]:
@@ -114,8 +141,14 @@ def read_messages(database_path: Path) -> list[dict[str, Any]]:
     cost = max(0.0, number(data.get("cost")))
     input_tokens, output_tokens, cache_read, cache_write = message_tokens(data)
     # OpenCode creates an empty assistant row while a response is streaming.
-    # It is not usage until it has a billed cost.
-    if cost <= 0:
+    # Completed Go responses can have a zero local cost, so token data is also
+    # sufficient to distinguish them from an empty streaming row.
+    finish = data.get("finish")
+    if cost <= 0 and (
+      input_tokens + output_tokens + cache_read + cache_write <= 0
+      or not isinstance(finish, str)
+      or finish == ""
+    ):
       continue
 
     timestamp_ms = integer(row["time_created"])
@@ -140,22 +173,41 @@ def read_messages(database_path: Path) -> list[dict[str, Any]]:
   return messages
 
 
-def window_usage(messages: list[dict[str, Any]], now: float, limit: float, seconds: int) -> tuple[float, str]:
-  current = [message for message in messages if message["timestamp"] >= now - seconds]
-  spent = sum(message["cost"] for message in current)
-  percent = min(1.0, spent / limit) if limit > 0 else -1.0
-  reset_at = ""
-  if current:
-    reset_at = dt.datetime.fromtimestamp(
-      min(message["timestamp"] + seconds for message in current),
-      tz=dt.timezone.utc,
-    ).isoformat().replace("+00:00", "Z")
-  return percent, reset_at
+def normalized_percent(value: Any) -> float:
+  try:
+    percent = float(value)
+  except (TypeError, ValueError):
+    return -1.0
+  if not math.isfinite(percent):
+    return -1.0
+  return max(0.0, min(1.0, percent / 100))
 
 
-def scan(database_path: Path, auth_path: Path) -> dict[str, Any]:
+def remote_limit(window: dict[str, Any] | None, label: str, limit: float) -> dict[str, Any]:
+  if not isinstance(window, dict):
+    return {"label": label, "limit": limit, "spent": -1, "percent": -1, "resetAt": ""}
+
+  percent = normalized_percent(window.get("percent"))
+  reset_at = window.get("resetsAt")
+  return {
+    "label": label,
+    # The usage endpoint intentionally returns the percentage, not the
+    # underlying dollar amount. Keep the documented cap for context, but do
+    # not turn a rounded percentage back into a fake dollar figure in the
+    # panel.
+    "limit": limit,
+    "spent": -1,
+    "percent": percent,
+    "resetAt": str(reset_at) if reset_at else "",
+  }
+
+
+def scan(database_path: Path, auth_path: Path, usage_url: str = USAGE_URL) -> dict[str, Any]:
   messages = read_messages(database_path)
-  authenticated = has_go_auth(auth_path)
+  api_key = read_go_api_key(auth_path)
+  authenticated = bool(api_key)
+  remote_usage = fetch_remote_usage(api_key, usage_url)
+  remote_available = remote_usage is not None
   ready = authenticated or bool(messages)
   dates = recent_date_strings()
   today = dates[-1]
@@ -194,13 +246,27 @@ def scan(database_path: Path, auth_path: Path) -> dict[str, Any]:
       today_total_tokens += total_tokens
       today_tokens_by_model[message["model"]] = today_tokens_by_model.get(message["model"], 0) + total_tokens
 
-  limits = []
-  now = time.time()
-  for label, limit, seconds in WINDOWS:
-    percent, reset_at = window_usage(messages, now, limit, seconds)
-    limits.append({"label": label, "limit": limit, "spent": sum(
-      message["cost"] for message in messages if message["timestamp"] >= now - seconds
-    ), "percent": percent if ready else -1, "resetAt": reset_at})
+  limits = [
+    remote_limit(
+      remote_usage.get(window_name) if remote_available else None,
+      label,
+      limit,
+    )
+    for label, window_name, limit in WINDOWS
+  ]
+
+  if remote_available:
+    usage_note = "Live limits from OpenCode Go"
+    usage_status_text = ""
+    auth_help_text = ""
+  elif authenticated:
+    usage_note = "Live limits unavailable; token history is local"
+    usage_status_text = "OpenCode Go live limits unavailable"
+    auth_help_text = "Could not fetch live limits. Token history is local."
+  else:
+    usage_note = ""
+    usage_status_text = ""
+    auth_help_text = "Connect OpenCode Go to restore usage data."
 
   return {
     "schemaVersion": 1,
@@ -209,9 +275,9 @@ def scan(database_path: Path, auth_path: Path) -> dict[str, Any]:
     "authenticated": authenticated,
     "providerName": "OpenCode Go",
     "tierLabel": "Go" if ready else "",
-    "usageNote": "Local estimate from OpenCode history",
-    "usageStatusText": "",
-    "authHelpText": "Connect OpenCode Go to restore usage data." if not authenticated else "",
+    "usageNote": usage_note,
+    "usageStatusText": usage_status_text,
+    "authHelpText": auth_help_text,
     "todayPrompts": today_prompts,
     "todaySessions": len(today_sessions),
     "todayTotalTokens": today_total_tokens,
@@ -244,8 +310,9 @@ def main() -> int:
   parser = argparse.ArgumentParser()
   parser.add_argument("database_path", nargs="?", default="~/.local/share/opencode/opencode.db")
   parser.add_argument("auth_path", nargs="?", default="~/.local/share/opencode/auth.json")
+  parser.add_argument("usage_url", nargs="?", default=USAGE_URL)
   args = parser.parse_args()
-  print(json.dumps(scan(expand_path(args.database_path), expand_path(args.auth_path)), separators=(",", ":")))
+  print(json.dumps(scan(expand_path(args.database_path), expand_path(args.auth_path), args.usage_url), separators=(",", ":")))
   return 0
 
 

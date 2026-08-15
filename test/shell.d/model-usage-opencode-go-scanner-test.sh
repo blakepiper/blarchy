@@ -10,14 +10,15 @@ trap 'rm -rf "$test_home"' EXIT
 
 db="$test_home/opencode.db"
 auth="$test_home/auth.json"
+usage="$test_home/usage.json"
 
-python3 - "$db" "$auth" <<'PY'
+python3 - "$db" "$auth" "$usage" <<'PY'
 import json
 import sqlite3
 import sys
 import time
 
-database_path, auth_path = sys.argv[1:]
+database_path, auth_path, usage_path = sys.argv[1:]
 now_ms = round(time.time() * 1000)
 
 connection = sqlite3.connect(database_path)
@@ -52,9 +53,18 @@ connection.close()
 
 with open(auth_path, "w", encoding="utf-8") as handle:
   json.dump({"opencode-go": {"type": "api", "key": "not-read-by-test-output"}}, handle)
+
+with open(usage_path, "w", encoding="utf-8") as handle:
+  json.dump({
+    "usage": {
+      "rolling": {"status": "ok", "percent": 72, "resetsAt": "2030-01-02T03:04:05Z"},
+      "weekly": {"status": "ok", "percent": 28, "resetsAt": "2030-01-08T00:00:00Z"},
+      "monthly": {"status": "ok", "percent": 14, "resetsAt": "2030-02-01T00:00:00Z"},
+    },
+  }, handle)
 PY
 
-result=$(python3 "$ROOT/shell/plugins/model-usage/scripts/opencode_go_usage_scanner.py" "$db" "$auth")
+result=$(python3 "$ROOT/shell/plugins/model-usage/scripts/opencode_go_usage_scanner.py" "$db" "$auth" "file://$usage")
 
 [[ $(jq -r '.ready' <<<"$result") == "true" ]] || fail "OpenCode Go scanner detects auth" "$result"
 pass "OpenCode Go scanner detects auth"
@@ -65,11 +75,24 @@ pass "OpenCode Go scanner ignores streaming rows"
 [[ $(jq -r '.todayTotalTokens' <<<"$result") == "110" ]] || fail "OpenCode Go scanner totals token categories" "$result"
 pass "OpenCode Go scanner totals token categories"
 
-[[ $(jq -r '.rateLimitPercent' <<<"$result") == "0.25" ]] || fail "OpenCode Go scanner reports the five-hour estimate" "$result"
-pass "OpenCode Go scanner reports the five-hour estimate"
+[[ $(jq -r '.rateLimitPercent' <<<"$result") == "0.72" ]] || fail "OpenCode Go scanner reports the server five-hour usage" "$result"
+pass "OpenCode Go scanner reports the server five-hour usage"
 
-[[ $(jq -r '.secondaryRateLimitPercent' <<<"$result") == "0.23333333333333334" ]] || fail "OpenCode Go scanner reports the weekly estimate" "$result"
-pass "OpenCode Go scanner reports the weekly estimate"
+[[ $(jq -r '.secondaryRateLimitPercent' <<<"$result") == "0.28" ]] || fail "OpenCode Go scanner reports the server weekly usage" "$result"
+pass "OpenCode Go scanner reports the server weekly usage"
+
+[[ $(jq -r '.tertiaryRateLimitPercent' <<<"$result") == "0.14" ]] || fail "OpenCode Go scanner reports the server monthly usage" "$result"
+pass "OpenCode Go scanner reports the server monthly usage"
+
+[[ $(jq -r '.rateLimitResetAt' <<<"$result") == "2030-01-02T03:04:05Z" ]] || fail "OpenCode Go scanner reports the server five-hour reset" "$result"
+pass "OpenCode Go scanner reports the server five-hour reset"
+
+[[ $(jq -r '.usageNote' <<<"$result") == "Live limits from OpenCode Go" ]] || fail "OpenCode Go scanner labels live limits" "$result"
+pass "OpenCode Go scanner labels live limits"
+
+[[ $(jq -r '.rateLimitSpent' <<<"$result") == "-1" && $(jq -r '.rateLimitLimit' <<<"$result") == "12.0" ]] ||
+  fail "OpenCode Go scanner does not invent dollar usage" "$result"
+pass "OpenCode Go scanner does not invent dollar usage"
 
 [[ $(jq -c '.modelUsage["gpt-test"]' <<<"$result") == '{"inputTokens":11,"outputTokens":22,"cacheReadInputTokens":33,"cacheCreationInputTokens":44}' ]] ||
   fail "OpenCode Go scanner groups model tokens" "$result"

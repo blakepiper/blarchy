@@ -595,7 +595,7 @@ Panel {
         text: {
           if (!limitRow.window || limitRow.window.percent < 0) return "—"
           var percent = Math.round(limitRow.window.percent * 100) + "%"
-          if (limitRow.window.limit > 0)
+          if (limitRow.window.limit > 0 && limitRow.window.spent >= 0)
             return "$" + limitRow.window.spent.toFixed(2) + " / $" + limitRow.window.limit.toFixed(0) + " · " + percent
           return percent
         }

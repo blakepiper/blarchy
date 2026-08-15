@@ -37,12 +37,13 @@ its own the first time a scan finds usage. Drop it with
 |---|---|---|
 | `claude` | Anthropic's OAuth usage endpoint (5-hour session + 7-day weekly) | `~/.claude/projects` scanned by `scripts/claude_usage_scanner.py`, plus `stats-cache.json` and `history.jsonl` |
 | `codex` | `scripts/codex_usage_scanner.py` reading the Codex CLI state | the same scanner |
-| `opencode-go` | Local estimate of OpenCode Go's $12/5-hour, $30-weekly, and $60-monthly allowances | `~/.local/share/opencode/opencode.db`, filtered to billed `opencode-go` responses |
+| `opencode-go` | OpenCode Go's live 5-hour, weekly, and monthly usage limits | OpenCode's usage endpoint for limits; `~/.local/share/opencode/opencode.db` for token history |
 
-OpenCode does not expose the Go subscription quota through its CLI. The Go tab
-therefore reports a read-only estimate from OpenCode's local billed response
-history and labels it as such; it never reads the API key or writes to the
-OpenCode database. The estimate covers the current machine only.
+The Go tab reads the live usage endpoint with the existing OpenCode Go API key,
+so its limit percentages and reset times match the OpenCode web console. The
+local database is still used for token and model history. If the usage service
+is unavailable, the panel does not substitute local cost estimates for live
+limits.
 
 Claude limits need a signed-in CLI; without credentials the panel says so and
 falls back to local stats only.

@@ -27,7 +27,7 @@ rather than sitting there with nothing to say. A CLI installed mid-session
 shows up at the next refresh, so nothing polls the disk waiting for it.
 
 That self-hiding is why the widget ships in the default bar layout: a machine
-that has never run Claude Code or Codex draws nothing, and the icon arrives on
+that has never run Claude Code, Codex, or OpenCode Go draws nothing, and the icon arrives on
 its own the first time a scan finds usage. Drop it with
 `omarchy plugin disable omarchy.model-usage`.
 
@@ -37,6 +37,12 @@ its own the first time a scan finds usage. Drop it with
 |---|---|---|
 | `claude` | Anthropic's OAuth usage endpoint (5-hour session + 7-day weekly) | `~/.claude/projects` scanned by `scripts/claude_usage_scanner.py`, plus `stats-cache.json` and `history.jsonl` |
 | `codex` | `scripts/codex_usage_scanner.py` reading the Codex CLI state | the same scanner |
+| `opencode-go` | Local estimate of OpenCode Go's $12/5-hour, $30-weekly, and $60-monthly allowances | `~/.local/share/opencode/opencode.db`, filtered to billed `opencode-go` responses |
+
+OpenCode does not expose the Go subscription quota through its CLI. The Go tab
+therefore reports a read-only estimate from OpenCode's local billed response
+history and labels it as such; it never reads the API key or writes to the
+OpenCode database. The estimate covers the current machine only.
 
 Claude limits need a signed-in CLI; without credentials the panel says so and
 falls back to local stats only.

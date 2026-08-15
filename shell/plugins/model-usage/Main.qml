@@ -25,7 +25,15 @@ Item {
     onReadyChanged: root.scheduleSync()
   }
 
-  property var providers: [claudeProvider, codexProvider]
+  OpenCodeGo {
+    id: opencodeGoProvider
+    enabled: root.providerEnabled("opencode-go")
+    providerSettings: root.settings && root.settings.providers && root.settings.providers["opencode-go"] ? root.settings.providers["opencode-go"] : ({})
+    onLastRefreshedAtMsChanged: root.scheduleSync()
+    onReadyChanged: root.scheduleSync()
+  }
+
+  property var providers: [claudeProvider, codexProvider, opencodeGoProvider]
 
   // A subscription earns a place in the bar and the panel by being switched on
   // in settings and having actually produced numbers — locally or on a synced
@@ -44,6 +52,10 @@ Item {
       var codex = displayProvider(codexProvider)
       if (providerHasData(codex)) result.push(codex)
     }
+    if (opencodeGoProvider.enabled) {
+      var opencodeGo = displayProvider(opencodeGoProvider)
+      if (providerHasData(opencodeGo)) result.push(opencodeGo)
+    }
     return result
   }
 
@@ -51,12 +63,12 @@ Item {
   function providerHasData(p) {
     return numberValue(p.totalPrompts) > 0 || numberValue(p.totalSessions) > 0
       || numberValue(p.activeDays) > 0 || Number(p.rateLimitPercent) >= 0
-      || Number(p.secondaryRateLimitPercent) >= 0
+      || Number(p.secondaryRateLimitPercent) >= 0 || Number(p.tertiaryRateLimitPercent) >= 0
   }
 
-  property bool refreshing: claudeProvider.refreshing || codexProvider.refreshing || syncRunning
+  property bool refreshing: claudeProvider.refreshing || codexProvider.refreshing || opencodeGoProvider.refreshing || syncRunning
   property double aggregateUpdatedAtMs: aggregateData && aggregateData.updatedAtMs ? Number(aggregateData.updatedAtMs) : 0
-  property double lastRefreshedAtMs: Math.max(aggregateUpdatedAtMs, claudeProvider.lastRefreshedAtMs || 0, codexProvider.lastRefreshedAtMs || 0)
+  property double lastRefreshedAtMs: Math.max(aggregateUpdatedAtMs, claudeProvider.lastRefreshedAtMs || 0, codexProvider.lastRefreshedAtMs || 0, opencodeGoProvider.lastRefreshedAtMs || 0)
   property int refreshIntervalSec: Math.max(30, Number(setting("refreshIntervalSec", 900)))
 
   property var syncModeSetting: setting("syncMode", setting("syncEnabled", false))
@@ -155,7 +167,7 @@ Item {
   }
 
   function providerEnabled(id) {
-    if (!settings || !settings.providers || !settings.providers[id]) return id === "claude" || id === "codex"
+    if (!settings || !settings.providers || !settings.providers[id]) return id === "claude" || id === "codex" || id === "opencode-go"
     return settings.providers[id].enabled !== false
   }
 
@@ -500,6 +512,7 @@ Item {
       lastRefreshedAtMs: Math.max(provider.lastRefreshedAtMs || 0, root.aggregateUpdatedAtMs || 0),
       usageStatusText: provider.usageStatusText,
       authHelpText: provider.authHelpText,
+      usageNote: provider.usageNote || "",
 
       rateLimitPercent: provider.rateLimitPercent,
       rateLimitLabel: provider.rateLimitLabel,
@@ -507,6 +520,15 @@ Item {
       secondaryRateLimitPercent: provider.secondaryRateLimitPercent,
       secondaryRateLimitLabel: provider.secondaryRateLimitLabel,
       secondaryRateLimitResetAt: provider.secondaryRateLimitResetAt,
+      tertiaryRateLimitPercent: provider.tertiaryRateLimitPercent,
+      tertiaryRateLimitLabel: provider.tertiaryRateLimitLabel,
+      tertiaryRateLimitResetAt: provider.tertiaryRateLimitResetAt,
+      rateLimitSpent: provider.rateLimitSpent,
+      rateLimitLimit: provider.rateLimitLimit,
+      secondaryRateLimitSpent: provider.secondaryRateLimitSpent,
+      secondaryRateLimitLimit: provider.secondaryRateLimitLimit,
+      tertiaryRateLimitSpent: provider.tertiaryRateLimitSpent,
+      tertiaryRateLimitLimit: provider.tertiaryRateLimitLimit,
       tierLabel: provider.tierLabel,
 
       todayPrompts: synced ? numberValue(stats.todayPrompts) : provider.todayPrompts,

@@ -56,12 +56,12 @@ Panel {
 
   // ---------------------------------------------------------------- limits
   //
-  // Both providers report the same two shapes: a short rolling session window
-  // and a long weekly one. Everything below normalizes them into one record so
-  // the meters and the hero speak a single language.
+  // Providers report a short rolling window plus longer weekly or monthly
+  // windows. Everything below normalizes them into one record so the meters
+  // and the hero speak a single language.
 
-  // Claude spells its windows out ("Session (5-hour)"), Codex abbreviates
-  // them ("5h window", "30m window"). Both have to land on the same record.
+  // Claude spells its windows out ("Session (5-hour)"), while Codex and
+  // OpenCode use shorter labels. All of them have to land on the same record.
   function windowIsLong(text) {
     return text.indexOf("week") >= 0 || text.indexOf("7-day") >= 0 || text.indexOf("seven") >= 0
       || text.indexOf("month") >= 0 || text.indexOf("30-day") >= 0
@@ -87,19 +87,22 @@ Panel {
     return plain === "" ? "Limit" : plain
   }
 
-  function limitWindow(label, percent, resetAt) {
+  function limitWindow(label, percent, resetAt, spent, limit) {
     return {
       title: windowTitle(label),
       percent: Number(percent),
-      resetAt: String(resetAt || "")
+      resetAt: String(resetAt || ""),
+      spent: Number(spent === undefined ? -1 : spent),
+      limit: Number(limit === undefined ? -1 : limit)
     }
   }
 
   function limitWindows(p) {
     if (!p) return []
     var out = []
-    if (p.rateLimitPercent >= 0) out.push(limitWindow(p.rateLimitLabel, p.rateLimitPercent, p.rateLimitResetAt))
-    if (p.secondaryRateLimitPercent >= 0) out.push(limitWindow(p.secondaryRateLimitLabel, p.secondaryRateLimitPercent, p.secondaryRateLimitResetAt))
+    if (p.rateLimitPercent >= 0) out.push(limitWindow(p.rateLimitLabel, p.rateLimitPercent, p.rateLimitResetAt, p.rateLimitSpent, p.rateLimitLimit))
+    if (p.secondaryRateLimitPercent >= 0) out.push(limitWindow(p.secondaryRateLimitLabel, p.secondaryRateLimitPercent, p.secondaryRateLimitResetAt, p.secondaryRateLimitSpent, p.secondaryRateLimitLimit))
+    if (p.tertiaryRateLimitPercent >= 0) out.push(limitWindow(p.tertiaryRateLimitLabel, p.tertiaryRateLimitPercent, p.tertiaryRateLimitResetAt, p.tertiaryRateLimitSpent, p.tertiaryRateLimitLimit))
     return out
   }
 
@@ -216,10 +219,12 @@ Panel {
 
   // Only speaks up when the numbers cover more than this machine.
   function footerText() {
-    if (usage.syncStatusText !== "") return usage.syncStatusText
+    var details = []
+    if (provider && String(provider.usageNote || "") !== "") details.push(provider.usageNote)
+    if (usage.syncStatusText !== "") details.push(usage.syncStatusText)
     if (provider && provider.syncEnabled && provider.syncDeviceCount > 0)
-      return "Merged from " + provider.syncDeviceCount + " device" + (provider.syncDeviceCount === 1 ? "" : "s")
-    return ""
+      details.push("Merged from " + provider.syncDeviceCount + " device" + (provider.syncDeviceCount === 1 ? "" : "s"))
+    return details.join(" · ")
   }
 
   // Codex ships as a white mark; swap to the dark one when the surface behind
@@ -243,6 +248,10 @@ Panel {
       return colorLuminance(surfaceColor || Color.background) >= 0.5
         ? Qt.resolvedUrl("assets/codex-light.svg")
         : Qt.resolvedUrl("assets/codex.svg")
+    if (p.providerId === "opencode-go")
+      return colorLuminance(surfaceColor || Color.background) >= 0.5
+        ? Qt.resolvedUrl("assets/opencode-light.svg")
+        : Qt.resolvedUrl("assets/opencode.svg")
     return ""
   }
 
@@ -373,7 +382,7 @@ Panel {
             visible: root.providers.length === 0
             width: parent.width
             topPadding: Style.space(24)
-            text: "No AI coding subscriptions found.\nClaude Code and Codex show up here once you've used them."
+            text: "No AI coding subscriptions found.\nClaude Code, Codex, and OpenCode Go show up here once they've produced usage."
             color: root.dim
             font.family: root.fontFamily
             font.pixelSize: Style.font.body
@@ -583,9 +592,13 @@ Panel {
 
       Text {
         id: limitValue
-        text: limitRow.window && limitRow.window.percent >= 0
-          ? Math.round(limitRow.window.percent * 100) + "%"
-          : "—"
+        text: {
+          if (!limitRow.window || limitRow.window.percent < 0) return "—"
+          var percent = Math.round(limitRow.window.percent * 100) + "%"
+          if (limitRow.window.limit > 0)
+            return "$" + limitRow.window.spent.toFixed(2) + " / $" + limitRow.window.limit.toFixed(0) + " · " + percent
+          return percent
+        }
         color: limitRow.alarming ? root.urgent : root.foreground
         font.family: root.fontFamily
         font.pixelSize: Style.font.caption

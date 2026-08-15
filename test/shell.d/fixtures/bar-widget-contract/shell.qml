@@ -99,6 +99,8 @@ ShellRoot {
       var lightIcon = String(item.iconSourceForProvider({ providerId: "codex" }, Qt.color("#ffffff")))
       root.assertTrue(darkIcon.indexOf("codex.svg") >= 0 && darkIcon.indexOf("codex-light.svg") < 0, entry.id + " uses the dark-theme Codex icon on dark surfaces")
       root.assertTrue(lightIcon.indexOf("codex-light.svg") >= 0, entry.id + " uses the light-theme Codex icon on light surfaces")
+      var openCodeIcon = String(item.iconSourceForProvider({ providerId: "opencode-go" }, Qt.color("#1a1b26")))
+      root.assertTrue(openCodeIcon.indexOf("opencode.svg") >= 0, entry.id + " exposes an OpenCode Go icon")
     }
 
     safeCall(item, "refresh", entry)

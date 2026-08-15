@@ -1,7 +1,7 @@
 -- BLARCHY's user-facing defaults live in this small override layer so the
 -- inherited default bindings can continue to receive upstream improvements.
 for _, keys in ipairs({
-  "SUPER + SPACE", "SUPER + RETURN", "SUPER + F", "SUPER + B", "SUPER + G", "SUPER + S", "SUPER + I",
+  "SUPER + SPACE", "SUPER + RETURN", "SUPER + C", "SUPER + F", "SUPER + B", "SUPER + G", "SUPER + S", "SUPER + I",
   "SUPER + Q", "SUPER + L", "SUPER + SHIFT + S", "SUPER + SHIFT + F", "SUPER + TAB",
   "SUPER + LEFT", "SUPER + RIGHT", "SUPER + UP", "SUPER + DOWN",
   "SUPER + CTRL + LEFT", "SUPER + CTRL + RIGHT", "SUPER + CTRL + UP", "SUPER + CTRL + DOWN",
@@ -9,6 +9,7 @@ for _, keys in ipairs({
 }) do hl.unbind(keys) end
 o.bind("SUPER + SPACE", "Application launcher", "omarchy-menu toggle apps")
 o.bind("SUPER + RETURN", "Terminal", { omarchy = "terminal" })
+o.bind("SUPER + C", "VSCodium", { launch = "codium" })
 o.bind("SUPER + F", "Files", { omarchy = "nautilus" })
 o.bind("SUPER + B", "Browser", { omarchy = "browser" })
 o.bind("SUPER + G", "Steam", { launch = "steam" })

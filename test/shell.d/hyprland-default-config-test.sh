@@ -131,6 +131,12 @@ grep -Fq 'o.bind("SUPER + CTRL + DOWN", "Focus window below", hl.dsp.focus({ dir
   fail "BLARCHY bindings focus the window below"
 pass "BLARCHY directional focus bindings override inherited behavior"
 
+grep -Fq '"SUPER + C"' <<<"$unbind_block" ||
+  fail "BLARCHY bindings unbind inherited SUPER + C clipboard behavior"
+grep -Fq 'o.bind("SUPER + C", "VSCodium", { launch = "codium" })' "$ROOT/config/hypr/bindings.lua" ||
+  fail "BLARCHY bindings open VSCodium with SUPER + C"
+pass "VSCodium opens with SUPER + C"
+
 if grep -Fq 'o.bind("SUPER + ALT + SPACE"' "$ROOT/config/hypr/bindings.lua"; then
   fail "BLARCHY menu does not register both symbolic and physical Space bindings"
 fi

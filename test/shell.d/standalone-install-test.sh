@@ -109,6 +109,9 @@ test_root=$(mktemp -d)
 migration_state=$(mktemp -d)
 trap 'rm -rf -- "$test_home" "$test_root" "$migration_state"' EXIT
 
+mkdir -p "$test_root/usr/bin"
+printf '%s\n' '#!/usr/bin/env python3' >"$test_root/usr/bin/powerprofilesctl"
+
 legacy_user_manager_dropin="$test_root/usr/lib/systemd/user@.service.d/faster-shutdown.conf"
 mkdir -p "$(dirname "$legacy_user_manager_dropin")"
 cp "$ROOT/default/systemd/user@.service.d/faster-shutdown.conf" \
@@ -190,6 +193,9 @@ done
 runtime="$test_root/usr/local/share/blarchy"
 [[ -d $runtime && ! -L $runtime ]] ||
   fail "system integration installs a standalone runtime snapshot"
+grep -Fxq '#!/bin/python3' "$test_root/usr/bin/powerprofilesctl" ||
+  fail "standalone system integration pins powerprofilesctl to system Python"
+pass "powerprofilesctl is safe with mise-enabled desktop PATHs"
 [[ $(stat -c %a "$runtime") == "755" ]] ||
   fail "installed runtime is traversable by desktop users"
 grep -Fq 'cp -a --no-preserve=ownership' "$ROOT/install/standalone/system.sh" ||
@@ -229,6 +235,11 @@ fi
   fail "system integration installs lock-screen authentication"
 [[ -f $test_root/etc/systemd/system.conf.d/10-faster-shutdown.conf ]] ||
   fail "system integration installs the faster system shutdown timeout"
+[[ -f $test_root/etc/systemd/logind.conf.d/30-omarchy-lid-handler.conf ]] ||
+  fail "system integration installs the validated lid handler policy"
+grep -Fxq 'HandleLidSwitch=ignore' \
+  "$test_root/etc/systemd/logind.conf.d/30-omarchy-lid-handler.conf" ||
+  fail "validated lid handler policy disables logind's direct lid action"
 grep -Fxq 'DefaultTimeoutStopSec=5s' \
   "$test_root/etc/systemd/system.conf.d/10-faster-shutdown.conf" ||
   fail "system integration configures a five-second system shutdown timeout"

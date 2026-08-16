@@ -38,6 +38,19 @@ install_file() {
   install -m "$mode" "$source_file" "$target"
 }
 
+fix_powerprofilesctl_shebang() {
+  local target
+
+  target=$(target_path /usr/bin/powerprofilesctl)
+  [[ -f $target ]] || return 0
+
+  # UWSM adds mise shims to the desktop PATH, but Arch's optional
+  # python-gobject module belongs to the system Python.  The packaged
+  # powerprofilesctl uses env python3, so make its interpreter independent of
+  # the user's development-language PATH.
+  sed -i '/^#!\/usr\/bin\/env python3$/c\#!/bin/python3' "$target"
+}
+
 copy_tree() {
   local source_dir="$1"
   local destination="$2"
@@ -190,6 +203,7 @@ install_sddm_state() {
 }
 
 install_runtime_snapshot
+fix_powerprofilesctl_shebang
 
 runtime_link=$(target_path /usr/share/omarchy)
 mkdir -p "$(dirname "$runtime_link")"
@@ -281,6 +295,8 @@ install_file "$repo_path/default/pam/omarchy-lock-password" \
   /etc/pam.d/omarchy-lock-password
 install_file "$repo_path/etc/systemd/system.conf.d/10-faster-shutdown.conf" \
   /etc/systemd/system.conf.d/10-faster-shutdown.conf
+install_file "$repo_path/etc/systemd/logind.conf.d/30-omarchy-lid-handler.conf" \
+  /etc/systemd/logind.conf.d/30-omarchy-lid-handler.conf
 
 copy_tree "$repo_path/default/systemd/user" /usr/lib/systemd/user
 copy_tree "$repo_path/default/systemd/user@.service.d" /usr/lib/systemd/system/user@.service.d

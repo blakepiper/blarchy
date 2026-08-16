@@ -33,6 +33,10 @@ SH
 echo $command >>"\$CALL_LOG"
 SH
   done
+  cat >"$mock_bin/systemctl" <<'SH'
+#!/bin/bash
+echo "systemctl $*" >>"$CALL_LOG"
+SH
   chmod +x "$mock_bin"/*
 }
 
@@ -55,6 +59,10 @@ pass "undocked lid close locks before anything else"
   fail "undocked lid close still reconciles displays" "calls: ${calls[*]}"
 pass "undocked lid close still reconciles displays"
 
+[[ ${calls[2]} == "systemctl suspend" ]] ||
+  fail "undocked lid close suspends after the lock and display sync" "calls: ${calls[*]}"
+pass "undocked lid close suspends after the lock and display sync"
+
 # A docked lid close is clamshell mode: logind leaves the machine awake and the
 # session stays in use on the external display, so locking it would be wrong.
 setup_scenario docked 0 0
@@ -68,6 +76,10 @@ pass "docked lid close does not lock the session"
   fail "docked lid close reconciles displays" "calls: ${calls[*]}"
 pass "docked lid close reconciles displays"
 
+[[ ${calls[*]} != *"systemctl suspend"* ]] ||
+  fail "docked lid close does not suspend" "calls: ${calls[*]}"
+pass "docked lid close does not suspend"
+
 # Hyprland can replay a switch binding when the lid is already open, and an
 # open lid must never lock the machine the user is sitting at.
 setup_scenario open 1 1
@@ -76,6 +88,10 @@ run_lid_close
 [[ ${calls[*]} != *omarchy-system-lock* ]] ||
   fail "an open lid never locks the session" "calls: ${calls[*]}"
 pass "an open lid never locks the session"
+
+[[ ${calls[*]} != *"systemctl suspend"* ]] ||
+  fail "an open lid never suspends the session" "calls: ${calls[*]}"
+pass "an open lid never suspends the session"
 
 # The lid handler runs from a Hyprland binding, so a lock that hangs or fails
 # must not stop the display reconciliation behind it.
@@ -91,3 +107,29 @@ run_lid_close
 [[ ${calls[1]} == "omarchy-hyprland-monitor-clamshell" ]] ||
   fail "a failing lock still reconciles displays" "calls: ${calls[*]}"
 pass "a failing lock still reconciles displays"
+
+[[ ${calls[2]} == "systemctl suspend" ]] ||
+  fail "a failing lock still follows through with lid suspend" "calls: ${calls[*]}"
+pass "a failing lock still follows through with lid suspend"
+
+# A firmware-generated lid pulse can report closed once before returning to
+# open. It must not lock or suspend the session.
+setup_scenario transient 0 1
+cat >"$mock_bin/omarchy-hw-laptop-closed" <<'SH'
+#!/bin/bash
+
+if [[ -e $CALL_LOG.transient ]]; then
+  exit 1
+fi
+
+touch "$CALL_LOG.transient"
+exit 0
+SH
+chmod +x "$mock_bin/omarchy-hw-laptop-closed"
+run_lid_close
+
+[[ ${calls[*]} != *omarchy-system-lock* ]] ||
+  fail "a transient lid event does not lock the session" "calls: ${calls[*]}"
+[[ ${calls[*]} != *"systemctl suspend"* ]] ||
+  fail "a transient lid event does not suspend the session" "calls: ${calls[*]}"
+pass "transient lid events do not lock or suspend"

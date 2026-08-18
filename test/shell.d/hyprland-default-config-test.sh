@@ -156,15 +156,15 @@ grep -Fq 'hl.monitor({ output = "HDMI-A-1", mode = "preferred", position = "auto
   "$ROOT/config/hypr/monitors.lua" ||
   fail "HDMI defaults to an extended display layout"
 pass "HDMI defaults to an extended display layout"
-grep -Fq 'hl.workspace_rule({ workspace = "1", monitor = "HDMI-A-1", default = true })' \
+grep -Fq 'hl.workspace_rule({ workspace = "1", monitor = "HDMI-A-1", default = true, persistent = true })' \
   "$ROOT/config/hypr/monitors.lua" ||
   fail "HDMI defaults to workspace 1"
 for workspace in 2 3 4; do
-  grep -Fq "hl.workspace_rule({ workspace = tostring(workspace), monitor = \"HDMI-A-1\" })" \
+  grep -Fq "hl.workspace_rule({ workspace = tostring(workspace), monitor = \"HDMI-A-1\", persistent = true })" \
     "$ROOT/config/hypr/monitors.lua" ||
     fail "HDMI owns workspace $workspace"
 done
-grep -Fq 'hl.workspace_rule({ workspace = "5", monitor = "eDP-1", default = true })' \
+grep -Fq 'hl.workspace_rule({ workspace = "5", monitor = "eDP-1", default = true, persistent = true })' \
   "$ROOT/config/hypr/monitors.lua" ||
   fail "laptop display defaults to workspace 5"
 pass "HDMI owns workspaces 1-4 and laptop owns workspace 5"

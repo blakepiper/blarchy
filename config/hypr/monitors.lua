@@ -11,11 +11,11 @@ hl.monitor({ output = "HDMI-A-1", mode = "preferred", position = "auto-left", sc
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = omarchy_monitor_scale })
 
 -- Keep workspaces 1-4 on the external monitor and workspace 5 on the laptop.
-hl.workspace_rule({ workspace = "1", monitor = "HDMI-A-1", default = true })
+hl.workspace_rule({ workspace = "1", monitor = "HDMI-A-1", default = true, persistent = true })
 for workspace = 2, 4 do
-  hl.workspace_rule({ workspace = tostring(workspace), monitor = "HDMI-A-1" })
+  hl.workspace_rule({ workspace = tostring(workspace), monitor = "HDMI-A-1", persistent = true })
 end
-hl.workspace_rule({ workspace = "5", monitor = "eDP-1", default = true })
+hl.workspace_rule({ workspace = "5", monitor = "eDP-1", default = true, persistent = true })
 
 -- Workspace rules do not move workspaces that already exist, so reconcile
 -- existing workspaces when a monitor is connected or the config is reloaded.

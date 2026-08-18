@@ -12,7 +12,7 @@ uniform sampler2D tex;
 const vec3 COMPENSATION_GAINS = vec3(1.15, 2.40, 1.70);
 const float BRIGHTNESS_BOOST = 1.30;
 const float CONTRAST = 1.25;
-const float TONE_MAPPING_EXPOSURE = 1.35;
+const float TONE_MAPPING_EXPOSURE = 1.00;
 const float COMPENSATION_STRENGTH = 1.0;
 
 void main() {

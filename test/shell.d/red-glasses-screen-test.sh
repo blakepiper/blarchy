@@ -27,7 +27,7 @@ grep -Fq 'vec3(1.15, 2.40, 1.70)' "$shader" ||
   fail "red-glasses shader uses the green-forward compensation profile"
 grep -Fq 'const float CONTRAST = 1.25;' "$shader" ||
   fail "red-glasses shader uses the intended contrast adjustment"
-grep -Fq 'const float TONE_MAPPING_EXPOSURE = 1.35;' "$shader" ||
+grep -Fq 'const float TONE_MAPPING_EXPOSURE = 1.00;' "$shader" ||
   fail "red-glasses shader uses the intended highlight tone mapping"
 grep -Fq '#version 300 es' "$shader" ||
   fail "red-glasses shader matches Hyprland's GLSL interface"

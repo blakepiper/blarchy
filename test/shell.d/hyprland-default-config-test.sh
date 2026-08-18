@@ -152,6 +152,11 @@ grep -Fq 'o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ 
   fail "fullscreen binding preserves bar and outer padding"
 pass "fullscreen binding preserves bar and outer padding"
 
+grep -Fq 'hl.monitor({ output = "HDMI-A-1", mode = "preferred", position = "auto", scale = 1, mirror = "eDP-1" })' \
+  "$ROOT/config/hypr/monitors.lua" ||
+  fail "HDMI defaults to mirroring the laptop display"
+pass "HDMI defaults to mirroring the laptop display"
+
 grep -F 'hl.dsp.send_key_state({ mods = mods, key = key, state = "down" })' "$ROOT/default/hypr/bindings/clipboard.lua" >/dev/null ||
   fail "universal clipboard shortcuts send explicit mods to the focused surface"
 pass "universal clipboard shortcuts send explicit mods to the focused surface"

@@ -6,8 +6,8 @@ local omarchy_monitor_scale = "auto"
 
 hl.env("GDK_SCALE", tostring(omarchy_gdk_scale))
 
--- Keep the external monitor to the left when it is connected.
-hl.monitor({ output = "HDMI-A-1", mode = "preferred", position = "auto-left", scale = 1 })
+-- Mirror the laptop display on the external monitor when it is connected.
+hl.monitor({ output = "HDMI-A-1", mode = "preferred", position = "auto", scale = 1, mirror = "eDP-1" })
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = omarchy_monitor_scale })
 
 -- Make the connected external monitor the focused/default monitor, and return

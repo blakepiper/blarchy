@@ -17,8 +17,10 @@ grep -Fq '"SUPER + R"' "$ROOT/config/hypr/bindings.lua" ||
   fail "SUPER+R is explicitly unbound before the override"
 grep -Fq 'const vec3 COMPENSATION_GAINS' "$shader" ||
   fail "red-glasses shader defines channel compensation gains"
-grep -Fq 'srgb_to_linear' "$shader" ||
-  fail "red-glasses shader applies its transform in linear light"
+grep -Fq 'const float BRIGHTNESS_BOOST' "$shader" ||
+  fail "red-glasses shader boosts display brightness"
+grep -Fq 'vec3(1.15, 2.40, 1.70)' "$shader" ||
+  fail "red-glasses shader uses the green-forward compensation profile"
 grep -Fq '#version 300 es' "$shader" ||
   fail "red-glasses shader matches Hyprland's GLSL interface"
 pass "red-glasses compensation defaults are wired into BLARCHY"

@@ -19,8 +19,12 @@ grep -Fq 'const vec3 COMPENSATION_GAINS' "$shader" ||
   fail "red-glasses shader defines channel compensation gains"
 grep -Fq 'const float BRIGHTNESS_BOOST' "$shader" ||
   fail "red-glasses shader boosts display brightness"
+grep -Fq 'const float CONTRAST' "$shader" ||
+  fail "red-glasses shader defines contrast adjustment"
 grep -Fq 'vec3(1.15, 2.40, 1.70)' "$shader" ||
   fail "red-glasses shader uses the green-forward compensation profile"
+grep -Fq 'const float CONTRAST = 1.25;' "$shader" ||
+  fail "red-glasses shader uses the intended contrast adjustment"
 grep -Fq '#version 300 es' "$shader" ||
   fail "red-glasses shader matches Hyprland's GLSL interface"
 pass "red-glasses compensation defaults are wired into BLARCHY"

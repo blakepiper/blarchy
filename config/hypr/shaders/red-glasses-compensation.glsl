@@ -11,11 +11,13 @@ uniform sampler2D tex;
 // so a dim-looking correction is not useful when viewed through the lenses.
 const vec3 COMPENSATION_GAINS = vec3(1.15, 2.40, 1.70);
 const float BRIGHTNESS_BOOST = 1.30;
+const float CONTRAST = 1.25;
 const float COMPENSATION_STRENGTH = 1.0;
 
 void main() {
   vec4 pixel = texture(tex, v_texcoord);
   vec3 compensated = pixel.rgb * COMPENSATION_GAINS * BRIGHTNESS_BOOST;
+  compensated = (compensated - vec3(0.5)) * CONTRAST + vec3(0.5);
   compensated = clamp(compensated, 0.0, 1.0);
   fragColor = vec4(mix(pixel.rgb, compensated, COMPENSATION_STRENGTH), pixel.a);
 }

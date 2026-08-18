@@ -152,10 +152,28 @@ grep -Fq 'o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ 
   fail "fullscreen binding preserves bar and outer padding"
 pass "fullscreen binding preserves bar and outer padding"
 
-grep -Fq 'hl.monitor({ output = "HDMI-A-1", mode = "preferred", position = "auto", scale = 1, mirror = "eDP-1" })' \
+grep -Fq 'hl.monitor({ output = "HDMI-A-1", mode = "preferred", position = "auto-left", scale = 1 })' \
   "$ROOT/config/hypr/monitors.lua" ||
-  fail "HDMI defaults to mirroring the laptop display"
-pass "HDMI defaults to mirroring the laptop display"
+  fail "HDMI defaults to an extended display layout"
+pass "HDMI defaults to an extended display layout"
+grep -Fq 'hl.workspace_rule({ workspace = "1", monitor = "HDMI-A-1", default = true })' \
+  "$ROOT/config/hypr/monitors.lua" ||
+  fail "HDMI defaults to workspace 1"
+for workspace in 2 3 4; do
+  grep -Fq "hl.workspace_rule({ workspace = tostring(workspace), monitor = \"HDMI-A-1\" })" \
+    "$ROOT/config/hypr/monitors.lua" ||
+    fail "HDMI owns workspace $workspace"
+done
+grep -Fq 'hl.workspace_rule({ workspace = "5", monitor = "eDP-1", default = true })' \
+  "$ROOT/config/hypr/monitors.lua" ||
+  fail "laptop display defaults to workspace 5"
+pass "HDMI owns workspaces 1-4 and laptop owns workspace 5"
+grep -Fq 'hl.dsp.workspace.move({ workspace = tostring(workspace), monitor = "HDMI-A-1" })' \
+  "$ROOT/config/hypr/monitors.lua" ||
+  fail "existing workspaces are reconciled onto HDMI"
+grep -Fq 'hl.on("config.reloaded", arrange_workspaces)' "$ROOT/config/hypr/monitors.lua" ||
+  fail "workspace placement is reapplied after config reload"
+pass "existing workspaces are reconciled after monitor changes"
 
 grep -F 'hl.dsp.send_key_state({ mods = mods, key = key, state = "down" })' "$ROOT/default/hypr/bindings/clipboard.lua" >/dev/null ||
   fail "universal clipboard shortcuts send explicit mods to the focused surface"

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# omarchy:summary=Toggle inverted monitor colors
+# omarchy:summary=Toggle red-glasses color compensation
 
 set -euo pipefail
 
 blarchy_path=${BLARCHY_PATH:-${OMARCHY_PATH:-/usr/local/share/blarchy}}
 source "$blarchy_path/bin/omarchy-screen-filter.sh"
-screen_filter_toggle invert
+screen_filter_toggle red-glasses

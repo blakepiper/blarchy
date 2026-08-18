@@ -1,7 +1,7 @@
 -- BLARCHY's user-facing defaults live in this small override layer so the
 -- inherited default bindings can continue to receive upstream improvements.
 for _, keys in ipairs({
-  "SUPER + SPACE", "SUPER + RETURN", "SUPER + C", "SUPER + F", "SUPER + B", "SUPER + G", "SUPER + S", "SUPER + I",
+  "SUPER + SPACE", "SUPER + RETURN", "SUPER + C", "SUPER + F", "SUPER + B", "SUPER + G", "SUPER + S", "SUPER + I", "SUPER + R",
   "SUPER + Q", "SUPER + L", "SUPER + SHIFT + S", "SUPER + SHIFT + F", "SUPER + TAB",
   "SUPER + LEFT", "SUPER + RIGHT", "SUPER + UP", "SUPER + DOWN",
   "SUPER + CTRL + LEFT", "SUPER + CTRL + RIGHT", "SUPER + CTRL + UP", "SUPER + CTRL + DOWN",
@@ -25,6 +25,7 @@ local blarchy_path = os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "
 local blarchy_bin = blarchy_path .. "/bin/"
 o.bind("SUPER + L", "Lock system", blarchy_bin .. "omarchy-system-lock")
 o.bind("SUPER + I", "Invert screen colors", blarchy_bin .. "omarchy-toggle-invert")
+o.bind("SUPER + R", "Red-glasses color compensation", blarchy_bin .. "omarchy-toggle-red-glasses")
 -- Use physical keycodes for these critical bindings. On a US layout, the
 -- symbolic and physical forms both match the same key, so registering both
 -- would toggle the menu twice (or issue the lock action twice) per press.

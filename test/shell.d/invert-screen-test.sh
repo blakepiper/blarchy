@@ -67,11 +67,11 @@ run_toggle() {
 run_toggle
 [[ $(<"$shader_state") == $shader ]] || fail "screen inversion command enables the shader"
 [[ $(<"$damage_state") == 0 ]] || fail "screen inversion disables partial-damage rendering"
-[[ $(<"$toggle_state/invert-screen-damage-tracking") == 2 ]] ||
+[[ $(<"$toggle_state/screen-filter-damage-tracking") == 2 ]] ||
   fail "screen inversion saves the previous damage tracking mode"
 
 run_toggle
 [[ -z $(<"$shader_state") ]] || fail "screen inversion command disables the shader"
 [[ $(<"$damage_state") == 2 ]] || fail "screen inversion restores full damage tracking"
-[[ ! -e $toggle_state/invert-screen-damage-tracking ]] || fail "screen inversion removes saved state when disabled"
+[[ ! -e $toggle_state/screen-filter-damage-tracking ]] || fail "screen inversion removes saved state when disabled"
 pass "screen inversion toggles safely without partial-damage flicker"

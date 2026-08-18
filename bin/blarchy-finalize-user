@@ -74,10 +74,10 @@ else
 fi
 
 mkdir -p ~/.agents/skills ~/.claude/skills ~/.codex/skills ~/.pi/agent/skills
-ln -sfn "$BLARCHY_PATH/default/omarchy-skill" ~/.agents/skills/omarchy
-ln -sfn "$BLARCHY_PATH/default/omarchy-skill" ~/.claude/skills/omarchy
-ln -sfn "$BLARCHY_PATH/default/omarchy-skill" ~/.codex/skills/omarchy
-ln -sfn "$BLARCHY_PATH/default/omarchy-skill" ~/.pi/agent/skills/omarchy
+for skills_dir in ~/.agents/skills ~/.claude/skills ~/.codex/skills ~/.pi/agent/skills; do
+  [[ -L $skills_dir/omarchy ]] && rm -f "$skills_dir/omarchy"
+  ln -sfn "$BLARCHY_PATH/default/blarchy" "$skills_dir/blarchy"
+done
 
 mkdir -p ~/Downloads ~/Pictures/Screenshots ~/Videos ~/.config/gtk-3.0
 if [[ ${OMARCHY_PRESERVE_USER_CONFIG:-0} != "1" || ! -f $HOME/.config/user-dirs.dirs ]]; then

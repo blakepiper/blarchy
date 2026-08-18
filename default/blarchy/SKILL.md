@@ -1,5 +1,5 @@
 ---
-name: omarchy
+name: blarchy
 description: >
   REQUIRED for end-user customization of Linux desktop, window manager, or system config.
   Use when editing ~/.config/hypr/, ~/.config/omarchy/, or
@@ -7,7 +7,8 @@ description: >
   Triggers: Hyprland, window rules, animations, keybindings, monitors, gaps, borders,
   blur, opacity, omarchy-shell, bar, terminal config, themes, background,
   night light, idle, lock screen, screenshots, reminders, layer rules, workspace
-  settings, display config, and user-facing omarchy commands. Excludes BLARCHY
+  settings, display config, and user-facing blarchy or retained omarchy commands.
+  Excludes BLARCHY
   source development through `omarchy dev link` workflows.
 ---
 

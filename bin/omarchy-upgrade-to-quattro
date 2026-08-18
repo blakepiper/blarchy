@@ -1848,11 +1848,12 @@ repair_sleep_lock_unit_override
 install_bash_startup
 
 mkdir -p "$HOME/.agents/skills" "$HOME/.claude/skills" "$HOME/.codex/skills" "$HOME/.pi/agent/skills"
-if [[ -d $root/default/omarchy-skill ]]; then
-  ln -sfn "$root/default/omarchy-skill" "$HOME/.agents/skills/omarchy"
-  ln -sfn "$root/default/omarchy-skill" "$HOME/.claude/skills/omarchy"
-  ln -sfn "$root/default/omarchy-skill" "$HOME/.codex/skills/omarchy"
-  ln -sfn "$root/default/omarchy-skill" "$HOME/.pi/agent/skills/omarchy"
+if [[ -d $root/default/blarchy ]]; then
+  for skills_dir in "$HOME/.agents/skills" "$HOME/.claude/skills" \
+    "$HOME/.codex/skills" "$HOME/.pi/agent/skills"; do
+    [[ -L $skills_dir/omarchy ]] && rm -f "$skills_dir/omarchy"
+    ln -sfn "$root/default/blarchy" "$skills_dir/blarchy"
+  done
 fi
 
 mkdir -p "$HOME/.local/state/omarchy/toggles/hypr"

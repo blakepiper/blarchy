@@ -2,7 +2,7 @@
 #   /etc/profile.d/omarchy.sh                 (system login shells)
 #   ~/.bashrc BLARCHY bootstrap block         (interactive shells)
 #   /usr/share/uwsm/env.d/10-omarchy          (Hyprland session via uwsm)
-#   /usr/share/omarchy/default/bash/envs      (bash rc chain; SSH/non-login)
+#   /usr/local/share/blarchy/default/bash/envs (bash rc chain; SSH/non-login)
 
 # Installed systems use the immutable runtime snapshot. Older installations
 # can continue to provide /etc/omarchy.conf when /etc/blarchy.conf is absent.
@@ -12,7 +12,7 @@ fi
 
 if [ -z "${BLARCHY_PATH:-}" ] && [ -f /etc/omarchy.conf ]; then
   . /etc/omarchy.conf
-  : "${BLARCHY_PATH:=${OMARCHY_PATH:-/usr/share/omarchy}}"
+  : "${BLARCHY_PATH:=${OMARCHY_PATH:-/usr/local/share/blarchy}}"
 fi
 
 if [ -z "${BLARCHY_PATH:-}" ]; then

@@ -4,6 +4,7 @@
 # omarchy:group=setup
 # omarchy:requires-sudo=true
 # omarchy:examples=omarchy setup hardware --install-user dhh
+# omarchy:hidden=true
 
 set -euo pipefail
 
@@ -35,6 +36,18 @@ while (($#)); do
       ;;
   esac
 done
+
+install_config="${BLARCHY_INSTALL_CONFIG:-/etc/blarchy.conf}"
+install_mode="${BLARCHY_INSTALL_MODE:-}"
+if [[ -r $install_config ]]; then
+  source "$install_config"
+  install_mode="${BLARCHY_INSTALL_MODE:-$install_mode}"
+fi
+if [[ $install_mode == "standalone" ]]; then
+  echo "Error: inherited hardware setup is unavailable on standalone BLARCHY installations." >&2
+  echo "Use BLARCHY-native hardware helpers explicitly when needed." >&2
+  exit 1
+fi
 
 if (( EUID != 0 )); then
   echo "Error: omarchy-setup-hardware must run as root" >&2

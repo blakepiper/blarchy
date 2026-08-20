@@ -4,6 +4,7 @@
 # omarchy:group=dev
 # omarchy:args=[package-name] [path-to-checkout]
 # omarchy:examples=omarchy dev pkg-test | omarchy dev pkg-test omarchy-dev ~/Work/omarchy/omarchy-installer
+# omarchy:hidden=true
 
 set -euo pipefail
 

@@ -11,15 +11,14 @@ if (($# != 1)) || [[ ! $1 =~ ^[0-9]+$ ]]; then
   exit 2
 fi
 
-steam_bin=$(command -v steam || true)
-if [[ -z $steam_bin ]]; then
+if omarchy-cmd-missing steam; then
   echo "omarchy launch steam-game: Steam was not found on PATH." >&2
   exit 127
 fi
+steam_bin=steam
 
 terminal_address=""
-if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] &&
-  command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
   active_window=$(hyprctl activewindow -j 2>/dev/null || true)
   active_pid=$(jq -r '.pid // empty' <<<"$active_window")
   active_address=$(jq -r '.address // empty' <<<"$active_window")

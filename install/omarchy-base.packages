@@ -1,7 +1,5 @@
-# BLARCHY core package list. The standalone installer resolves it through
-# pacman/AUR; retained ISO tooling may also use it to construct an offline mirror.
+# BLARCHY package list. The standalone installer resolves it through pacman/AUR.
 
-aether
 alacritty
 alsa-utils
 avahi
@@ -14,20 +12,16 @@ bluez-utils
 bolt
 brightnessctl
 btop
-chafa
-clang
 cups
 cups-browsed
 cups-filters
 cups-pdf
 dosfstools
-dotnet-runtime
 dua-cli
 evince
 exfatprogs
 expac
 eza
-fakeroot
 fastfetch
 fcitx5
 fcitx5-gtk
@@ -64,12 +58,9 @@ lazygit
 less
 libsecret
 libyaml
-llvm
 localsend
 lua51
-luarocks
 man-db
-mariadb-libs
 mise
 mpv
 mpv-mpris
@@ -85,16 +76,14 @@ noto-fonts-emoji
 nss-mdns
 oh-my-pi-bin
 pacman-contrib
-pamixer
+pipewire-alsa
+pipewire-pulse
 plocate
-postgresql-libs
 power-profiles-daemon
 python
 python-gobject
 python-pip
-python-poetry-core
 python-terminaltexteffects
-qemu-user-static-binfmt
 qrencode
 quickshell-git
 ripgrep
@@ -111,7 +100,6 @@ system-config-printer
 tesseract
 tesseract-data-eng
 tldr
-tree-sitter-cli
 tmux
 ttf-ia-writer
 ttf-jetbrains-mono-nerd
@@ -122,7 +110,6 @@ unzip
 usage
 uwsm
 vscodium-bin
-whois
 wireless-regdb
 wireplumber
 wl-clipboard
@@ -131,7 +118,7 @@ woff2-font-awesome
 xdg-desktop-portal-gtk
 xdg-desktop-portal-hyprland
 xdg-terminal-exec
+xdg-user-dirs
 yaru-icon-theme
-yay
 yt-dlp
 zoxide

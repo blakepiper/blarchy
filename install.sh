@@ -152,7 +152,7 @@ install_aur_packages() {
   local -A failed_status=()
 
   aur_log_dir=$(mktemp -d "${TMPDIR:-/tmp}/blarchy-aur.XXXXXX")
-  if yay -S --needed --noconfirm "${aur_packages[@]}" \
+  if yay -S --needed --noconfirm --removemake --cleanafter "${aur_packages[@]}" \
     > >(tee "$aur_log_dir/batch.log") 2>&1; then
     rm -rf -- "$aur_log_dir"
     aur_log_dir=""
@@ -171,7 +171,7 @@ install_aur_packages() {
     fi
     log_name=${package_name//[^[:alnum:]._-]/_}
     echo "Retry AUR package: $package_name"
-    if yay -S --needed --noconfirm "$package_name" \
+    if yay -S --needed --noconfirm --removemake --cleanafter "$package_name" \
       > >(tee "$aur_log_dir/$log_name.log") 2>&1; then
       continue
     else
@@ -200,6 +200,7 @@ enable_multilib
 echo "Update Arch and install build prerequisites"
 rustup_installed=0
 native_rust_installed=0
+temporary_rust_installed=0
 installed_packages=$(pacman -Qq)
 if grep -Fxq rustup <<<"$installed_packages"; then
   rustup_installed=1
@@ -217,22 +218,18 @@ fi
 
 build_prerequisites=(base-devel git)
 pacman_options=(--needed --noconfirm)
-use_rustup=0
 if (( rustup_installed )); then
-  use_rustup=1
   echo "Use the existing rustup provider for AUR builds"
 elif (( native_rust_installed )); then
-  use_rustup=1
-  build_prerequisites+=(rustup)
-  echo "Replace the existing Arch Rust provider with rustup in one pacman transaction"
+  echo "Use the existing Arch Rust provider for AUR builds"
 else
-  use_rustup=1
-  build_prerequisites+=(rustup)
+  build_prerequisites+=(rust)
+  temporary_rust_installed=1
 fi
 
 sudo pacman -Syu "${pacman_options[@]}" "${build_prerequisites[@]}"
 
-if (( use_rustup )) && ! rustup default >/dev/null 2>&1; then
+if (( rustup_installed )) && ! rustup default >/dev/null 2>&1; then
   echo "Initialize the installed rustup provider for AUR builds"
   rustup default stable
 fi
@@ -248,6 +245,10 @@ sudo pacman -S --needed --noconfirm "${repo_packages[@]}"
 if (( ${#aur_packages[@]} )); then
   echo "Build and install BLARCHY AUR packages"
   install_aur_packages
+fi
+if (( temporary_rust_installed )); then
+  echo "Remove the temporary Rust build toolchain"
+  sudo pacman -Rns --noconfirm rust
 fi
 yay -Y --devel --save
 

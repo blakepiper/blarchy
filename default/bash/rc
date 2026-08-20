@@ -1,4 +1,4 @@
-: "${OMARCHY_PATH:=/usr/share/omarchy}"
+: "${OMARCHY_PATH:=${BLARCHY_PATH:-/usr/local/share/blarchy}}"
 
 # BLARCHY keeps Bash as its default shell. ble.sh supplies history-backed ghost
 # suggestions and syntax-aware completion without changing the user's shell.

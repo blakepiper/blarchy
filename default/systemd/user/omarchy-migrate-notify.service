@@ -3,7 +3,7 @@ Description=Notify about pending BLARCHY migrations
 # Login-only. Normal yay/pacman updates do not alter the Git-owned migration
 # directory. This catches an explicit source pull that was not followed by the
 # idempotent installer without watching the checkout continuously.
-ConditionPathIsDirectory=/usr/share/omarchy/migrations
+ConditionPathIsDirectory=/usr/local/share/blarchy/migrations
 # The actionable notification launches its terminal through uwsm-app, whose
 # daemon starts after graphical-session.target. Run after the target too so this
 # oneshot cannot hold the target open while waiting for that daemon.

@@ -1,6 +1,6 @@
 SNAPPER_CONFIG_PATH="${OMARCHY_SNAPPER_CONFIG_PATH:-/etc/snapper/configs/root}"
 SNAPPER_CONF_PATH="${OMARCHY_SNAPPER_CONF_PATH:-/etc/conf.d/snapper}"
-template="${OMARCHY_SNAPPER_TEMPLATE:-${OMARCHY_PATH:-/usr/share/omarchy}/default/snapper/root}"
+template="${OMARCHY_SNAPPER_TEMPLATE:-${BLARCHY_PATH:-${OMARCHY_PATH:-/usr/local/share/blarchy}}/default/snapper/root}"
 
 echo "Configuring BLARCHY Snapper snapshot retention"
 

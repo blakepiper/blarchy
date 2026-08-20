@@ -34,10 +34,12 @@ fi
 pass "Git remains an installer prerequisite rather than a bundled default"
 grep -Fq 'pacman -S --needed --noconfirm "${repo_packages[@]}"' "$ROOT/install.sh" ||
   fail "standalone installer installs repository packages before AUR builds"
-grep -Fq 'yay -S --needed --noconfirm "${aur_packages[@]}"' "$ROOT/install.sh" ||
-  fail "standalone installer installs AUR packages idempotently"
-grep -Fq 'build_prerequisites+=(rustup)' "$ROOT/install.sh" ||
-  fail "standalone installer uses rustup as its fresh-install AUR toolchain"
+grep -Fq 'yay -S --needed --noconfirm --removemake --cleanafter "${aur_packages[@]}"' "$ROOT/install.sh" ||
+  fail "standalone installer installs AUR packages without retaining build dependencies"
+grep -Fq 'build_prerequisites+=(rust)' "$ROOT/install.sh" ||
+  fail "standalone installer uses the packaged Rust toolchain for fresh AUR builds"
+grep -Fq 'sudo pacman -Rns --noconfirm rust' "$ROOT/install.sh" ||
+  fail "standalone installer removes its temporary Rust toolchain"
 grep -Fq 'native_rust_installed' "$ROOT/install.sh" ||
   fail "standalone installer handles an existing Arch Rust provider"
 grep -Fq 'pacman_options=(--needed --noconfirm)' "$ROOT/install.sh" ||
@@ -71,6 +73,17 @@ done
 for package_name in blesh ttf-jetbrains-mono-nerd hyprland-preview-share-picker-git; do
   grep -Fxq "$package_name" "$ROOT/install/omarchy-base.packages" ||
     fail "standalone manifest uses the public package name" "$package_name"
+done
+for package_name in pipewire-alsa pipewire-pulse xdg-user-dirs; do
+  grep -Fxq "$package_name" "$ROOT/install/omarchy-base.packages" ||
+    fail "standalone manifest declares runtime dependency" "$package_name"
+done
+for package_name in \
+  aether chafa clang dotnet-runtime fakeroot llvm luarocks mariadb-libs pamixer \
+  postgresql-libs python-poetry-core qemu-user-static-binfmt tree-sitter-cli whois yay; do
+  if grep -Fxq "$package_name" "$ROOT/install/omarchy-base.packages"; then
+    fail "standalone manifest excludes unused or build-only package" "$package_name"
+  fi
 done
 for package_name in cliamp kdenlive libreoffice-fresh moonlight-qt neovim obs-studio obsidian pinta xournalpp; do
   if grep -Fxq "$package_name" "$ROOT/install/omarchy-base.packages"; then
@@ -110,7 +123,7 @@ migration_state=$(mktemp -d)
 trap 'rm -rf -- "$test_home" "$test_root" "$migration_state"' EXIT
 
 mkdir -p "$test_root/usr/bin"
-printf '%s\n' '#!/usr/bin/env python3' >"$test_root/usr/bin/powerprofilesctl"
+printf '%s\n' '#!/bin/python3' >"$test_root/usr/bin/powerprofilesctl"
 
 legacy_user_manager_dropin="$test_root/usr/lib/systemd/user@.service.d/faster-shutdown.conf"
 mkdir -p "$(dirname "$legacy_user_manager_dropin")"
@@ -135,6 +148,14 @@ grep -Fxq 'keep-my-binding' "$test_home/.config/hypr/bindings.lua" ||
 [[ ! -e $test_home/.config/autostart/limine-snapper-notify.desktop ]] ||
   fail "normal install excludes the Limine snapshot notifier"
 pass "user defaults are idempotent and preserve existing files"
+
+mkdir -p "$test_home/.local/bin"
+printf '%s\n' '#!/bin/bash' 'echo keep-user-codex' >"$test_home/.local/bin/codex"
+HOME="$test_home" OMARCHY_PRESERVE_USER_CONFIG=1 \
+  bash "$ROOT/bin/omarchy-mise-install" codex >/dev/null
+grep -Fxq 'echo keep-user-codex' "$test_home/.local/bin/codex" ||
+  fail "normal finalization preserves existing user commands"
+pass "mise command wrappers preserve existing user commands"
 
 grep -Fq '/usr/local/share/blarchy/default/bash/env-bootstrap' "$test_home/.bashrc" ||
   fail "new Bash integration loads the installed BLARCHY runtime"
@@ -193,8 +214,10 @@ done
 runtime="$test_root/usr/local/share/blarchy"
 [[ -d $runtime && ! -L $runtime ]] ||
   fail "system integration installs a standalone runtime snapshot"
-grep -Fxq '#!/bin/python3' "$test_root/usr/bin/powerprofilesctl" ||
-  fail "standalone system integration pins powerprofilesctl to system Python"
+grep -Fxq '#!/usr/bin/env python3' "$test_root/usr/bin/powerprofilesctl" ||
+  fail "standalone system integration preserves the package-owned powerprofilesctl"
+[[ $(readlink "$test_root/usr/local/bin/powerprofilesctl") == /usr/local/share/blarchy/bin/blarchy-powerprofilesctl ]] ||
+  fail "standalone system integration shadows powerprofilesctl with a BLARCHY-owned wrapper"
 pass "powerprofilesctl is safe with mise-enabled desktop PATHs"
 [[ $(stat -c %a "$runtime") == "755" ]] ||
   fail "installed runtime is traversable by desktop users"
@@ -202,6 +225,16 @@ grep -Fq 'cp -a --no-preserve=ownership' "$ROOT/install/standalone/system.sh" ||
   fail "system integration does not preserve user ownership in system paths"
 [[ -f $runtime/bin/omarchy && -f $runtime/bin/blarchy ]] ||
   fail "runtime snapshot includes compatibility and BLARCHY command surfaces"
+for inherited_path in \
+  "$runtime/bin/omarchy-setup-system" \
+  "$runtime/bin/omarchy-setup-hardware" \
+  "$runtime/bin/omarchy-upgrade-to-quattro" \
+  "$runtime/bin/omarchy-dev-pkg-test" \
+  "$runtime/default/libalpm" \
+  "$runtime/default/pacman"; do
+  [[ ! -e $inherited_path ]] ||
+    fail "standalone runtime excludes inherited Omarchy lifecycle assets" "$inherited_path"
+done
 [[ $(readlink "$test_root/usr/share/omarchy") == /usr/local/share/blarchy ]] ||
   fail "Omarchy compatibility path resolves to the installed BLARCHY runtime"
 [[ $(readlink "$test_root/usr/local/bin/omarchy") == /usr/local/share/blarchy/bin/omarchy ]] ||
@@ -231,6 +264,19 @@ fi
   fail "system integration installs the BLARCHY Fastfetch logo asset"
 [[ -f $test_root/etc/firefox/policies/policies.json ]] ||
   fail "system integration installs the Firefox policy"
+rm -f "$test_root/etc/blarchy/managed/firefox-policy"
+printf '%s\n' '{"policies":{"DisableTelemetry":true}}' \
+  >"$test_root/etc/firefox/policies/policies.json"
+ln -sfn /opt/custom-powerprofilesctl "$test_root/usr/local/bin/powerprofilesctl"
+BLARCHY_REPO_PATH="$ROOT" \
+  BLARCHY_INSTALL_ROOT="$test_root" \
+  BLARCHY_INSTALL_USER="$(id -un)" \
+  BLARCHY_INSTALL_SKIP_SERVICES=1 \
+  bash "$ROOT/install/standalone/system.sh" >/dev/null
+grep -Fq '"DisableTelemetry":true' "$test_root/etc/firefox/policies/policies.json" ||
+  fail "system integration preserves an administrator-owned Firefox policy"
+[[ $(readlink "$test_root/usr/local/bin/powerprofilesctl") == /opt/custom-powerprofilesctl ]] ||
+  fail "system integration preserves an administrator-owned command symlink"
 [[ -f $test_root/etc/pam.d/omarchy-lock-password ]] ||
   fail "system integration installs lock-screen authentication"
 [[ -f $test_root/etc/systemd/system.conf.d/10-faster-shutdown.conf ]] ||
@@ -263,6 +309,18 @@ grep -Fxq "export BLARCHY_VERSION='$(<"$ROOT/version")'" "$test_root/etc/blarchy
 grep -Fq 'export OMARCHY_PATH="${BLARCHY_PATH:-/usr/local/share/blarchy}"' \
   "$test_root/etc/omarchy.conf" ||
   fail "legacy environment is only a compatibility alias"
+for inherited_command in omarchy-setup-system omarchy-setup-hardware omarchy-upgrade-to-quattro; do
+  inherited_args=(--install-user "$(id -un)")
+  [[ $inherited_command != "omarchy-upgrade-to-quattro" ]] ||
+    inherited_args=(--user "$(id -un)")
+  if error=$(BLARCHY_INSTALL_CONFIG="$test_root/etc/blarchy.conf" \
+    bash "$ROOT/bin/$inherited_command" "${inherited_args[@]}" 2>&1); then
+    fail "standalone mode blocks inherited lifecycle command" "$inherited_command"
+  fi
+  grep -Fqi 'unavailable on standalone BLARCHY installations' <<<"$error" ||
+    fail "inherited lifecycle command explains the standalone boundary" "$inherited_command"
+done
+pass "standalone mode blocks inherited Omarchy lifecycle commands"
 while IFS=' ' read -r unit command; do
   override="$test_root/etc/systemd/user/$unit.d/10-blarchy-standalone.conf"
   grep -Fxq "ExecStart=/usr/local/bin/$command" "$override" ||

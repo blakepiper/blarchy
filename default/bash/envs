@@ -9,7 +9,7 @@ export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 
 # Idempotent — already sourced by /etc/skel/.bashrc; re-source here so SSH and
 # other non-interactive non-login bash sessions still get OMARCHY_PATH.
-[ -r /usr/share/omarchy/default/bash/env-bootstrap ] && . /usr/share/omarchy/default/bash/env-bootstrap
+[ -r /usr/local/share/blarchy/default/bash/env-bootstrap ] && . /usr/local/share/blarchy/default/bash/env-bootstrap
 
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;

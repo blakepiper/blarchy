@@ -38,17 +38,14 @@ install_file() {
   install -m "$mode" "$source_file" "$target"
 }
 
-fix_powerprofilesctl_shebang() {
+restore_powerprofilesctl_shebang() {
   local target
 
   target=$(target_path /usr/bin/powerprofilesctl)
   [[ -f $target ]] || return 0
-
-  # UWSM adds mise shims to the desktop PATH, but Arch's optional
-  # python-gobject module belongs to the system Python.  The packaged
-  # powerprofilesctl uses env python3, so make its interpreter independent of
-  # the user's development-language PATH.
-  sed -i '/^#!\/usr\/bin\/env python3$/c\#!/bin/python3' "$target"
+  # Older BLARCHY releases changed this package-owned shebang. Restore only the
+  # exact legacy edit; the BLARCHY-owned wrapper below now selects system Python.
+  sed -i '1s|^#!/bin/python3$|#!/usr/bin/env python3|' "$target"
 }
 
 copy_tree() {
@@ -116,6 +113,16 @@ install_runtime_snapshot() {
     [[ -e $repo_path/$runtime_item ]] || continue
     cp -a --no-preserve=ownership "$repo_path/$runtime_item" "$runtime_stage/"
   done
+  # Keep retained upstream lifecycle code in the source checkout for historical
+  # review without publishing it into a standalone installation.
+  rm -f \
+    "$runtime_stage/bin/omarchy-setup-system" \
+    "$runtime_stage/bin/omarchy-setup-hardware" \
+    "$runtime_stage/bin/omarchy-upgrade-to-quattro" \
+    "$runtime_stage/bin/omarchy-dev-pkg-test"
+  rm -rf \
+    "$runtime_stage/default/libalpm" \
+    "$runtime_stage/default/pacman"
   chmod 0755 "$runtime_stage"
 
   if [[ -e $runtime_target || -L $runtime_target ]]; then
@@ -203,7 +210,7 @@ install_sddm_state() {
 }
 
 install_runtime_snapshot
-fix_powerprofilesctl_shebang
+restore_powerprofilesctl_shebang
 
 runtime_link=$(target_path /usr/share/omarchy)
 mkdir -p "$(dirname "$runtime_link")"
@@ -281,6 +288,17 @@ for source_file in \
 done
 shopt -u nullglob
 
+powerprofilesctl_link="$bin_dir/powerprofilesctl"
+powerprofilesctl_target="$runtime_path/bin/blarchy-powerprofilesctl"
+if [[ ! -e $powerprofilesctl_link && ! -L $powerprofilesctl_link ]]; then
+  ln -s "$powerprofilesctl_target" "$powerprofilesctl_link"
+elif [[ -L $powerprofilesctl_link ]] &&
+  [[ $(readlink "$powerprofilesctl_link") == "$powerprofilesctl_target" ]]; then
+  ln -sfn "$runtime_path/bin/blarchy-powerprofilesctl" "$powerprofilesctl_link"
+else
+  echo "Preserve existing command: $powerprofilesctl_link"
+fi
+
 install_file "$repo_path/etc/profile.d/omarchy.sh" /etc/profile.d/omarchy.sh
 install_file "$repo_path/default/uwsm/env.d/10-omarchy" /usr/share/uwsm/env.d/10-omarchy
 install_file "$repo_path/default/wayland-sessions/omarchy.desktop" \
@@ -289,8 +307,19 @@ install_file "$repo_path/default/xdg-terminal-exec/hyprland-xdg-terminals.list" 
   /usr/share/xdg-terminal-exec/hyprland-xdg-terminals.list
 install_file "$repo_path/default/environment.d/10-omarchy-fcitx.conf" \
   /usr/lib/environment.d/10-omarchy-fcitx.conf
-install_file "$repo_path/default/firefox/policies.json" \
-  /etc/firefox/policies/policies.json
+firefox_policy=$(target_path /etc/firefox/policies/policies.json)
+firefox_policy_marker=$(target_path /etc/blarchy/managed/firefox-policy)
+if [[ ! -e $firefox_policy || -f $firefox_policy_marker ]]; then
+  install_file "$repo_path/default/firefox/policies.json" \
+    /etc/firefox/policies/policies.json
+  mkdir -p "$(dirname "$firefox_policy_marker")"
+  touch "$firefox_policy_marker"
+elif cmp -s "$repo_path/default/firefox/policies.json" "$firefox_policy"; then
+  mkdir -p "$(dirname "$firefox_policy_marker")"
+  touch "$firefox_policy_marker"
+else
+  echo "Preserve existing Firefox enterprise policy: $firefox_policy"
+fi
 install_file "$repo_path/default/pam/omarchy-lock-password" \
   /etc/pam.d/omarchy-lock-password
 install_file "$repo_path/etc/systemd/system.conf.d/10-faster-shutdown.conf" \

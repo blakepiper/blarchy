@@ -26,10 +26,19 @@ while (($#)); do
 done
 
 install_config="${BLARCHY_INSTALL_CONFIG:-/etc/blarchy.conf}"
+blarchy_path_override="${BLARCHY_PATH-}"
+blarchy_path_was_set="${BLARCHY_PATH+x}"
+blarchy_install_override="${BLARCHY_INSTALL-}"
+blarchy_install_was_set="${BLARCHY_INSTALL+x}"
+install_mode_override="${BLARCHY_INSTALL_MODE-}"
+install_mode_was_set="${BLARCHY_INSTALL_MODE+x}"
 BLARCHY_INSTALL_MODE="${BLARCHY_INSTALL_MODE:-}"
 if [[ -r $install_config ]]; then
   source "$install_config"
 fi
+[[ -n $blarchy_path_was_set ]] && BLARCHY_PATH="$blarchy_path_override"
+[[ -n $blarchy_install_was_set ]] && BLARCHY_INSTALL="$blarchy_install_override"
+[[ -n $install_mode_was_set ]] && BLARCHY_INSTALL_MODE="$install_mode_override"
 
 BLARCHY_PATH="${BLARCHY_PATH:-${OMARCHY_PATH:-/usr/local/share/blarchy}}"
 BLARCHY_INSTALL="${BLARCHY_INSTALL:-$BLARCHY_PATH/install}"

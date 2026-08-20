@@ -7,7 +7,7 @@ if not blarchy_path or blarchy_path == "" then
   blarchy_path = os.getenv("OMARCHY_PATH")
 end
 if not blarchy_path or blarchy_path == "" then
-  blarchy_path = "/usr/share/omarchy"
+  blarchy_path = "/usr/local/share/blarchy"
 end
 dofile(blarchy_path .. "/default/hypr/bootstrap.lua")
 package.path = blarchy_path .. "/?.lua;" .. package.path

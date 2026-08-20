@@ -114,6 +114,16 @@ if { [[ -n $channel_override ]] || (( channel_override_cli )); } && ! valid_chan
   fail "Invalid channel '$channel_override'. Use stable, rc, or edge."
 fi
 
+install_config="${BLARCHY_INSTALL_CONFIG:-/etc/blarchy.conf}"
+install_mode="${BLARCHY_INSTALL_MODE:-}"
+if [[ -r $install_config ]]; then
+  source "$install_config"
+  install_mode="${BLARCHY_INSTALL_MODE:-$install_mode}"
+fi
+if [[ $install_mode == "standalone" ]]; then
+  fail "The retained Omarchy upgrade is unavailable on standalone BLARCHY installations. Run blarchy update instead."
+fi
+
 if ! command -v pacman >/dev/null 2>&1; then
   fail "This upgrade is only supported on Arch/Omarchy systems with pacman."
 fi

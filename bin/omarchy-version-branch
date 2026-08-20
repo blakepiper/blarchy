@@ -3,10 +3,10 @@
 # omarchy:summary=Print the active BLARCHY source branch
 # omarchy:hidden=true
 
-omarchy_path=${OMARCHY_PATH:-/usr/share/omarchy}
+omarchy_path=${BLARCHY_PATH:-${OMARCHY_PATH:-/usr/local/share/blarchy}}
 omarchy_path=${omarchy_path%/}
 
-[[ $omarchy_path != "/usr/share/omarchy" ]] || exit 1
+[[ -d $omarchy_path/.git ]] || exit 1
 
 branch=$(git -C "$omarchy_path" branch --show-current 2>/dev/null || true)
 if [[ -z $branch ]]; then

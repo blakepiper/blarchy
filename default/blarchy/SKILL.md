@@ -46,16 +46,17 @@ When invoking a privileged command directly from a graphical context, use
 `pkexec` so BLARCHY can show an authorization prompt with command context. Do
 not wrap commands that already manage privilege elevation themselves.
 
-**For end-user customization tasks, NEVER modify anything in `/usr/share/omarchy/`** - but READING is safe and encouraged.
+**For end-user customization tasks, NEVER modify anything in `/usr/local/share/blarchy/`** - but READING is safe and encouraged.
 
-On a standalone install this compatibility path points to the user's BLARCHY
-Git checkout. Any direct changes will be:
-- Liable to conflict with the next explicit BLARCHY `git pull`
-- Cause conflicts with upstream
-- Bypass BLARCHY's explicit source-update workflow
+On a standalone install this path contains BLARCHY's installed runtime snapshot.
+Any direct changes will be:
+
+- Lost on the next `blarchy update` or installer rerun
+- Outside your user configuration and source checkout
+- Bypass BLARCHY's source and user-configuration layers
 
 ```
-/usr/share/omarchy/     # READ-ONLY - NEVER EDIT (reading is OK)
+/usr/local/share/blarchy/ # READ-ONLY - NEVER EDIT (reading is OK)
 ├── bin/                    # Source scripts (symlinked to PATH)
 ├── config/                 # Default config templates
 ├── themes/                 # Stock themes
@@ -65,11 +66,11 @@ Git checkout. Any direct changes will be:
 └── install/                # Installation scripts
 ```
 
-**Reading `/usr/share/omarchy/` is SAFE and useful** - do it freely to:
+**Reading `/usr/local/share/blarchy/` is SAFE and useful** - do it freely to:
 - Understand how omarchy commands work: `omarchy theme set --help` or `cat $(which omarchy-theme-set)`
 - See default configs before customizing: `cat "$OMARCHY_PATH/config/omarchy/shell.json"`
 - Check stock theme files to copy for customization
-- Reference default hyprland settings: `cat /usr/share/omarchy/default/hypr/*`
+- Reference default hyprland settings: `cat /usr/local/share/blarchy/default/hypr/*`
 
 **Always use these safe locations instead:**
 - `~/.config/` - User configuration (safe to edit)
@@ -252,7 +253,7 @@ cp ~/.config/hypr/bindings.lua ~/.config/hypr/bindings.lua.bak.$(date +%s)
 ### Pattern 2: Make a new theme
 
 1. Create a directory under ~/.config/omarchy/themes.
-2. See how an existing theme is done via /usr/share/omarchy/themes/catppuccin.
+2. See how an existing theme is done via /usr/local/share/blarchy/themes/catppuccin.
 3. Download a matching background (or several) from the internet and put them in ~/.config/omarchy/themes/[name-of-new-theme]
 4. When done with the theme, run `omarchy theme set "Name of new theme"`
 
@@ -429,7 +430,7 @@ omarchy reinstall
 When user requests system changes:
 
 1. **Is it a retained BLARCHY `omarchy` command?** Use it directly
-2. **Is it a config edit?** Edit in `~/.config/`, never `/usr/share/omarchy/`
+2. **Is it a config edit?** Edit in `~/.config/`, never `/usr/local/share/blarchy/`
 3. **Is it a theme customization?** Create a NEW custom theme directory
 4. **Is it automation?** Use `omarchy hook install` and the hook `.d` directories
 5. **Is it a normal package install?** Use `yay -S <pkgs...>` so official and
@@ -452,7 +453,7 @@ omarchy reminder clear
 ## Out of Scope
 
 This skill intentionally does not cover BLARCHY source development. Do not use this skill for:
-- Editing files in `/usr/share/omarchy/` (`bin/`, `config/`, `default/`, `shell/`, `themes/`, `migrations/`, etc.)
+- Editing files in `/usr/local/share/blarchy/` (`bin/`, `config/`, `default/`, `shell/`, `themes/`, `migrations/`, etc.)
 - Creating or editing migrations
 - Running `omarchy dev ...` commands
 

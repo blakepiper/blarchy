@@ -4,6 +4,7 @@
 # omarchy:group=setup
 # omarchy:requires-sudo=true
 # omarchy:examples=omarchy setup system --install-user dhh --first-install
+# omarchy:hidden=true
 
 set -euo pipefail
 
@@ -46,6 +47,18 @@ while (($#)); do
       ;;
   esac
 done
+
+install_config="${BLARCHY_INSTALL_CONFIG:-/etc/blarchy.conf}"
+install_mode="${BLARCHY_INSTALL_MODE:-}"
+if [[ -r $install_config ]]; then
+  source "$install_config"
+  install_mode="${BLARCHY_INSTALL_MODE:-$install_mode}"
+fi
+if [[ $install_mode == "standalone" ]]; then
+  echo "Error: inherited system setup is unavailable on standalone BLARCHY installations." >&2
+  echo "Rerun ./install.sh from the configured BLARCHY checkout instead." >&2
+  exit 1
+fi
 
 if (( EUID != 0 )); then
   echo "Error: omarchy-setup-system must run as root" >&2

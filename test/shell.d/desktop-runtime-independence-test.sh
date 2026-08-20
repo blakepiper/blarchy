@@ -10,7 +10,9 @@ shell_root="$ROOT/shell/shell.qml"
 fastfetch_config="$ROOT/etc/fastfetch/config.jsonc"
 menu_config="$ROOT/default/omarchy/omarchy-menu.jsonc"
 
-grep -Fq 'os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "/usr/local/share/blarchy"' "$hypr_entry" ||
+grep -Fq 'os.getenv("BLARCHY_PATH")' "$hypr_entry" &&
+  grep -Fq 'os.getenv("OMARCHY_PATH")' "$hypr_entry" &&
+  grep -Fq 'blarchy_path = "/usr/local/share/blarchy"' "$hypr_entry" ||
   fail "Hyprland defaults to the installed BLARCHY runtime"
 grep -Fq 'Quickshell.env("BLARCHY_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/blarchy"' "$shell_root" ||
   fail "Quickshell defaults to the installed BLARCHY runtime"

@@ -5,6 +5,22 @@ set -euo pipefail
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 TEST_DIR="$ROOT/test/shell.d"
 
+privilege_guard=$(mktemp -d)
+cleanup() {
+  rm -rf -- "$privilege_guard"
+}
+trap cleanup EXIT
+
+for command_name in sudo pkexec; do
+  cat >"$privilege_guard/$command_name" <<'SH'
+#!/bin/bash
+echo "Error: shell tests must mock ${0##*/} explicitly." >&2
+exit 97
+SH
+  chmod +x "$privilege_guard/$command_name"
+done
+export PATH="$privilege_guard:$PATH"
+
 shopt -s nullglob
 tests=()
 for test in "$TEST_DIR"/*-test.sh; do

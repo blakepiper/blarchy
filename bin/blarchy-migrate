@@ -30,14 +30,26 @@ blarchy_path_override="${BLARCHY_PATH-}"
 blarchy_path_was_set="${BLARCHY_PATH+x}"
 blarchy_install_override="${BLARCHY_INSTALL-}"
 blarchy_install_was_set="${BLARCHY_INSTALL+x}"
+omarchy_path_override="${OMARCHY_PATH-}"
+omarchy_path_was_set="${OMARCHY_PATH+x}"
+omarchy_install_override="${OMARCHY_INSTALL-}"
+omarchy_install_was_set="${OMARCHY_INSTALL+x}"
 install_mode_override="${BLARCHY_INSTALL_MODE-}"
 install_mode_was_set="${BLARCHY_INSTALL_MODE+x}"
 BLARCHY_INSTALL_MODE="${BLARCHY_INSTALL_MODE:-}"
 if [[ -r $install_config ]]; then
   source "$install_config"
 fi
-[[ -n $blarchy_path_was_set ]] && BLARCHY_PATH="$blarchy_path_override"
-[[ -n $blarchy_install_was_set ]] && BLARCHY_INSTALL="$blarchy_install_override"
+if [[ -n $blarchy_path_was_set ]]; then
+  BLARCHY_PATH="$blarchy_path_override"
+elif [[ -n $omarchy_path_was_set ]]; then
+  BLARCHY_PATH="$omarchy_path_override"
+fi
+if [[ -n $blarchy_install_was_set ]]; then
+  BLARCHY_INSTALL="$blarchy_install_override"
+elif [[ -n $omarchy_install_was_set ]]; then
+  BLARCHY_INSTALL="$omarchy_install_override"
+fi
 [[ -n $install_mode_was_set ]] && BLARCHY_INSTALL_MODE="$install_mode_override"
 
 BLARCHY_PATH="${BLARCHY_PATH:-${OMARCHY_PATH:-/usr/local/share/blarchy}}"

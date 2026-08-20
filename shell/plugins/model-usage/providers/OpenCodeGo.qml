@@ -67,14 +67,6 @@ Item {
     }
   }
 
-  Timer {
-    interval: 5 * 60 * 1000
-    running: root.enabled
-    repeat: true
-    triggeredOnStart: true
-    onTriggered: root.refresh()
-  }
-
   onEnabledChanged: if (enabled) refresh()
 
   readonly property string home: Quickshell.env("HOME") || ""

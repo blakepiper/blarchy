@@ -7,29 +7,22 @@ adapter per subscription.
 
 ## Panel
 
-- **Hero** — the mark, the tool, and the plan it runs on ("Max 20x", "Pro").
-  Auth and endpoint problems replace the plan line and repeat in a card.
-- **Subscription switch** — one chip per enabled provider (`h`/`l` or click).
-  It appears only when more than one provider is enabled.
-- **Limits** — the percentage of each allowance used, a matching meter, and
-  the time until the session or weekly window resets.
-- **Tokens by day** — one row per day for the last week: day, bar, tokens, with today
-  bolded at the bottom. Hover today for its prompt and session count.
-- **Tokens by model** — tokens per model with the bar behind each row scaled
-  to the heaviest model,
-  the same way the weekly chart scales to its busiest day. Hover for the
-  input / output / cache split.
+The popup is one compact table with every enabled provider visible at once.
+Each provider has session, weekly, and monthly columns showing used / remaining
+allowance and reset time, plus today's tokens and prompt count. A missing limit
+is shown as an em dash, so providers with different subscription windows still
+line up without tabs or provider switching.
 
-A subscription appears only when it is enabled in settings and has actually
-recorded usage — on this machine or on a synced one. With one such provider
-there is no switch row at all; with none, the module leaves the bar entirely
-rather than sitting there with nothing to say. A CLI installed mid-session
-shows up at the next refresh, so nothing polls the disk waiting for it.
+The long-running shell refreshes every provider in the background and keeps
+the latest values in memory. Opening the popup only reads that cached snapshot;
+it does not wait for Codex RPC, local transcript scans, or provider endpoints.
+The default refresh interval is five minutes, matching the Blix widget. Right
+click, `r`, or Enter forces a refresh.
 
-That self-hiding is why the widget ships in the default bar layout: a machine
-that has never run Claude Code, Codex, or OpenCode Go draws nothing, and the icon arrives on
-its own the first time a scan finds usage. Drop it with
-`omarchy plugin disable omarchy.model-usage`.
+Every configured provider keeps a row even when it has no signed-in data, which
+makes auth or endpoint failures visible instead of silently removing a provider.
+Set a provider's `enabled` setting to `false` when it should not be shown. Drop
+the complete widget with `omarchy plugin disable omarchy.model-usage`.
 
 ## Providers
 
@@ -50,11 +43,10 @@ falls back to local stats only.
 
 ## Interactions
 
-- Bar icon: hover = the Blix-style remaining-usage summary; left = panel,
-  right = refresh, middle = next subscription.
-- Panel: `h`/`l` switch subscription, `j`/`k` scroll, `r` or Enter refresh,
-  Tab moves to the neighboring bar panel, Esc closes.
-- IPC: `omarchy-shell omarchy.model-usage <open|close|toggle|refresh|next>`.
+- Bar icon: hover = the remaining-usage summary; left = table; right = refresh.
+- Panel: `r` or Enter refreshes, Tab moves to the neighboring bar panel, and
+  Esc closes.
+- IPC: `omarchy-shell omarchy.model-usage <open|close|toggle|refresh>`.
 
 ## Settings
 
@@ -64,7 +56,7 @@ top-level keys can be set with
 
 | Key | Default | What it does |
 |---|---|---|
-| `refreshIntervalSec` | `900` | How often local scans and snapshots refresh |
+| `refreshIntervalSec` | `300` | How often the cached provider snapshot refreshes |
 | `syncMode` | `"Off"` | `"On"` writes this machine's snapshot and merges the others |
 | `syncDir` | `""` | A folder synced by Syncthing, Dropbox, rsync, … |
 | `syncFileName` | `<hostname>.json` | This machine's snapshot file |
@@ -93,7 +85,7 @@ omarchy bar set omarchy.model-usage providers '{
 }' --json
 ```
 
-`enabled` defaults to `true` for both; set it to `false` to hide a
+`enabled` defaults to `true` for every provider; set it to `false` to hide a
 subscription that is installed. The paths above are the defaults.
 
 With `syncMode` on, every `*.json` snapshot in `syncDir` is merged, so today,

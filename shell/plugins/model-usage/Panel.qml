@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 import qs.Commons
@@ -14,54 +13,27 @@ Panel {
   readonly property color foreground: bar ? bar.foreground : Color.foreground
   readonly property color urgent: bar ? bar.urgent : Color.urgent
   readonly property color dim: Qt.darker(foreground, 1.55)
-  readonly property color surface: Color.popups.background
-  readonly property color track: Style.selectedFillFor(foreground, Color.accent)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
 
   readonly property var providers: usage.enabledProviders
-  // The selection follows the provider, not the slot it happens to sit in: a
-  // provider whose first scan lands while the panel is open would otherwise
-  // shift the list underneath you and swap out what you were reading.
-  property string selectedProviderId: ""
-  readonly property int providerIndex: {
-    for (var i = 0; i < providers.length; i++)
-      if (providers[i].providerId === selectedProviderId) return i
-    return 0
-  }
-  readonly property var provider: providers.length > 0 ? providers[providerIndex] : null
-
-  property bool cursorActive: false
-
-  // Countdowns and "updated" read this instead of Date.now() so the
-  // panel keeps telling the truth while it sits open.
   property double nowMs: Date.now()
 
-  readonly property var limits: limitWindows(provider)
-  readonly property var models: modelRows(provider)
-  readonly property var headline: bindingWindow(provider)
-  readonly property bool alarming: !!headline && headline.percent >= 0.9
+  readonly property int providerColumnWidth: Style.space(132)
+  readonly property int limitColumnWidth: Style.space(112)
+  readonly property int todayColumnWidth: Style.space(118)
+  readonly property int tableSpacing: Style.space(10)
+  readonly property int tableWidth: providerColumnWidth + limitColumnWidth * 3
+    + todayColumnWidth + tableSpacing * 4
 
-  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)) }
-  function alpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
-
-  function selectProvider(index) {
-    if (providers.length === 0) return
-    var wrapped = ((index % providers.length) + providers.length) % providers.length
-    selectedProviderId = providers[wrapped].providerId
+  function clamp(value, lo, hi) {
+    return Math.max(lo, Math.min(hi, value))
   }
 
-  function refreshNow() {
-    usage.refreshAll(true)
+  function validPercent(value) {
+    var percent = Number(value)
+    return isFinite(percent) && percent >= 0 ? clamp(percent, 0, 1) : -1
   }
 
-  // ---------------------------------------------------------------- limits
-  //
-  // Providers report a short rolling window plus longer weekly or monthly
-  // windows. Everything below normalizes them into one record so the meters
-  // and the hero speak a single language.
-
-  // Claude spells its windows out ("Session (5-hour)"), while Codex and
-  // OpenCode use shorter labels. All of them have to land on the same record.
   function windowIsLong(text) {
     return text.indexOf("week") >= 0 || text.indexOf("7-day") >= 0 || text.indexOf("seven") >= 0
       || text.indexOf("month") >= 0 || text.indexOf("30-day") >= 0
@@ -80,47 +52,45 @@ Panel {
 
   function windowTitle(label) {
     var text = String(label || "").toLowerCase()
-    if (text.indexOf("month") >= 0) return "Monthly"
+    if (text.indexOf("month") >= 0 || text.indexOf("30-day") >= 0) return "Monthly"
     if (windowIsLong(text)) return "Weekly"
     if (text.indexOf("session") >= 0 || windowSpanMs(label) > 0) return "Session"
     var plain = String(label || "").replace(/\s*\(.*\)\s*/, "").trim()
     return plain === "" ? "Limit" : plain
   }
 
-  function limitWindow(label, percent, resetAt, spent, limit) {
+  function limitWindow(label, percent, resetAt) {
     return {
       title: windowTitle(label),
-      percent: Number(percent),
-      resetAt: String(resetAt || ""),
-      spent: Number(spent === undefined ? -1 : spent),
-      limit: Number(limit === undefined ? -1 : limit)
+      percent: validPercent(percent),
+      resetAt: String(resetAt || "")
     }
   }
 
-  function limitWindows(p) {
-    if (!p) return []
-    var out = []
-    if (p.rateLimitPercent >= 0) out.push(limitWindow(p.rateLimitLabel, p.rateLimitPercent, p.rateLimitResetAt, p.rateLimitSpent, p.rateLimitLimit))
-    if (p.secondaryRateLimitPercent >= 0) out.push(limitWindow(p.secondaryRateLimitLabel, p.secondaryRateLimitPercent, p.secondaryRateLimitResetAt, p.secondaryRateLimitSpent, p.secondaryRateLimitLimit))
-    if (p.tertiaryRateLimitPercent >= 0) out.push(limitWindow(p.tertiaryRateLimitLabel, p.tertiaryRateLimitPercent, p.tertiaryRateLimitResetAt, p.tertiaryRateLimitSpent, p.tertiaryRateLimitLimit))
-    return out
+  function limitWindows(provider) {
+    if (!provider) return []
+    var result = []
+    if (validPercent(provider.rateLimitPercent) >= 0)
+      result.push(limitWindow(provider.rateLimitLabel, provider.rateLimitPercent, provider.rateLimitResetAt))
+    if (validPercent(provider.secondaryRateLimitPercent) >= 0)
+      result.push(limitWindow(provider.secondaryRateLimitLabel, provider.secondaryRateLimitPercent, provider.secondaryRateLimitResetAt))
+    if (validPercent(provider.tertiaryRateLimitPercent) >= 0)
+      result.push(limitWindow(provider.tertiaryRateLimitLabel, provider.tertiaryRateLimitPercent, provider.tertiaryRateLimitResetAt))
+    return result
   }
 
-  // The window that decides how much room is left — the fullest one, since
-  // that is what stops the next prompt.
-  function bindingWindow(p) {
-    var windows = limitWindows(p)
-    var best = null
+  function providerLimit(provider, title) {
+    var windows = limitWindows(provider)
     for (var i = 0; i < windows.length; i++) {
-      if (!best || windows[i].percent > best.percent) best = windows[i]
+      if (windows[i].title === title) return windows[i]
     }
-    return best
+    return null
   }
 
-  function resetMsFor(w) {
-    if (!w || w.resetAt === "") return -1
-    var ms = new Date(w.resetAt).getTime()
-    return isFinite(ms) ? ms - root.nowMs : -1
+  function resetMsFor(window) {
+    if (!window || window.resetAt === "") return -1
+    var resetMs = new Date(window.resetAt).getTime()
+    return isFinite(resetMs) ? resetMs - root.nowMs : -1
   }
 
   function formatDuration(ms) {
@@ -133,36 +103,45 @@ Panel {
     return Math.max(1, minutes) + "m"
   }
 
-  // Blix keeps the bar itself icon-only, then puts the useful summary in its
-  // tooltip. Keep BLARCHY's icon and native popup, but give the icon the same
-  // at-a-glance answer: the fullest allowance is the one that limits the next
-  // prompt, so its remaining percentage is the meaningful headline.
-  function validPercent(value) {
-    var percent = Number(value)
-    return isFinite(percent) && percent >= 0 ? clamp(percent, 0, 1) : -1
+  function limitUsageText(window) {
+    if (!window || window.percent < 0) return "\u2014"
+    var used = Math.round(window.percent * 100)
+    return used + "% / " + (100 - used) + "%"
   }
 
-  function providerTooltip(p) {
-    if (!p) return ""
-    var lines = []
-    var tier = String(p.tierLabel || "")
-    lines.push(p.providerName + (tier !== "" ? " · " + tier : ""))
+  function limitResetText(window) {
+    var remaining = resetMsFor(window)
+    return remaining > 0 ? "resets " + formatDuration(remaining) : ""
+  }
 
-    var windows = limitWindows(p)
+  function providerStatus(provider) {
+    if (!provider) return ""
+    var status = String(provider.usageStatusText || "").trim()
+    if (status !== "") return status
+    var tier = String(provider.tierLabel || "").trim()
+    return tier !== "" ? tier : "No signed-in data"
+  }
+
+  function providerTooltip(provider) {
+    if (!provider) return ""
+    var lines = []
+    var tier = String(provider.tierLabel || "")
+    lines.push(provider.providerName + (tier !== "" ? " \u00b7 " + tier : ""))
+    var status = String(provider.usageStatusText || "").trim()
+    if (status !== "") lines.push("  " + status)
+
+    var windows = limitWindows(provider)
     for (var i = 0; i < windows.length; i++) {
       var window = windows[i]
-      var used = validPercent(window.percent)
-      if (used < 0) continue
-      var resetMs = resetMsFor(window)
-      lines.push("  " + window.title + ": " + Math.round(used * 100) + "% used · "
-        + Math.round((1 - used) * 100) + "% left"
-        + (resetMs > 0 ? " · resets in " + formatDuration(resetMs) : ""))
+      var reset = limitResetText(window)
+      lines.push("  " + window.title + ": " + Math.round(window.percent * 100) + "% used \u00b7 "
+        + Math.round((1 - window.percent) * 100) + "% left"
+        + (reset !== "" ? " \u00b7 " + reset : ""))
     }
 
-    if (windows.length === 0)
-      lines.push("  " + (String(p.usageStatusText || "") || "No signed-in usage data"))
-    lines.push("  Today: " + usage.formatTokenCount(Number(p.todayTotalTokens || 0))
-      + " tokens · " + Number(p.todayPrompts || 0) + " prompts")
+    if (windows.length === 0 && status === "") lines.push("  No signed-in usage data")
+    lines.push("  Today: " + usage.formatTokenCount(Number(provider.todayTotalTokens || 0))
+      + " tokens \u00b7 " + Number(provider.todayPrompts || 0) + " prompts")
     return lines.join("\n")
   }
 
@@ -170,119 +149,43 @@ Panel {
     var values = []
     for (var i = 0; i < providers.length; i++) {
       var windows = limitWindows(providers[i])
-      for (var j = 0; j < windows.length; j++) {
-        var percent = validPercent(windows[j].percent)
-        if (percent >= 0) values.push(percent)
-      }
+      for (var j = 0; j < windows.length; j++) values.push(windows[j].percent)
     }
     return values
   }
-  readonly property string barSummary: usagePercents.length > 0
-    ? "AI " + Math.round((1 - Math.max.apply(Math, usagePercents)) * 100) + "% left"
+
+  readonly property real highestUsage: usagePercents.length > 0
+    ? Math.max.apply(Math, usagePercents)
+    : -1
+  readonly property bool alarming: highestUsage >= 0.9
+  readonly property string barSummary: highestUsage >= 0
+    ? "AI " + Math.round((1 - highestUsage) * 100) + "% left"
     : "AI usage"
   readonly property string barTooltip: {
-    var rows = [barSummary]
-    for (var i = 0; i < providers.length; i++) rows.push(providerTooltip(providers[i]))
-    rows.push("\nLeft click: details · Middle click: next provider · Right click: refresh")
-    return rows.join("\n\n")
+    var sections = [barSummary]
+    for (var i = 0; i < providers.length; i++) sections.push(providerTooltip(providers[i]))
+    sections.push("\nLeft click: details \u00b7 Right click: refresh")
+    return sections.join("\n\n")
   }
 
-  // ---------------------------------------------------------------- content
-
-  // The plan you pay for, under the name of the tool it pays for. Limits live
-  // in their own section; the hero just says what this is.
-  function heroMeta(p) {
-    if (!p) return ""
-    if (String(p.usageStatusText || "") !== "") return p.usageStatusText
-    var tier = String(p.tierLabel || "")
-    if (tier === "") return "Subscription"
-    return tier.charAt(0).toUpperCase() + tier.slice(1)
+  function refreshNow() {
+    usage.refreshAll(true)
   }
 
-  // Local calendar date, recomputed from nowMs so a panel left open across
-  // midnight moves the "Today" row with the clock.
-  function todayDate() {
-    var now = new Date(root.nowMs)
-    return now.getFullYear()
-      + "-" + String(now.getMonth() + 1).padStart(2, "0")
-      + "-" + String(now.getDate()).padStart(2, "0")
+  function updatedText() {
+    if (usage.refreshing) return "Refreshing provider cache\u2026"
+    if (!(usage.lastRefreshedAtMs > 0)) return "Waiting for first refresh"
+    var age = Math.max(0, root.nowMs - usage.lastRefreshedAtMs)
+    if (age < 60000) return "Updated just now"
+    return "Updated " + formatDuration(age) + " ago"
   }
 
-  function dayName(date) {
-    var parsed = new Date(String(date || "") + "T00:00:00")
-    if (isNaN(parsed.getTime())) return String(date || "")
-    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][parsed.getDay()]
+  function refreshIntervalText() {
+    var seconds = usage.refreshIntervalSec
+    if (seconds % 60 === 0) return (seconds / 60) + " min"
+    return seconds + " sec"
   }
 
-  function dayLabel(date, today) {
-    if (today) return "Today"
-    return dayName(date)
-  }
-
-  function dayTooltip(day, today) {
-    if (!day) return ""
-    var parsed = new Date(String(day.date) + "T00:00:00")
-    var label = isNaN(parsed.getTime())
-      ? String(day.date)
-      : dayName(day.date) + " " + (parsed.getMonth() + 1) + "/" + parsed.getDate()
-    var text = label + " · " + usage.formatTokenCount(Number(day.messageCount || 0)) + " tokens"
-    // Prompt and session counts only exist for today, so they ride along here
-    // instead of taking a section of their own.
-    if (today && provider)
-      text += " · " + Number(provider.todayPrompts || 0) + " prompts · "
-        + Number(provider.todaySessions || 0) + " sessions"
-    return text
-  }
-
-  function weekPeak(p) {
-    var days = p ? (p.recentDays || []) : []
-    var peak = 0
-    for (var i = 0; i < days.length; i++) peak = Math.max(peak, Number(days[i].messageCount || 0))
-    return peak
-  }
-
-  function modelRows(p) {
-    var usageByModel = p ? (p.modelUsage || {}) : {}
-    var rows = []
-    for (var id in usageByModel) {
-      var bucket = usageByModel[id] || {}
-      var input = Number(bucket.inputTokens || 0)
-      var output = Number(bucket.outputTokens || 0)
-      var cacheRead = Number(bucket.cacheReadInputTokens || 0)
-      var cacheWrite = Number(bucket.cacheCreationInputTokens || 0)
-      rows.push({
-        name: usage.friendlyModelName(id),
-        total: input + output + cacheRead + cacheWrite,
-        input: input,
-        output: output,
-        cacheRead: cacheRead,
-        cacheWrite: cacheWrite
-      })
-    }
-    rows.sort(function(a, b) { return b.total - a.total })
-    return rows.slice(0, 4)
-  }
-
-  function modelTooltip(row) {
-    if (!row) return ""
-    return "In " + usage.formatTokenCount(row.input)
-      + " · out " + usage.formatTokenCount(row.output)
-      + " · cache read " + usage.formatTokenCount(row.cacheRead)
-      + " · cache write " + usage.formatTokenCount(row.cacheWrite)
-  }
-
-  // Only speaks up when the numbers cover more than this machine.
-  function footerText() {
-    var details = []
-    if (provider && String(provider.usageNote || "") !== "") details.push(provider.usageNote)
-    if (usage.syncStatusText !== "") details.push(usage.syncStatusText)
-    if (provider && provider.syncEnabled && provider.syncDeviceCount > 0)
-      details.push("Merged from " + provider.syncDeviceCount + " device" + (provider.syncDeviceCount === 1 ? "" : "s"))
-    return details.join(" · ")
-  }
-
-  // Codex ships as a white mark; swap to the dark one when the surface behind
-  // it is light. The Claude mark is brand-orange and works on both.
   function colorChannelLuminance(value) {
     var channel = Number(value)
     if (!isFinite(channel)) return 0
@@ -295,34 +198,28 @@ Panel {
       + 0.0722 * colorChannelLuminance(color.b)
   }
 
-  function iconSourceForProvider(p, surfaceColor) {
-    if (!p) return ""
-    if (p.providerId === "claude") return Qt.resolvedUrl("assets/claude.svg")
-    if (p.providerId === "codex")
+  // Kept as part of the widget's QML API even though the compact table uses
+  // provider names instead of logos.
+  function iconSourceForProvider(provider, surfaceColor) {
+    if (!provider) return ""
+    if (provider.providerId === "claude") return Qt.resolvedUrl("assets/claude.svg")
+    if (provider.providerId === "codex")
       return colorLuminance(surfaceColor || Color.background) >= 0.5
         ? Qt.resolvedUrl("assets/codex-light.svg")
         : Qt.resolvedUrl("assets/codex.svg")
-    if (p.providerId === "opencode-go")
+    if (provider.providerId === "opencode-go")
       return colorLuminance(surfaceColor || Color.background) >= 0.5
         ? Qt.resolvedUrl("assets/opencode-light.svg")
         : Qt.resolvedUrl("assets/opencode.svg")
     return ""
   }
 
-  // Nothing to report, nothing in the bar: Bar.qml collapses a slot whose item
-  // is invisible, so the icon appears the moment the first scan finds usage and
-  // stays away entirely on a machine that has never run either CLI.
   visible: providers.length > 0
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  onProviderIndexChanged: if (panelFlick) panelFlick.contentY = 0
   onOpenedChanged: if (opened) {
-    cursorActive = false
     nowMs = Date.now()
-    if (panelFlick) panelFlick.contentY = 0
-    usage.refreshAll()
-    usage.refreshLimits()
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
 
@@ -331,8 +228,6 @@ Panel {
     settings: root.settings
   }
 
-  // Cheap enough to keep running: it only re-evaluates text bindings, and a
-  // stale "resets in 2h" on a panel that is open is worse than a timer.
   Timer {
     interval: 30000
     running: root.opened
@@ -348,19 +243,38 @@ Panel {
     function hide(): void { root.close() }
     function toggle(): void { root.toggle() }
     function refresh(): string { root.refreshNow(); return "ok" }
-    function next(): string { root.selectProvider(root.providerIndex + 1); return "ok" }
+    function next(): string { return "all providers shown" }
+    function state(): string { return root.opened ? "open" : "closed" }
+    function debug(): string {
+      return JSON.stringify({
+        opened: root.opened,
+        panelVisible: panel.visible,
+        panelWidth: panel.width,
+        panelHeight: panel.height,
+        contentWidth: panel.contentWidth,
+        contentHeight: panel.contentHeight,
+        cardX: panel.cardOrigin.x,
+        cardY: panel.cardOrigin.y,
+        screenWidth: panel.screenW,
+        screenHeight: panel.screenH,
+        anchorX: panel.anchorScreenPos.x,
+        anchorY: panel.anchorScreenPos.y,
+        providers: root.providers.length,
+        buttonWidth: button.width,
+        buttonHeight: button.height
+      })
+    }
   }
 
   BarIconButton {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: "󱚣"
+    text: "󱢣"
     active: root.alarming
     tooltipText: root.barTooltip
     onPressed: function(buttonCode) {
       if (buttonCode === Qt.RightButton) root.refreshNow()
-      else if (buttonCode === Qt.MiddleButton) root.selectProvider(root.providerIndex + 1)
       else root.toggle()
     }
   }
@@ -372,485 +286,240 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: keyCatcher
-    contentWidth: panel.fittedContentWidth(Style.space(380))
-    // Taller than the control panels on purpose: this one is a dashboard, and
-    // the whole point is reading limits and history without scrolling.
-    contentHeight: panel.fittedContentHeight(column.implicitHeight, Style.space(640))
+    contentWidth: panel.fittedContentWidth(root.tableWidth)
+    contentHeight: panel.fittedContentHeight(contentColumn.implicitHeight)
 
     PanelKeyCatcher {
       id: keyCatcher
       anchors.fill: parent
-
-      onMoveRequested: function(dx, dy) {
-        if (dx !== 0) {
-          root.cursorActive = true
-          root.selectProvider(root.providerIndex + dx)
-        }
-        if (dy !== 0)
-          panelFlick.contentY = root.clamp(panelFlick.contentY + dy * Style.space(56), 0,
-                                           Math.max(0, panelFlick.contentHeight - panelFlick.height))
-      }
       onActivateRequested: root.refreshNow()
       onCloseRequested: root.close()
       onTabRequested: function(direction) { root.switchPanel(direction) }
-      onTextKey: function(t) { if (t === "r" || t === "R") root.refreshNow() }
+      onTextKey: function(text) { if (text === "r" || text === "R") root.refreshNow() }
 
-      Flickable {
-        id: panelFlick
-        anchors.fill: parent
-        contentWidth: width
-        contentHeight: column.implicitHeight
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-        flickableDirection: Flickable.VerticalFlick
-        interactive: contentHeight > height
-        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+      Column {
+        id: contentColumn
+        width: parent.width
+        spacing: Style.space(12)
 
-        Column {
-          id: column
-          width: panelFlick.width
-          spacing: Style.space(12)
+        Item {
+          width: parent.width
+          implicitHeight: Math.max(titleText.implicitHeight + subtitleText.implicitHeight + Style.space(2), refreshText.implicitHeight)
 
-          // ---------- Hero: provider mark · name · plan ----------
-          PanelHero {
-            id: hero
-            visible: !!root.provider
-            width: parent.width
-            title: root.provider ? root.provider.providerName : ""
-            meta: root.heroMeta(root.provider)
-            foreground: root.foreground
-            fontFamily: root.fontFamily
-
-            iconComponent: Component {
-              Image {
-                source: root.iconSourceForProvider(root.provider, root.surface)
-                width: Style.font.display
-                height: Style.font.display
-                sourceSize.width: Style.font.display * 2
-                sourceSize.height: Style.font.display * 2
-                fillMode: Image.PreserveAspectFit
-              }
-            }
-          }
-
-          Text {
-            visible: root.providers.length === 0
-            width: parent.width
-            topPadding: Style.space(24)
-            text: "No AI coding subscriptions found.\nClaude Code, Codex, and OpenCode Go show up here once they've produced usage."
-            color: root.dim
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.body
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
-          }
-
-          // ---------- Provider switch ----------
-          Row {
-            id: providerSwitch
-            visible: root.providers.length > 1
-            width: parent.width
-            spacing: Style.spacing.md
-
-            readonly property real cellWidth: root.providers.length > 0
-              ? (width - spacing * (root.providers.length - 1)) / root.providers.length
-              : 0
-
-            Repeater {
-              model: root.providers
-
-              Button {
-                required property var modelData
-                required property int index
-
-                width: providerSwitch.cellWidth
-                text: modelData.providerName
-                selected: index === root.providerIndex
-                hasCursor: root.cursorActive && index === root.providerIndex
-                bordered: true
-                foreground: root.foreground
-                fontFamily: root.fontFamily
-                fontSize: Style.font.bodySmall
-                verticalPadding: Style.spacing.controlPaddingY
-                onClicked: {
-                  root.cursorActive = true
-                  root.selectProvider(index)
-                }
-                onHovered: function(isHovered) { if (isHovered) root.cursorActive = true }
-              }
-            }
-          }
-
-          // ---------- Status ----------
-          BorderSurface {
-            visible: !!root.provider && String(root.provider.usageStatusText || "") !== ""
-            width: parent.width
-            implicitHeight: statusText.implicitHeight + Style.spacing.xl * 2
-            color: root.alpha(root.urgent, 0.10)
-            borderSpec: Border.flat(root.alpha(root.urgent, 0.35), 1)
-            radius: Style.cornerRadius
+          Column {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(2)
 
             Text {
-              id: statusText
-              anchors.left: parent.left
-              anchors.right: parent.right
-              anchors.verticalCenter: parent.verticalCenter
-              anchors.leftMargin: Style.space(12)
-              anchors.rightMargin: Style.space(12)
-              text: root.provider ? String(root.provider.authHelpText || "") : ""
+              id: titleText
+              text: "AI Usage"
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.title
+              font.bold: true
+            }
+
+            Text {
+              id: subtitleText
+              text: "All providers \u00b7 cached every " + root.refreshIntervalText()
               color: root.dim
               font.family: root.fontFamily
               font.pixelSize: Style.font.caption
-              wrapMode: Text.WordWrap
-            }
-          }
-
-          // ---------- Limits ----------
-          PanelSeparator {
-            visible: limitsSection.visible
-            foreground: root.foreground
-          }
-
-          Column {
-            id: limitsSection
-            visible: root.limits.length > 0
-            width: parent.width
-            spacing: Style.space(10)
-
-            PanelSectionHeader {
-              text: "LIMITS"
-              foreground: root.foreground
-              fontFamily: root.fontFamily
-            }
-
-            Repeater {
-              model: root.limits
-
-              LimitRow {
-                required property var modelData
-                width: limitsSection.width
-                window: modelData
-              }
-            }
-          }
-
-          // ---------- Usage ----------
-          PanelSeparator {
-            visible: usageSection.visible
-            foreground: root.foreground
-          }
-
-          Column {
-            id: usageSection
-            visible: !!root.provider && root.provider.recentDays && root.provider.recentDays.length > 0
-            width: parent.width
-            spacing: Style.spacing.md
-
-            readonly property var days: root.provider ? (root.provider.recentDays || []) : []
-            readonly property real peak: Math.max(1, root.weekPeak(root.provider))
-
-            PanelSectionHeader {
-              width: parent.width
-              text: "TOKENS BY DAY"
-              foreground: root.foreground
-              fontFamily: root.fontFamily
-            }
-
-            Repeater {
-              model: usageSection.days
-
-              DayRow {
-                required property var modelData
-                required property int index
-
-                width: usageSection.width
-                day: modelData
-                ratio: Number(modelData.messageCount || 0) / usageSection.peak
-                // By date, not by position: the Claude stats-cache fallback can
-                // hand us a window that stops short of today.
-                today: String(modelData.date || "") === root.todayDate()
-              }
-            }
-          }
-
-          // ---------- Models ----------
-          PanelSeparator {
-            visible: modelSection.visible
-            foreground: root.foreground
-          }
-
-          Column {
-            id: modelSection
-            visible: root.models.length > 0
-            width: parent.width
-            spacing: Style.spacing.md
-
-            PanelSectionHeader {
-              width: parent.width
-              text: "TOKENS BY MODEL"
-              foreground: root.foreground
-              fontFamily: root.fontFamily
-            }
-
-            Repeater {
-              model: root.models
-
-              ModelRow {
-                required property var modelData
-                width: modelSection.width
-                row: modelData
-                // Scaled to the heaviest model, so the top row is always full —
-                // the same scale-to-peak the weekly chart uses for its busiest day.
-                share: modelData.total / Math.max(1, root.models[0].total)
-              }
             }
           }
 
           Text {
-            visible: text !== ""
-            width: parent.width
-            topPadding: Style.space(2)
-            text: root.footerText()
-            color: root.dim
+            id: refreshText
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.updatedText()
+            color: usage.refreshing ? root.foreground : root.dim
             font.family: root.fontFamily
             font.pixelSize: Style.font.caption
-            horizontalAlignment: Text.AlignHCenter
-            elide: Text.ElideRight
           }
         }
+
+        PanelSeparator {
+          width: parent.width
+          foreground: root.foreground
+        }
+
+        Row {
+          width: parent.width
+          spacing: root.tableSpacing
+
+          TableHeader { width: root.providerColumnWidth; title: "PROVIDER" }
+          TableHeader { width: root.limitColumnWidth; title: "SESSION"; detail: "USED / LEFT" }
+          TableHeader { width: root.limitColumnWidth; title: "WEEKLY"; detail: "USED / LEFT" }
+          TableHeader { width: root.limitColumnWidth; title: "MONTHLY"; detail: "USED / LEFT" }
+          TableHeader { width: root.todayColumnWidth; title: "TODAY" }
+        }
+
+        Repeater {
+          model: root.providers
+
+          Column {
+            required property var modelData
+            required property int index
+
+            width: contentColumn.width
+            spacing: Style.space(10)
+
+            Rectangle {
+              visible: index > 0
+              width: parent.width
+              height: Style.spacing.hairline
+              color: root.foreground
+              opacity: 0.12
+            }
+
+            Row {
+              width: parent.width
+              spacing: root.tableSpacing
+
+              ProviderCell {
+                width: root.providerColumnWidth
+                provider: modelData
+              }
+
+              LimitCell {
+                width: root.limitColumnWidth
+                window: root.providerLimit(modelData, "Session")
+              }
+
+              LimitCell {
+                width: root.limitColumnWidth
+                window: root.providerLimit(modelData, "Weekly")
+              }
+
+              LimitCell {
+                width: root.limitColumnWidth
+                window: root.providerLimit(modelData, "Monthly")
+              }
+
+              TodayCell {
+                width: root.todayColumnWidth
+                provider: modelData
+              }
+            }
+          }
+        }
+
+        Text {
+          visible: usage.syncStatusText !== ""
+          width: parent.width
+          text: usage.syncStatusText
+          color: root.dim
+          font.family: root.fontFamily
+          font.pixelSize: Style.font.caption
+          horizontalAlignment: Text.AlignHCenter
+          elide: Text.ElideRight
+        }
       }
     }
   }
 
-  // A limit window: label and percentage, meter, and reset countdown.
-  component LimitRow: Column {
-    id: limitRow
-    property var window: null
+  component TableHeader: Column {
+    property string title: ""
+    property string detail: ""
 
-    readonly property bool alarming: window && window.percent >= 0.9
-
-    spacing: Style.space(6)
-
-    Item {
-      width: parent.width
-      implicitHeight: Math.max(limitLabel.implicitHeight, limitValue.implicitHeight)
-
-      Text {
-        id: limitLabel
-        text: limitRow.window ? limitRow.window.title : ""
-        color: root.foreground
-        font.family: root.fontFamily
-        font.pixelSize: Style.font.body
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-      }
-
-      Text {
-        id: limitValue
-        text: {
-          if (!limitRow.window || limitRow.window.percent < 0) return "—"
-          var percent = Math.round(limitRow.window.percent * 100) + "%"
-          if (limitRow.window.limit > 0 && limitRow.window.spent >= 0)
-            return "$" + limitRow.window.spent.toFixed(2) + " / $" + limitRow.window.limit.toFixed(0) + " · " + percent
-          return percent
-        }
-        color: limitRow.alarming ? root.urgent : root.foreground
-        font.family: root.fontFamily
-        font.pixelSize: Style.font.caption
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-      }
-    }
-
-    Meter {
-      width: parent.width
-      value: limitRow.window ? limitRow.window.percent : -1
-      alarming: limitRow.alarming
-    }
+    spacing: Style.space(1)
 
     Text {
-      id: resetText
       width: parent.width
-      text: {
-        var remainingMs = root.resetMsFor(limitRow.window)
-        return remainingMs > 0 ? "Resets in " + root.formatDuration(remainingMs) : ""
-      }
+      text: parent.title
       color: root.dim
       font.family: root.fontFamily
       font.pixelSize: Style.font.caption
-    }
-  }
-
-  // Rounded track showing the percentage of the allowance used.
-  component Meter: Item {
-    id: meter
-    property real value: -1
-    property bool alarming: false
-    property real thickness: Math.max(Style.space(4), Math.round(Style.spacing.controlHeight * 0.14))
-
-    implicitHeight: thickness
-
-    Rectangle {
-      id: meterTrack
-      anchors.fill: parent
-      radius: height / 2
-      color: root.track
-    }
-
-    Rectangle {
-      anchors.left: meterTrack.left
-      anchors.verticalCenter: meterTrack.verticalCenter
-      height: meterTrack.height
-      radius: meterTrack.radius
-      width: meterTrack.width * root.clamp(meter.value, 0, 1)
-      color: meter.alarming ? root.urgent : root.foreground
-
-      Behavior on width {
-        NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-      }
-    }
-
-  }
-
-  // One row per day: label, bar, tokens. Today is picked out in full
-  // foreground so the week reads as a run-up to right now.
-  component DayRow: Item {
-    id: dayRow
-    property var day: null
-    property real ratio: 0
-    property bool today: false
-
-    implicitHeight: Math.max(dayLabel.implicitHeight, dayValue.implicitHeight) + Style.spacing.sm
-
-    Text {
-      id: dayLabel
-      text: root.dayLabel(dayRow.day ? dayRow.day.date : "", dayRow.today)
-      color: dayRow.today ? root.foreground : root.dim
-      font.family: root.fontFamily
-      font.pixelSize: Style.font.caption
-      font.bold: dayRow.today
-      anchors.left: parent.left
-      anchors.verticalCenter: parent.verticalCenter
-      width: Style.space(52)
-    }
-
-    Rectangle {
-      id: dayTrack
-      anchors.left: dayLabel.right
-      anchors.right: dayValue.left
-      anchors.leftMargin: Style.space(8)
-      anchors.rightMargin: Style.space(10)
-      anchors.verticalCenter: parent.verticalCenter
-      height: Math.max(Style.space(4), Math.round(Style.spacing.controlHeight * 0.14))
-      radius: height / 2
-      color: root.track
-
-      Rectangle {
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-        height: parent.height
-        radius: parent.radius
-        width: parent.width * root.clamp(dayRow.ratio, 0, 1)
-        color: dayRow.today ? root.foreground : root.alpha(root.foreground, 0.55)
-
-        Behavior on width {
-          NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-        }
-      }
-    }
-
-    Text {
-      id: dayValue
-      text: usage.formatTokenCount(dayRow.day ? Number(dayRow.day.messageCount || 0) : 0)
-      color: dayRow.today ? root.foreground : root.dim
-      font.family: root.fontFamily
-      font.pixelSize: Style.font.caption
       font.bold: true
-      horizontalAlignment: Text.AlignRight
-      anchors.right: parent.right
-      anchors.verticalCenter: parent.verticalCenter
-      width: Style.space(52)
-    }
-
-    MouseArea {
-      id: dayHover
-      anchors.fill: parent
-      hoverEnabled: true
-      acceptedButtons: Qt.NoButton
-    }
-
-    PanelToolTip {
-      visible: dayHover.containsMouse
-      text: root.dayTooltip(dayRow.day, dayRow.today)
-      fontFamily: root.fontFamily
-    }
-  }
-
-  // Model rows read as a table: the share bar fills the row behind the label
-  // instead of stacking under it, which keeps the whole dashboard on one screen.
-  component ModelRow: Item {
-    id: modelRow
-    property var row: null
-    property real share: 0
-
-    implicitHeight: modelName.implicitHeight + Style.spacing.lg
-
-    Rectangle {
-      anchors.fill: parent
-      radius: Style.cornerRadius
-      color: root.alpha(root.foreground, 0.05)
-    }
-
-    Rectangle {
-      anchors.left: parent.left
-      anchors.top: parent.top
-      anchors.bottom: parent.bottom
-      width: parent.width * root.clamp(modelRow.share, 0, 1)
-      radius: Style.cornerRadius
-      color: root.alpha(root.foreground, 0.14)
-
-      Behavior on width {
-        NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-      }
+      elide: Text.ElideRight
     }
 
     Text {
-      id: modelName
-      text: modelRow.row ? modelRow.row.name : ""
+      visible: parent.detail !== ""
+      width: parent.width
+      text: parent.detail
+      color: root.dim
+      opacity: 0.7
+      font.family: root.fontFamily
+      font.pixelSize: Style.font.caption
+      elide: Text.ElideRight
+    }
+  }
+
+  component ProviderCell: Column {
+    property var provider: null
+
+    spacing: Style.space(2)
+
+    Text {
+      width: parent.width
+      text: parent.provider ? parent.provider.providerName : ""
       color: root.foreground
       font.family: root.fontFamily
-      font.pixelSize: Style.font.bodySmall
+      font.pixelSize: Style.font.body
+      font.bold: true
       elide: Text.ElideRight
-      anchors.left: parent.left
-      anchors.leftMargin: Style.space(8)
-      anchors.right: modelTokens.left
-      anchors.rightMargin: Style.space(8)
-      anchors.verticalCenter: parent.verticalCenter
     }
 
     Text {
-      id: modelTokens
-      text: modelRow.row ? usage.formatTokenCount(modelRow.row.total) : ""
+      width: parent.width
+      text: root.providerStatus(parent.provider)
       color: root.dim
       font.family: root.fontFamily
-      font.pixelSize: Style.font.bodySmall
+      font.pixelSize: Style.font.caption
+      elide: Text.ElideRight
+    }
+  }
+
+  component LimitCell: Column {
+    property var window: null
+
+    spacing: Style.space(2)
+
+    Text {
+      width: parent.width
+      text: root.limitUsageText(parent.window)
+      color: parent.window && parent.window.percent >= 0.9 ? root.urgent : root.foreground
+      font.family: root.fontFamily
+      font.pixelSize: Style.font.body
       font.bold: true
-      anchors.right: parent.right
-      anchors.rightMargin: Style.space(8)
-      anchors.verticalCenter: parent.verticalCenter
+      elide: Text.ElideRight
     }
 
-    MouseArea {
-      id: modelHover
-      anchors.fill: parent
-      hoverEnabled: true
-      acceptedButtons: Qt.NoButton
+    Text {
+      width: parent.width
+      text: root.limitResetText(parent.window)
+      color: root.dim
+      font.family: root.fontFamily
+      font.pixelSize: Style.font.caption
+      elide: Text.ElideRight
+    }
+  }
+
+  component TodayCell: Column {
+    property var provider: null
+
+    spacing: Style.space(2)
+
+    Text {
+      width: parent.width
+      text: usage.formatTokenCount(Number(parent.provider ? parent.provider.todayTotalTokens || 0 : 0)) + " tokens"
+      color: root.foreground
+      font.family: root.fontFamily
+      font.pixelSize: Style.font.body
+      font.bold: true
+      elide: Text.ElideRight
     }
 
-    PanelToolTip {
-      visible: modelHover.containsMouse
-      text: root.modelTooltip(modelRow.row)
-      fontFamily: root.fontFamily
+    Text {
+      width: parent.width
+      text: Number(parent.provider ? parent.provider.todayPrompts || 0 : 0) + " prompts"
+      color: root.dim
+      font.family: root.fontFamily
+      font.pixelSize: Style.font.caption
+      elide: Text.ElideRight
     }
   }
 }

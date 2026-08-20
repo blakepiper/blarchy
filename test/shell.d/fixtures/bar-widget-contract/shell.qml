@@ -113,6 +113,18 @@ ShellRoot {
       root.assertTrue(usageTooltip.indexOf("Codex · Pro") >= 0, entry.id + " labels AI usage by provider and plan")
       root.assertTrue(usageTooltip.indexOf("Session: 25% used · 75% left") >= 0, entry.id + " shows the remaining AI allowance")
       root.assertTrue(usageTooltip.indexOf("Today: 1.2K tokens · 3 prompts") >= 0, entry.id + " includes today's AI activity")
+      var monthlyLimit = item.providerLimit({
+        tertiaryRateLimitPercent: 0.4,
+        tertiaryRateLimitLabel: "Monthly window",
+        tertiaryRateLimitResetAt: ""
+      }, "Monthly")
+      root.assertTrue(monthlyLimit && monthlyLimit.percent === 0.4, entry.id + " maps provider windows into the shared table")
+      root.assertEqual(item.limitUsageText(monthlyLimit), "40% / 60%", entry.id + " formats table cells as used and left")
+      root.assertEqual(item.windowTitle("30-day window"), "Monthly", entry.id + " maps 30-day limits to the monthly column")
+      root.assertEqual(item.providerStatus({
+        tierLabel: "Pro",
+        usageStatusText: "Limits unavailable"
+      }), "Limits unavailable", entry.id + " keeps provider errors visible over stale plan labels")
     }
 
     safeCall(item, "refresh", entry)

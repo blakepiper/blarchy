@@ -101,6 +101,18 @@ ShellRoot {
       root.assertTrue(lightIcon.indexOf("codex-light.svg") >= 0, entry.id + " uses the light-theme Codex icon on light surfaces")
       var openCodeIcon = String(item.iconSourceForProvider({ providerId: "opencode-go" }, Qt.color("#1a1b26")))
       root.assertTrue(openCodeIcon.indexOf("opencode.svg") >= 0, entry.id + " exposes an OpenCode Go icon")
+      var usageTooltip = item.providerTooltip({
+        providerName: "Codex",
+        tierLabel: "Pro",
+        rateLimitPercent: 0.25,
+        rateLimitLabel: "Session (5-hour)",
+        rateLimitResetAt: "",
+        todayTotalTokens: 1200,
+        todayPrompts: 3
+      })
+      root.assertTrue(usageTooltip.indexOf("Codex · Pro") >= 0, entry.id + " labels AI usage by provider and plan")
+      root.assertTrue(usageTooltip.indexOf("Session: 25% used · 75% left") >= 0, entry.id + " shows the remaining AI allowance")
+      root.assertTrue(usageTooltip.indexOf("Today: 1.2K tokens · 3 prompts") >= 0, entry.id + " includes today's AI activity")
     }
 
     safeCall(item, "refresh", entry)

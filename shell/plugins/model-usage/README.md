@@ -50,7 +50,8 @@ falls back to local stats only.
 
 ## Interactions
 
-- Bar icon: left = panel, right = refresh, middle = next subscription.
+- Bar icon: hover = the Blix-style remaining-usage summary; left = panel,
+  right = refresh, middle = next subscription.
 - Panel: `h`/`l` switch subscription, `j`/`k` scroll, `r` or Enter refresh,
   Tab moves to the neighboring bar panel, Esc closes.
 - IPC: `omarchy-shell omarchy.model-usage <open|close|toggle|refresh|next>`.

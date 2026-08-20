@@ -133,6 +133,60 @@ Panel {
     return Math.max(1, minutes) + "m"
   }
 
+  // Blix keeps the bar itself icon-only, then puts the useful summary in its
+  // tooltip. Keep BLARCHY's icon and native popup, but give the icon the same
+  // at-a-glance answer: the fullest allowance is the one that limits the next
+  // prompt, so its remaining percentage is the meaningful headline.
+  function validPercent(value) {
+    var percent = Number(value)
+    return isFinite(percent) && percent >= 0 ? clamp(percent, 0, 1) : -1
+  }
+
+  function providerTooltip(p) {
+    if (!p) return ""
+    var lines = []
+    var tier = String(p.tierLabel || "")
+    lines.push(p.providerName + (tier !== "" ? " · " + tier : ""))
+
+    var windows = limitWindows(p)
+    for (var i = 0; i < windows.length; i++) {
+      var window = windows[i]
+      var used = validPercent(window.percent)
+      if (used < 0) continue
+      var resetMs = resetMsFor(window)
+      lines.push("  " + window.title + ": " + Math.round(used * 100) + "% used · "
+        + Math.round((1 - used) * 100) + "% left"
+        + (resetMs > 0 ? " · resets in " + formatDuration(resetMs) : ""))
+    }
+
+    if (windows.length === 0)
+      lines.push("  " + (String(p.usageStatusText || "") || "No signed-in usage data"))
+    lines.push("  Today: " + usage.formatTokenCount(Number(p.todayTotalTokens || 0))
+      + " tokens · " + Number(p.todayPrompts || 0) + " prompts")
+    return lines.join("\n")
+  }
+
+  readonly property var usagePercents: {
+    var values = []
+    for (var i = 0; i < providers.length; i++) {
+      var windows = limitWindows(providers[i])
+      for (var j = 0; j < windows.length; j++) {
+        var percent = validPercent(windows[j].percent)
+        if (percent >= 0) values.push(percent)
+      }
+    }
+    return values
+  }
+  readonly property string barSummary: usagePercents.length > 0
+    ? "AI " + Math.round((1 - Math.max.apply(Math, usagePercents)) * 100) + "% left"
+    : "AI usage"
+  readonly property string barTooltip: {
+    var rows = [barSummary]
+    for (var i = 0; i < providers.length; i++) rows.push(providerTooltip(providers[i]))
+    rows.push("\nLeft click: details · Middle click: next provider · Right click: refresh")
+    return rows.join("\n\n")
+  }
+
   // ---------------------------------------------------------------- content
 
   // The plan you pay for, under the name of the tool it pays for. Limits live
@@ -303,6 +357,7 @@ Panel {
     bar: root.bar
     text: "󱚣"
     active: root.alarming
+    tooltipText: root.barTooltip
     onPressed: function(buttonCode) {
       if (buttonCode === Qt.RightButton) root.refreshNow()
       else if (buttonCode === Qt.MiddleButton) root.selectProvider(root.providerIndex + 1)

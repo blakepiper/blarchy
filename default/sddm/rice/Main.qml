@@ -67,7 +67,7 @@ Rectangle {
       anchors.horizontalCenter: parent.horizontalCenter
 
       Text {
-        text: "ARCH LINUX"
+        text: "BLARCHY"
         color: "#c0caf5"
         font.family: "JetBrainsMono Nerd Font"
         font.pixelSize: 52

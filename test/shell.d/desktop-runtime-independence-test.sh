@@ -39,10 +39,10 @@ pass "desktop runtime path selection is deterministic"
 jq -e '
   .logo.type == "builtin" and
   .logo.source == "arch" and
-  any(.modules[]; type == "object" and .type == "os" and .key == " OS") and
-  any(.modules[]; type == "object" and .type == "custom" and .format == "Personal Arch")
-' "$fastfetch_config" >/dev/null || fail "Fastfetch reports the personal Arch environment"
-pass "Fastfetch uses the default Arch logo and personal environment label"
+  any(.modules[]; type == "object" and .type == "os" and .key == " OS" and .format == "{pretty-name}") and
+  all(.modules[]; type != "object" or .key != "│ ├󰍹 Environment")
+' "$fastfetch_config" >/dev/null || fail "Fastfetch reports ordinary Arch Linux without a custom environment label"
+pass "Fastfetch uses the default Arch logo and ordinary OS identity"
 
 grep -Fq "'yay -Syu'" "$menu_config" ||
   fail "menu exposes the Arch/AUR update route"

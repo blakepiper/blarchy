@@ -66,12 +66,6 @@
       "format": "{pretty-name}"
     },
     {
-      "type": "custom",
-      "key": "│ ├󰍹 Environment",
-      "keyColor": "blue",
-      "format": "Personal Arch"
-    },
-    {
       "type": "kernel",
       "key": "│ ├",
       "keyColor": "blue"

@@ -262,9 +262,9 @@ bash "$RICE_INSTALL/standalone/finalize-user.sh"
 
 cat <<'DONE'
 
-Personal Arch desktop installation complete.
+Arch Linux desktop installation complete.
 
-Reboot when convenient, then select "Personal Arch (Hyprland)" in your display
+Reboot when convenient, then select "Hyprland" in your display
 manager if it is not selected automatically. Your existing disk layout,
 bootloader, EFI entries, and other operating systems were not changed.
 DONE

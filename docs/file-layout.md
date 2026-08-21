@@ -1,4 +1,4 @@
-# Personal Arch rice file layout
+# Rice file layout
 
 The repository has three layers:
 

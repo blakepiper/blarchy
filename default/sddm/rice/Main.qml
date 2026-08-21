@@ -67,7 +67,7 @@ Rectangle {
       anchors.horizontalCenter: parent.horizontalCenter
 
       Text {
-        text: "PERSONAL ARCH"
+        text: "ARCH LINUX"
         color: "#c0caf5"
         font.family: "JetBrainsMono Nerd Font"
         font.pixelSize: 52

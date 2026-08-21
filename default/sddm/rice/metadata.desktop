@@ -1,6 +1,6 @@
 [SddmGreeterTheme]
-Name=Personal Arch
-Description=Minimal terminal-style login theme for the personal Arch desktop
+Name=Arch Linux
+Description=Minimal terminal-style login theme
 Author=Omarchy contributors / Blake
 Type=sddm-theme
 Version=1.0

@@ -9,7 +9,7 @@
 
 # Repository purpose
 
-This repository reproduces a personal Arch Linux desktop. The supported path
+This repository reproduces an Arch Linux desktop. The supported path
 is cloning it onto an already bootable minimal Arch system and running
 `./install.sh` as the intended desktop user.
 

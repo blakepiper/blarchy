@@ -57,14 +57,21 @@ fi
 
 bashrc="$HOME/.bashrc"
 touch "$bashrc"
-if ! grep -Fq '# >>> PERSONAL ARCH RICE >>>' "$bashrc"; then
+if grep -Eq '^# >>> .*ARCH RICE >>>$' "$bashrc"; then
+  sed -i \
+    -E \
+    -e 's/^# >>> .*ARCH RICE >>>$/# >>> RICE >>>/' \
+    -e 's/^# <<< .*ARCH RICE <<<$/# <<< RICE <<</' \
+    "$bashrc"
+fi
+if ! grep -Fq '# >>> RICE >>>' "$bashrc"; then
   cat >>"$bashrc" <<'BASHRC'
 
-# >>> PERSONAL ARCH RICE >>>
+# >>> RICE >>>
 if [[ -r /usr/local/share/rice/default/bash/env-bootstrap ]]; then
   source /usr/local/share/rice/default/bash/env-bootstrap
   source "$RICE_PATH/default/bash/rc"
 fi
-# <<< PERSONAL ARCH RICE <<<
+# <<< RICE <<<
 BASHRC
 fi

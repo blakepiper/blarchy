@@ -12,9 +12,9 @@ description: >
   source development through `omarchy dev link` workflows.
 ---
 
-# Personal Arch Desktop Skill
+# Arch Linux Desktop Skill
 
-Manage the installed personal Arch desktop. It combines Hyprland, XFCE, and
+Manage the installed Arch Linux desktop. It combines Hyprland, XFCE, and
 user configuration without acting as a distribution or update service. It
 retains the `omarchy` command and config namespaces for upstream compatibility.
 

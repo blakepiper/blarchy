@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Open the BLARCHY theme switcher
+# omarchy:summary=Open the RICE theme switcher
 
 preload=false
 

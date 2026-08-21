@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# omarchy:summary=Temporarily point BLARCHY runtime code at another checkout after reboot
+# omarchy:summary=Temporarily point RICE runtime code at another checkout after reboot
 # omarchy:group=dev
 # omarchy:args=<path-to-checkout> [--no-reboot]
-# omarchy:examples=omarchy dev link ~/src/blarchy
+# omarchy:examples=omarchy dev link ~/src/rice
 
 set -euo pipefail
 
@@ -18,7 +18,7 @@ if (( $# < 1 || $# > 2 )) || [[ $1 == "-h" || $1 == "--help" ]]; then
   cat <<USAGE
 Usage: omarchy dev link <path-to-checkout> [--no-reboot]
 
-Writes /etc/blarchy-dev.conf so BLARCHY_PATH resolves to <path-to-checkout>
+Writes /etc/rice-dev.conf so RICE_PATH resolves to <path-to-checkout>
 after reboot. OMARCHY_PATH follows it as a compatibility alias. This
 intentionally does not rewrite the running Hyprland,
 systemd, shell, or app-launcher environment; reboot to make every layer agree.
@@ -42,7 +42,7 @@ if (( $# == 2 )); then
   fi
 fi
 
-blarchy_conf_quote() {
+rice_conf_quote() {
   local value="$1"
   value=${value//\\/\\\\}
   value=${value//\"/\\\"}
@@ -58,17 +58,17 @@ target=$(realpath -e "$1" 2>/dev/null) || {
 
 for required in bin default shell; do
   if [[ ! -d $target/$required ]]; then
-    echo "Warning: $target/$required not found — does this look like a BLARCHY source checkout?" >&2
+    echo "Warning: $target/$required not found — does this look like a RICE source checkout?" >&2
   fi
 done
 
 {
-  printf 'export BLARCHY_PATH='
-  blarchy_conf_quote "$target"
-  printf '\nexport OMARCHY_PATH="$BLARCHY_PATH"\n'
-} | sudo tee /etc/blarchy-dev.conf >/dev/null
+  printf 'export RICE_PATH='
+  rice_conf_quote "$target"
+  printf '\nexport OMARCHY_PATH="$RICE_PATH"\n'
+} | sudo tee /etc/rice-dev.conf >/dev/null
 
-echo "Pointed BLARCHY at $target"
+echo "Pointed RICE at $target"
 echo
 
 if (( prompt_reboot )) && gum confirm "Reboot now to activate?"; then

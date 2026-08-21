@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "author": "Omarchy",
   "license": "MIT",
-  "description": "Claude Code, Codex, and OpenCode Go limits in one cached BLARCHY bar table.",
+  "description": "Claude Code, Codex, and OpenCode Go limits in one cached RICE bar table.",
   "kinds": ["bar-widget"],
   "activation": "on-demand",
   "entryPoints": {

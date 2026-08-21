@@ -1,4 +1,4 @@
--- Window and layer rules for the BLARCHY Quickshell surfaces. The
+-- Window and layer rules for the RICE Quickshell surfaces. The
 -- shell-wide bar / menu / popouts are layer-shell.
 
 -- Keep the bar instant: no layer-shell fade/slide animation.
@@ -11,4 +11,4 @@ hl.layer_rule({ match = { namespace = "^(omarchy-menu|omarchy-image-selector|oma
 
 -- Dev gallery is the main shell workbench; open it maximized like
 -- SUPER+ALT+F so component previews have the whole workspace.
-o.window({ class = "^org.quickshell$", title = "^BLARCHY shell – dev gallery$" }, { maximize = true })
+o.window({ class = "^org.quickshell$", title = "^RICE shell – dev gallery$" }, { maximize = true })

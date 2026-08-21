@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Launch the default editor selected by BLARCHY.
+# omarchy:summary=Launch the default editor selected by RICE.
 # omarchy:args=[--inline] <path>
 
 omarchy-hyprland-window-prepare-launch

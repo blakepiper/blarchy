@@ -11,7 +11,7 @@ Panel {
   ipcTarget: "omarchy.weather"
   manageIpc: false
 
-  property string omarchyPath: Quickshell.env("BLARCHY_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/blarchy"
+  property string omarchyPath: Quickshell.env("RICE_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/rice"
   property var anchorItem: null
   property bool openedFromHotkey: false
 

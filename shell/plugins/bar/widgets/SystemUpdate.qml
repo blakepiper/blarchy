@@ -17,7 +17,7 @@ BarWidget {
   function clear() { updateAvailable = false }
 
   function runUpdate() {
-    if (root.bar) root.bar.run("omarchy-launch-floating-terminal-with-presentation 'blarchy system update'")
+    if (root.bar) root.bar.run("omarchy-launch-floating-terminal-with-presentation 'yay -Syu'")
   }
 
   visible: updateAvailable
@@ -38,7 +38,7 @@ BarWidget {
 
   Process {
     id: updateProc
-    command: ["omarchy-update-available"]
+    command: ["bash", "-c", "[[ -n $(checkupdates 2>/dev/null; yay -Qua 2>/dev/null) ]]"]
     onExited: function(exitCode) {
       root.updateAvailable = exitCode === 0
     }

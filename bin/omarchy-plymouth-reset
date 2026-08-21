@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Retained upstream: restore the legacy Plymouth boot theme and SDDM screen
-# omarchy:requires-sudo=true
-
-omarchy-refresh-plymouth
-omarchy-refresh-sddm

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Sync the current BLARCHY theme environment into tmux
+# omarchy:summary=Sync the current RICE theme environment into tmux
 # omarchy:hidden=true
 
 CURRENT_THEME_PATH="$HOME/.local/state/omarchy/current/theme"

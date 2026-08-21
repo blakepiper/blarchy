@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Compatibility wrapper for the BLARCHY source updater
-# omarchy:hidden=true
-
-exec "$(dirname -- "${BASH_SOURCE[0]}")/blarchy-update" "$@"

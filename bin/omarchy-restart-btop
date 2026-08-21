@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# omarchy:summary=Reload btop configuration used by BLARCHY theme switching.
+# omarchy:summary=Reload btop configuration used by RICE theme switching.
 
 pkill -SIGUSR2 btop

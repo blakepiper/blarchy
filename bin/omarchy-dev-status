@@ -1,22 +1,22 @@
 #!/bin/bash
 
-# omarchy:summary=Show the current BLARCHY dev-link state
+# omarchy:summary=Show the current RICE dev-link state
 # omarchy:group=dev
 
 set -euo pipefail
 
-default_target="/usr/local/share/blarchy"
+default_target="/usr/local/share/rice"
 configured="$default_target"
 conf_present=0
 linked=0
 
-if [[ -f /etc/blarchy-dev.conf ]]; then
+if [[ -f /etc/rice-dev.conf ]]; then
   conf_present=1
   configured=$(
-    BLARCHY_PATH=
+    RICE_PATH=
     # shellcheck disable=SC1091
-    . /etc/blarchy-dev.conf
-    printf '%s' "${BLARCHY_PATH:-<empty>}"
+    . /etc/rice-dev.conf
+    printf '%s' "${RICE_PATH:-<empty>}"
   )
   if [[ $configured != "$default_target" ]]; then
     linked=1
@@ -25,18 +25,18 @@ fi
 
 if (( linked )); then
   echo "dev-link: configured"
-  echo "  /etc/blarchy-dev.conf -> BLARCHY_PATH=$configured"
+  echo "  /etc/rice-dev.conf -> RICE_PATH=$configured"
   echo "  status: reboot required before all session layers use this checkout"
 else
   echo "dev-link: inactive"
   if (( conf_present )); then
-    echo "  /etc/blarchy-dev.conf -> BLARCHY_PATH=$configured (default guard)"
+    echo "  /etc/rice-dev.conf -> RICE_PATH=$configured (default guard)"
   fi
 fi
 
-echo "  current shell:       BLARCHY_PATH=${BLARCHY_PATH:-<unset>}"
+echo "  current shell:       RICE_PATH=${RICE_PATH:-<unset>}"
 
-if [[ ${BLARCHY_PATH:-$default_target} != "$configured" ]]; then
+if [[ ${RICE_PATH:-$default_target} != "$configured" ]]; then
   echo
-  echo "Note: the running session does not match /etc/blarchy-dev.conf. Reboot to settle it."
+  echo "Note: the running session does not match /etc/rice-dev.conf. Reboot to settle it."
 fi

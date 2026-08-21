@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Report BLARCHY's independent release channel
-# omarchy:hidden=true
-
-echo "independent"

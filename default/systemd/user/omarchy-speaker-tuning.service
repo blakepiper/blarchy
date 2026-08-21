@@ -1,6 +1,6 @@
 [Unit]
-Description=BLARCHY speaker tuning filter-chain
-Documentation=file:/usr/local/share/blarchy/docs/AUDIO-TUNING.md
+Description=RICE speaker tuning filter-chain
+Documentation=file:/usr/local/share/rice/docs/AUDIO-TUNING.md
 # WirePlumber does the linking, so starting before it is up risks the output being
 # linked before the speaker device has been discovered.
 After=pipewire.service wireplumber.service

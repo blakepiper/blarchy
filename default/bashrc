@@ -3,7 +3,7 @@
 
 # All the default Omarchy aliases and functions
 # (don't mess with these directly, just overwrite them here!)
-[[ -r /usr/local/share/blarchy/default/bash/env-bootstrap ]] && source /usr/local/share/blarchy/default/bash/env-bootstrap
+[[ -r /usr/local/share/rice/default/bash/env-bootstrap ]] && source /usr/local/share/rice/default/bash/env-bootstrap
 source "$OMARCHY_PATH/default/bash/rc"
 
 # Add your own exports, aliases, and functions here.

@@ -155,12 +155,8 @@ assert(
   'menu system-package update entry does not depend on the Omarchy logo font'
 )
 assert(
-  defaultById['update.system'].action.includes('blarchy system update'),
-  'menu updates Arch and AUR packages through the BLARCHY command surface'
-)
-assert(
-  defaultById['update.blarchy'].action.includes('blarchy update'),
-  'menu exposes a distinct BLARCHY environment update'
+  defaultById['update.system'].action.includes('yay -Syu'),
+  'menu updates Arch and AUR packages with yay'
 )
 assert(
   defaultById['setup.input'].action.includes('input.lua'),

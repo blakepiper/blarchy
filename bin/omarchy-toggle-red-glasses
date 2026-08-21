@@ -4,6 +4,6 @@
 
 set -euo pipefail
 
-blarchy_path=${BLARCHY_PATH:-${OMARCHY_PATH:-/usr/local/share/blarchy}}
-source "$blarchy_path/bin/omarchy-screen-filter.sh"
+rice_path=${RICE_PATH:-${OMARCHY_PATH:-/usr/local/share/rice}}
+source "$rice_path/bin/omarchy-screen-filter.sh"
 screen_filter_toggle red-glasses

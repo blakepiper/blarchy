@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Finish first-login setup for BLARCHY.
+# omarchy:summary=Finish first-login desktop setup
 # omarchy:args=[--force]
 
 set -e
@@ -15,12 +15,10 @@ USAGE
 }
 
 force=0
-finalize_user_args=()
 while (($#)); do
   case "$1" in
     --force)
       force=1
-      finalize_user_args+=(--force)
       shift
       ;;
     -h|--help)
@@ -41,8 +39,6 @@ if omarchy-done check "$FIRST_RUN_DONE" && (( force == 0 )); then
   echo "First-run already complete (rerun with --force to refresh)."
   exit 0
 fi
-
-omarchy-finalize-user "${finalize_user_args[@]}" || true
 
 mkdir -p "$state_dir"
 

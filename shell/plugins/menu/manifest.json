@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "id": "omarchy.menu",
-  "name": "BLARCHY menu",
+  "name": "RICE menu",
   "version": "1.0.0",
   "author": "Omarchy",
-  "description": "Quickshell-powered BLARCHY command menu",
+  "description": "Quickshell-powered RICE command menu",
   "kinds": [
     "menu",
     "bar-widget"
@@ -15,8 +15,8 @@
     "barWidget": "BarWidget.qml"
   },
   "barWidget": {
-    "displayName": "BLARCHY menu",
-    "description": "Launches the BLARCHY menu",
+    "displayName": "RICE menu",
+    "description": "Launches the RICE menu",
     "category": "Compositor",
     "allowMultiple": false
   }

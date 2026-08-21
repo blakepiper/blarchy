@@ -13,10 +13,10 @@ verify_core_packages() {
   while IFS= read -r package; do
     [[ -z $package || $package == \#* ]] && continue
     pacman -Q "$package" >/dev/null 2>&1 || missing+=("$package")
-  done <"$OMARCHY_PATH/install/omarchy-base.packages"
+  done <"$OMARCHY_PATH/install/packages"
 
-  (( ${#missing[@]} == 0 )) || fail "all BLARCHY core packages are installed" "missing packages: ${missing[*]}"
-  pass "all BLARCHY core packages are installed (${#missing[@]} missing)"
+  (( ${#missing[@]} == 0 )) || fail "all personal packages are installed" "missing packages: ${missing[*]}"
+  pass "all personal packages are installed (${#missing[@]} missing)"
 }
 
 verify_defaults() {
@@ -70,11 +70,11 @@ verify_runtime_tools() {
 
   local command
   for command in alacritty firefox gimp git nautilus node npm pip python codium codex claude omp spotify steam; do
-    command -v "$command" >/dev/null || fail "BLARCHY default commands are installed" "$command is missing"
+    command -v "$command" >/dev/null || fail "RICE default commands are installed" "$command is missing"
   done
   tmux -V >/dev/null || fail "Tmux is installed and runnable"
   mise --version >/dev/null || fail "Mise is installed and runnable"
-  pass "BLARCHY default commands are installed and core terminal tools are runnable"
+  pass "RICE default commands are installed and core terminal tools are runnable"
 }
 
 verify_user_setup() {
@@ -89,7 +89,7 @@ verify_user_setup() {
   [[ -e $HOME/.local/state/omarchy/current/background ]] || fail "current background state exists"
   [[ -s $HOME/.config/omarchy/shell.json ]] || fail "shell configuration exists"
   jq empty "$HOME/.config/omarchy/shell.json" || fail "shell configuration is valid JSON"
-  pass "BLARCHY user state and shell configuration exist"
+  pass "RICE user state and shell configuration exist"
 }
 
 for check in verify_core_packages verify_defaults verify_services verify_runtime_tools verify_user_setup; do

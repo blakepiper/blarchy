@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Compatibility no-op for the retired pacman update guard
-# omarchy:hidden=true
-
-# BLARCHY follows normal Arch package-management behavior. Direct pacman and
-# yay system upgrades are never blocked or redirected to a BLARCHY updater.
-exit 0

@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-# BLARCHY never replaces pacman.conf or the mirrorlist. The user owns repository
+# RICE never replaces pacman.conf or the mirrorlist. The user owns repository
 # and mirror choices on the Arch installation they created.
 omarchy-hook pre-refresh-pacman
 sudo env OMARCHY_UPDATE_PACMAN=1 pacman -Syyuu --noconfirm \

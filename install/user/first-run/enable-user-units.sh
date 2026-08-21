@@ -12,11 +12,9 @@
 set -euo pipefail
 
 systemctl --user daemon-reload
-systemctl --user disable --now omarchy-migrate-notify.service >/dev/null 2>&1 || true
 systemctl --user enable --now \
   bt-agent.service \
-  blarchy-agent-keep-awake.service \
+  agent-keep-awake.service \
   omarchy-recover-internal-monitor.service \
   omarchy-sleep-lock.service \
-  blarchy-migrate-notify.service \
   omarchy-fcitx5.service

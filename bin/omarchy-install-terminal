@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Install an approved terminal and set it as the BLARCHY default.
+# omarchy:summary=Install an approved terminal and set it as the RICE default.
 # omarchy:args=<alacritty|ghostty|kitty>
 # omarchy:requires-sudo=true
 

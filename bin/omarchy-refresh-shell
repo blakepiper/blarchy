@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Reset shell.json to BLARCHY defaults
+# omarchy:summary=Reset shell.json to RICE defaults
 # omarchy:examples=omarchy refresh shell
 
 set -euo pipefail

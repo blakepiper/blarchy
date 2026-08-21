@@ -22,9 +22,9 @@ ShellRoot {
   property string home: Quickshell.env("HOME")
 
   // The omarchy-shell host is the long-running entry point. Plugins live in
-  // sibling directories under plugins/. BLARCHY_PATH points at the installed
+  // sibling directories under plugins/. RICE_PATH points at the installed
   // runtime; OMARCHY_PATH remains a legacy compatibility override.
-  property string omarchyPath: Quickshell.env("BLARCHY_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/blarchy"
+  property string omarchyPath: Quickshell.env("RICE_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/rice"
   readonly property string shellPath: omarchyPath + "/shell"
   readonly property string firstPartyPluginsDir: shellPath + "/plugins"
   readonly property string defaultsPath: omarchyPath + "/config/omarchy/shell.json"

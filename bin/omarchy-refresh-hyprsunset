@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Overwrite the user hyprsunset config with the BLARCHY default and restart the service.
+# omarchy:summary=Overwrite the user hyprsunset config with the RICE default and restart the service.
 
 omarchy-refresh-config hypr/hyprsunset.conf
 omarchy-restart-hyprsunset

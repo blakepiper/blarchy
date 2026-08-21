@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Restore BLARCHY to the installed runtime after reboot
+# omarchy:summary=Restore RICE to the installed runtime after reboot
 # omarchy:group=dev
 # omarchy:args=[--no-reboot]
 
@@ -28,7 +28,7 @@ case "${1:-}" in
     cat <<USAGE
 Usage: omarchy dev unlink [--no-reboot]
 
-Removes /etc/blarchy-dev.conf so BLARCHY_PATH resolves to the installed runtime
+Removes /etc/rice-dev.conf so RICE_PATH resolves to the installed runtime
 after reboot. This intentionally does not rewrite the running Hyprland,
 systemd, shell, or app-launcher environment; reboot to make every layer agree.
 
@@ -42,9 +42,9 @@ USAGE
     ;;
 esac
 
-sudo rm -f /etc/blarchy-dev.conf
+sudo rm -f /etc/rice-dev.conf
 
-echo "Restored BLARCHY to /usr/local/share/blarchy"
+echo "Restored RICE to /usr/local/share/rice"
 echo
 
 if (( prompt_reboot )) && gum confirm "Reboot now to activate?"; then

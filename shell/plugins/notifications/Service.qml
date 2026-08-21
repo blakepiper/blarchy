@@ -17,7 +17,7 @@ Item {
   // Injected by omarchy-shell (the first-party service loader).
   property var shell: null
 
-  property string omarchyPath: Quickshell.env("BLARCHY_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/blarchy"
+  property string omarchyPath: Quickshell.env("RICE_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/rice"
   readonly property string home: Quickshell.env("HOME")
   // History + DND live under XDG_STATE_HOME: they're persistent user state
   // (history of received notifications, last-set DND preference), not
@@ -157,7 +157,7 @@ Item {
     //   - app_name is "notify-send" (the CLI default — means the sender
     //     didn't bother declaring an identity, so it's almost certainly
     //     ephemeral test/feedback noise)
-    //   - app_name is "omarchy-action" (BLARCHY's retained user-action
+    //   - app_name is "omarchy-action" (RICE's retained user-action
     //     toasts — the user just triggered them, they don't
     //     need to be archived)
     var transient = false

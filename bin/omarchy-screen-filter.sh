@@ -2,10 +2,10 @@
 
 screen_filter_toggle() {
   local mode="$1"
-  local blarchy_path="${BLARCHY_PATH:-${OMARCHY_PATH:-/usr/local/share/blarchy}}"
-  local state_dir="${BLARCHY_SCREEN_FILTER_STATE_DIR:-${BLARCHY_INVERT_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/blarchy}}"
-  local invert_shader="$blarchy_path/config/hypr/shaders/invert-colors.glsl"
-  local red_glasses_shader="$blarchy_path/config/hypr/shaders/red-glasses-compensation.glsl"
+  local rice_path="${RICE_PATH:-${OMARCHY_PATH:-/usr/local/share/rice}}"
+  local state_dir="${RICE_SCREEN_FILTER_STATE_DIR:-${RICE_INVERT_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/rice}}"
+  local invert_shader="$rice_path/config/hypr/shaders/invert-colors.glsl"
+  local red_glasses_shader="$rice_path/config/hypr/shaders/red-glasses-compensation.glsl"
   local requested_shader=""
   local enabled_message=""
   local disabled_message=""

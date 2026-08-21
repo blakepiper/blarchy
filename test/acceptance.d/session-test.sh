@@ -34,10 +34,6 @@ wait_until "pipewire is running" 30 wpctl status
 [[ $(findmnt -no FSTYPE /) == "btrfs" ]] || fail "root filesystem is btrfs"
 pass "root filesystem is btrfs"
 
-# Omarchy reports its version
-omarchy-version >/dev/null || fail "omarchy-version works"
-pass "omarchy-version works"
-
 # No failed units, system or user. OMARCHY_ACCEPTANCE_IGNORE_UNITS can hold a
 # regex of units to overlook (useful on dev machines; a fresh VM should be clean).
 failed_units() {

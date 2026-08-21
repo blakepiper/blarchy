@@ -97,7 +97,7 @@ def fetch_remote_usage(api_key: str, usage_url: str) -> dict[str, Any] | None:
     headers={
       "Accept": "application/json",
       "Authorization": f"Bearer {api_key}",
-      "User-Agent": "BLARCHY-model-usage/1.0",
+      "User-Agent": "RICE-model-usage/1.0",
     },
   )
   try:

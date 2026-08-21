@@ -1,18 +1,18 @@
-# BLARCHY shell (`omarchy-shell`)
+# RICE shell (`omarchy-shell`)
 
 A single long-running [Quickshell](https://quickshell.org/) instance
-that hosts the BLARCHY desktop. The bar, panels, overlays, menus, and
+that hosts the RICE desktop. The bar, panels, overlays, menus, and
 services all run inside as plugins. `omarchy-shell` is the canonical IPC entry
 point for CLIs and forwards to the already-running shell; it does not start an
 additional Quickshell process.
 
 The `omarchy-shell`, `omarchy.*`, and `~/.config/omarchy` names are retained
 compatibility APIs and should not be renamed for branding alone. The built-in
-shell code and assets are loaded from the installed BLARCHY runtime identified
-by `$BLARCHY_PATH` (normally `/usr/local/share/blarchy`), not from the Git
+shell code and assets are loaded from the installed RICE runtime identified
+by `$RICE_PATH` (normally `/usr/local/share/rice`), not from the Git
 worktree or an Omarchy installation. `$OMARCHY_PATH` remains a compatibility
 fallback for older installations and test harnesses. Explicit development
-links override `$BLARCHY_PATH` through `/etc/blarchy-dev.conf`.
+links override `$RICE_PATH` through `/etc/rice-dev.conf`.
 
 ## Plugin manifest
 

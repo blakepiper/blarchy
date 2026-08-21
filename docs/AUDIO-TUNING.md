@@ -20,9 +20,9 @@ drops every PulseAudio client's connection, and applications that do not reconne
 a start/stop of one small process, and contains failure: a malformed tuning breaks
 only that service instead of stopping PipeWire from starting at all.
 
-Tunings apply automatically: `install/hardware/speaker-tuning.sh` installs the
-LV2 dependency and `install/user/first-run/audio-tuning.sh` applies the tuning,
-both gated on the match. Machines without a matching tuning are untouched.
+Tunings apply automatically: the standalone installer publishes the tuning
+assets and `install/user/first-run/audio-tuning.sh` applies them, gated on the
+hardware match. Machines without a matching tuning are untouched.
 
 Switching it on happens at first graphical run, not at finalize-user time,
 because finalization can run before an audio server exists. The sink a tuning

@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Print the installed BLARCHY version
-
-exec "$(dirname -- "${BASH_SOURCE[0]}")/blarchy-version" "$@"

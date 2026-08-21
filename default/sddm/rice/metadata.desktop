@@ -1,0 +1,7 @@
+[SddmGreeterTheme]
+Name=Personal Arch
+Description=Minimal terminal-style login theme for the personal Arch desktop
+Author=Omarchy contributors / Blake
+Type=sddm-theme
+Version=1.0
+QtVersion=6

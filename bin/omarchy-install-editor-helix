@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Install Helix and configure it to use the current BLARCHY theme
+# omarchy:summary=Install Helix and configure it to use the current RICE theme
 
 echo "Installing Helix..."
 omarchy-pkg-add helix

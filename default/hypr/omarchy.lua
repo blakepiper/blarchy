@@ -1,9 +1,9 @@
--- BLARCHY Hyprland setup, retained under the Omarchy module namespace.
+-- RICE Hyprland setup, retained under the Omarchy module namespace.
 
 require("default.hypr.helpers")
 local require_optional = require("default.hypr.require_optional")
 
--- Use BLARCHY defaults, but don't edit these directly.
+-- Use RICE defaults, but don't edit these directly.
 require("default.hypr.autostart")
 if _G.omarchy_default_bindings ~= false then
   require("default.hypr.bindings.media")

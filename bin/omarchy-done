@@ -1,6 +1,38 @@
 #!/bin/bash
 
-# omarchy:summary=Compatibility wrapper for BLARCHY setup task state
+# omarchy:summary=Track one-time user setup steps
+# omarchy:args=<check|mark|ensure> <name>
 # omarchy:hidden=true
 
-exec "$(dirname -- "${BASH_SOURCE[0]}")/blarchy-done" "$@"
+set -euo pipefail
+
+action=${1:-}
+name=${2:-}
+state_dir=${RICE_DONE_STATE:-${XDG_STATE_HOME:-$HOME/.local/state}/rice/done}
+legacy_state_dir=${OMARCHY_DONE_STATE:-${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/done}
+marker="$state_dir/$name"
+legacy_marker="$legacy_state_dir/$name"
+
+if [[ -z $action || -z $name || $name == */* ]]; then
+  echo "Usage: omarchy-done <check|mark|ensure> <name>" >&2
+  exit 1
+fi
+
+case $action in
+  check)
+    [[ -f $marker || -f $legacy_marker ]]
+    ;;
+  mark)
+    mkdir -p "$state_dir"
+    touch "$marker"
+    ;;
+  ensure)
+    [[ ! -f $marker && ! -f $legacy_marker ]] || exit 1
+    mkdir -p "$state_dir"
+    (set -o noclobber; : >"$marker") 2>/dev/null
+    ;;
+  *)
+    echo "Usage: omarchy-done <check|mark|ensure> <name>" >&2
+    exit 1
+    ;;
+esac

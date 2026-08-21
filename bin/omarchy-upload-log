@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Save a local BLARCHY support log
+# omarchy:summary=Save a local RICE support log
 # omarchy:args=<log-file>
 # omarchy:hidden=true
 
@@ -150,7 +150,7 @@ installed|system-info)
   ;;
 esac
 
-output_file="${BLARCHY_SUPPORT_LOG:-$PWD/blarchy-support-$LOG_TYPE.log}"
+output_file="${RICE_SUPPORT_LOG:-$PWD/rice-support-$LOG_TYPE.log}"
 cp "$TEMP_LOG" "$output_file"
 echo
 echo "Support log saved locally to $output_file"

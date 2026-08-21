@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Install and enable ydotool mouse automation for BLARCHY development
+# omarchy:summary=Install and enable ydotool mouse automation for RICE development
 # omarchy:requires-sudo=true
 
 set -euo pipefail

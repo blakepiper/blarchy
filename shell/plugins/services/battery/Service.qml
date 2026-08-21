@@ -8,7 +8,7 @@ Item {
   id: root
 
   property var shell: null
-  property string omarchyPath: Quickshell.env("BLARCHY_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/blarchy"
+  property string omarchyPath: Quickshell.env("RICE_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/rice"
 
   readonly property int batteryThreshold: 10
   property string pendingPowerSource: ""

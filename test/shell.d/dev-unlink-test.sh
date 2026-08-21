@@ -54,7 +54,7 @@ run_unlink() {
 : >"$log_file"
 run_unlink --no-reboot
 
-grep -Fx $'sudo\trm\t-f\t/etc/blarchy-dev.conf' "$log_file" >/dev/null ||
+grep -Fx $'sudo\trm\t-f\t/etc/rice-dev.conf' "$log_file" >/dev/null ||
   fail "dev unlink removes the explicit runtime override" "$(cat "$log_file")"
 [[ ! -e $conf_file ]] || fail "dev unlink removes the dev config"
 if grep -Eq '^(gum|reboot)' "$log_file"; then

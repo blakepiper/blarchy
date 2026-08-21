@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# rice:summary=Keep the desktop awake while a coding agent is running
+# rice:group=system
+
+set -euo pipefail
+
+state_dir="${RICE_AGENT_KEEP_AWAKE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/indicators}"
+state_file="${RICE_AGENT_KEEP_AWAKE_STATE_FILE:-$state_dir/agent-keep-awake}"
+poll_seconds="${RICE_AGENT_KEEP_AWAKE_POLL_SECONDS:-2}"
+# Keep idle and hardware-triggered sleep from interrupting a coding session,
+# while allowing an explicit System > Suspend request to proceed normally.
+inhibit_what="idle:handle-lid-switch:handle-suspend-key:handle-hibernate-key"
+
+# Match executable names and path components, including common Node/Python
+# wrappers. The boundary characters keep names such as "myomp" from matching
+# the shorter "omp" agent name. Add or replace this expression in the
+# environment when a locally-installed agent uses another name.
+default_agent_pattern='(^|[/[:space:]_.-])(claude|claude-code|codex|codex-[^/[:space:]]*|goose|goose-[^/[:space:]]*|omp|omp-[^/[:space:]]*|pi|pi-[^/[:space:]]*|aider|amp|cline|crush|cursor-agent|gemini|kilo|opencode|qwen|roo)([/[:space:]_.-]|$)'
+agent_pattern="${RICE_AGENT_KEEP_AWAKE_PATTERN:-$default_agent_pattern}"
+
+clear_state() {
+  rm -f -- "$state_file"
+}
+
+matching_agents() {
+  local proc pid comm cmdline
+
+  for proc in /proc/[0-9]*; do
+    [[ -r $proc/cmdline && -r $proc/comm ]] || continue
+    pid=${proc##*/}
+    [[ $pid != "$BASHPID" && $pid != "$PPID" ]] || continue
+
+    comm=$(<"$proc/comm") || continue
+    cmdline=$(tr '\0' ' ' <"$proc/cmdline" 2>/dev/null) || continue
+    [[ -n $cmdline ]] || continue
+
+    if [[ "$comm $cmdline" =~ $agent_pattern ]]; then
+      printf '%s\t%s\t%s\n' "$pid" "$comm" "$cmdline"
+    fi
+  done
+}
+
+has_matching_agent() {
+  local matches
+
+  matches=$(matching_agents)
+  [[ -n $matches ]]
+}
+
+run_monitor() {
+  clear_state
+
+  trap clear_state EXIT HUP INT TERM
+
+  while :; do
+    if has_matching_agent; then
+      systemd-inhibit \
+        --what="$inhibit_what" \
+        --mode=block \
+        --who=RICE \
+        --why="Coding agent is running" \
+        "$0" --inhibited
+    else
+      clear_state
+      sleep "$poll_seconds"
+    fi
+  done
+}
+
+run_inhibited() {
+  mkdir -p -- "$state_dir"
+  trap clear_state EXIT HUP INT TERM
+
+  while has_matching_agent; do
+    : >"$state_file"
+    sleep "$poll_seconds"
+  done
+}
+
+case ${1:-} in
+  --clear)
+    clear_state
+    ;;
+  --once)
+    if has_matching_agent; then
+      mkdir -p -- "$state_dir"
+      : >"$state_file"
+      matching_agents
+    else
+      clear_state
+    fi
+    ;;
+  --inhibited)
+    run_inhibited
+    ;;
+  --agents)
+    matching_agents
+    ;;
+  --help|-h)
+    cat <<'EOF'
+Usage: agent-keep-awake [--once|--agents|--clear]
+
+Monitor for coding-agent processes and keep the RICE desktop awake while
+one is running. The default process list includes Claude Code, Codex, Goose,
+OMP, Pi, Aider, Amp, Cline, Crush, Cursor Agent, Gemini, Kilo, OpenCode,
+Qwen, and Roo. Set RICE_AGENT_KEEP_AWAKE_PATTERN to replace the matcher.
+EOF
+    ;;
+  *)
+    run_monitor
+    ;;
+esac

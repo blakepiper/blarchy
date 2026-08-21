@@ -1,7 +1,6 @@
 -- https://wiki.hypr.land/Configuring/Basics/Variables/#input
 
--- Layouts that can't type Latin letters. Keep in sync with the list in
--- etc/mkinitcpio.conf.d/omarchy_hooks.conf.
+-- Layouts that can't type Latin letters.
 local non_latin_layouts =
   " af am ara bd bg by et ge gr il in iq ir kg kh kz la lk mk mm mn mv np rs ru sy th tj ua "
 
@@ -11,11 +10,11 @@ local kb_layout = os.getenv("OMARCHY_XKB_LAYOUT") or "us"
 local kb_variant = os.getenv("OMARCHY_XKB_VARIANT") or ""
 -- CapsLock is the compose key. Keep the option set minimal: the former
 -- shift:both_capslock_cancel option conflicts with the active XKB keymap on
--- some BLARCHY sessions and can break modifier chords globally.
+-- some RICE sessions and can break modifier chords globally.
 local kb_options = "compose:caps"
 
 -- Hyprland resolves keybindings against the first entry in kb_layout, not the
--- layout that's currently active, so BLARCHY's Latin-keysym bindings (SUPER + W
+-- layout that's currently active, so RICE's Latin-keysym bindings (SUPER + W
 -- and friends) only fire when a Latin layout leads. Installing with a non-Latin
 -- one would otherwise leave the desktop unusable.
 if non_latin_layouts:find(" " .. kb_layout:match("^[^,]*") .. " ", 1, true) then

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This compatibility hook is called only by an explicit `omarchy refresh
-# pacman`, before that command refreshes package databases. BLARCHY never
+# pacman`, before that command refreshes package databases. RICE never
 # replaces /etc/pacman.conf or the mirrorlist. Normal `yay -Syu` updates do not
 # run this hook; manage custom repositories through ordinary Arch configuration.
 #

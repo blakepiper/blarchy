@@ -175,8 +175,10 @@ ShellRoot {
         dnd.moduleName = "Dnd"
         root.injectBar(dnd)
         notificationService.doNotDisturb = false
+        dnd.triggerPress(Qt.RightButton)
+        root.assertTrue(notificationService.doNotDisturb === true, "DND right click toggles notification service")
         dnd.triggerPress(Qt.LeftButton)
-        root.assertTrue(notificationService.doNotDisturb === true, "DND left click toggles notification service")
+        root.assertTrue(root.commandCount("omarchy-shell notifications showHistory") === 1, "DND left click opens notification history")
       }
 
       var nightLight = root.createIndicator("NightLight")

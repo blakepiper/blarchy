@@ -24,7 +24,7 @@ chmod +x "$stub_bin/qs"
 ln -s "$ROOT/bin/omarchy-menu" "$stub_bin/omarchy-menu"
 
 PATH="$stub_bin:/usr/bin:/bin" \
-BLARCHY_PATH=/tmp/installed-runtime \
+RICE_PATH=/tmp/installed-runtime \
 OMARCHY_PATH=/tmp/installed-runtime \
 OMARCHY_TEST_QS_ARGS="$qs_args" \
   "$stub_bin/omarchy-menu" ping >/dev/null

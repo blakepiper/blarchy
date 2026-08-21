@@ -3,7 +3,7 @@
 set -euo pipefail
 
 mode=${1:-preserve}
-runtime_path=${BLARCHY_PATH:-${OMARCHY_PATH:-}}
+runtime_path=${RICE_PATH:-${OMARCHY_PATH:-}}
 
 if [[ $mode != "preserve" && $mode != "overwrite" ]]; then
   echo "Usage: user.sh [preserve|overwrite]" >&2
@@ -11,7 +11,7 @@ if [[ $mode != "preserve" && $mode != "overwrite" ]]; then
 fi
 
 if [[ -z $runtime_path || ! -d $runtime_path/config ]]; then
-  echo "Error: BLARCHY_PATH must point to the installed BLARCHY runtime." >&2
+  echo "Error: RICE_PATH must point to the installed desktop runtime." >&2
   exit 1
 fi
 
@@ -57,14 +57,14 @@ fi
 
 bashrc="$HOME/.bashrc"
 touch "$bashrc"
-if ! grep -Fq '# >>> BLARCHY >>>' "$bashrc"; then
+if ! grep -Fq '# >>> PERSONAL ARCH RICE >>>' "$bashrc"; then
   cat >>"$bashrc" <<'BASHRC'
 
-# >>> BLARCHY >>>
-if [[ -r /usr/local/share/blarchy/default/bash/env-bootstrap ]]; then
-  source /usr/local/share/blarchy/default/bash/env-bootstrap
-  source "$BLARCHY_PATH/default/bash/rc"
+# >>> PERSONAL ARCH RICE >>>
+if [[ -r /usr/local/share/rice/default/bash/env-bootstrap ]]; then
+  source /usr/local/share/rice/default/bash/env-bootstrap
+  source "$RICE_PATH/default/bash/rc"
 fi
-# <<< BLARCHY <<<
+# <<< PERSONAL ARCH RICE <<<
 BASHRC
 fi

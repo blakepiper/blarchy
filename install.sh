@@ -16,7 +16,7 @@ usage() {
   cat <<'USAGE'
 Usage: ./install.sh
 
-Install BLARCHY on an existing minimal Arch Linux system.
+Reproduce this personal desktop on an existing minimal Arch Linux system.
 
 The system must already boot, have working networking, and have a non-root
 user with sudo access. This installer does not partition, format, mount,
@@ -35,7 +35,7 @@ if (( $# > 0 )); then
 fi
 
 if (( EUID == 0 )); then
-  echo "Error: run ./install.sh as the user who will run BLARCHY, not as root." >&2
+  echo "Error: run ./install.sh as the user who will use this desktop, not as root." >&2
   exit 1
 fi
 
@@ -47,7 +47,7 @@ if [[ -z $install_home || ! -d $install_home ]]; then
 fi
 
 if [[ ! -f /etc/arch-release ]]; then
-  echo "Error: BLARCHY's standalone installer supports Arch Linux only." >&2
+  echo "Error: this installer supports Arch Linux only." >&2
   exit 1
 fi
 
@@ -59,7 +59,7 @@ for command_name in git pacman sudo; do
 done
 
 if [[ ! -d $repo_path/.git ]]; then
-  echo "Error: clone BLARCHY with Git before running the installer." >&2
+  echo "Error: clone this repository with Git before running the installer." >&2
   exit 1
 fi
 
@@ -74,8 +74,8 @@ enable_multilib() {
   fi
 
   echo "Enable Arch multilib for Steam"
-  if [[ ! -e /etc/pacman.conf.blarchy-before-multilib ]]; then
-    sudo cp -p /etc/pacman.conf /etc/pacman.conf.blarchy-before-multilib
+  if [[ ! -e /etc/pacman.conf.rice-before-multilib ]]; then
+    sudo cp -p /etc/pacman.conf /etc/pacman.conf.rice-before-multilib
   fi
   sudo sed -i \
     '/^#\[multilib\]$/,/^#Include = \/etc\/pacman.d\/mirrorlist$/ s/^#//' \
@@ -109,7 +109,7 @@ load_packages() {
     package_name=${package_name//[[:space:]]/}
     [[ -n $package_name ]] || continue
     packages+=("$package_name")
-  done <"$repo_path/install/omarchy-base.packages"
+  done <"$repo_path/install/packages"
 
   printf '%s\n' "${packages[@]}"
 }
@@ -151,7 +151,7 @@ install_aur_packages() {
   local -a failed_packages=()
   local -A failed_status=()
 
-  aur_log_dir=$(mktemp -d "${TMPDIR:-/tmp}/blarchy-aur.XXXXXX")
+  aur_log_dir=$(mktemp -d "${TMPDIR:-/tmp}/rice-aur.XXXXXX")
   if yay -S --needed --noconfirm --removemake --cleanafter "${aur_packages[@]}" \
     > >(tee "$aur_log_dir/batch.log") 2>&1; then
     rm -rf -- "$aur_log_dir"
@@ -198,39 +198,26 @@ sudo -v
 enable_multilib
 
 echo "Update Arch and install build prerequisites"
-rustup_installed=0
-native_rust_installed=0
-temporary_rust_installed=0
-installed_packages=$(pacman -Qq)
-if grep -Fxq rustup <<<"$installed_packages"; then
-  rustup_installed=1
+# Use one persistent Rust provider. If an Arch Rust provider is already
+# installed, leave this transaction interactive so pacman can ask permission
+# to replace it with rustup atomically. --noconfirm answers that conflict prompt
+# with its default "no" and causes the exact provider mismatch this avoids.
+build_prerequisites=(base-devel git rustup)
+rust_conflicts=()
+if ! pacman -Qq rustup >/dev/null 2>&1; then
+  for package_name in rust cargo rustfmt; do
+    pacman -Qq "$package_name" >/dev/null 2>&1 && rust_conflicts+=("$package_name")
+  done
 fi
-for package_name in cargo rust rustfmt; do
-  if grep -Fxq "$package_name" <<<"$installed_packages"; then
-    native_rust_installed=1
-  fi
-done
-
-if (( rustup_installed && native_rust_installed )); then
-  echo "Error: both rustup and an Arch Rust provider are installed; resolve the conflict before rerunning BLARCHY." >&2
-  exit 1
-fi
-
-build_prerequisites=(base-devel git)
-pacman_options=(--needed --noconfirm)
-if (( rustup_installed )); then
-  echo "Use the existing rustup provider for AUR builds"
-elif (( native_rust_installed )); then
-  echo "Use the existing Arch Rust provider for AUR builds"
+if (( ${#rust_conflicts[@]} )); then
+  printf 'Replace conflicting Rust packages with rustup: %s\n' "${rust_conflicts[*]}"
+  sudo pacman -Syu --needed "${build_prerequisites[@]}"
 else
-  build_prerequisites+=(rust)
-  temporary_rust_installed=1
+  sudo pacman -Syu --needed --noconfirm "${build_prerequisites[@]}"
 fi
 
-sudo pacman -Syu "${pacman_options[@]}" "${build_prerequisites[@]}"
-
-if (( rustup_installed )) && ! rustup default >/dev/null 2>&1; then
-  echo "Initialize the installed rustup provider for AUR builds"
+if ! rustup default >/dev/null 2>&1; then
+  echo "Initialize the stable Rust toolchain for AUR builds"
   rustup default stable
 fi
 
@@ -240,54 +227,44 @@ mapfile -t packages < <(load_packages)
 validate_package_manifest
 split_packages
 
-echo "Install BLARCHY repository packages"
+echo "Install repository packages"
 sudo pacman -S --needed --noconfirm "${repo_packages[@]}"
 if (( ${#aur_packages[@]} )); then
-  echo "Build and install BLARCHY AUR packages"
+  echo "Build and install AUR packages"
   install_aur_packages
-fi
-if (( temporary_rust_installed )); then
-  echo "Remove the temporary Rust build toolchain"
-  sudo pacman -Rns --noconfirm rust
 fi
 yay -Y --devel --save
 
-echo "Install BLARCHY system integration"
-sudo env BLARCHY_REPO_PATH="$repo_path" \
-  BLARCHY_INSTALL_USER="$install_user" \
+echo "Install system integration"
+sudo env RICE_REPO_PATH="$repo_path" \
+  RICE_INSTALL_USER="$install_user" \
   bash "$repo_path/install/standalone/system.sh"
 
-echo "Seed BLARCHY user defaults without overwriting existing files"
-export BLARCHY_PATH=/usr/local/share/blarchy
-export BLARCHY_INSTALL="$BLARCHY_PATH/install"
-export BLARCHY_SOURCE_PATH="$repo_path"
-export BLARCHY_PRESERVE_USER_CONFIG=1
-export BLARCHY_USER_NAME="$(git config --global user.name 2>/dev/null || true)"
-export BLARCHY_USER_EMAIL="$(git config --global user.email 2>/dev/null || true)"
+echo "Seed user defaults without overwriting existing files"
+export RICE_PATH=/usr/local/share/rice
+export RICE_INSTALL="$RICE_PATH/install"
+export RICE_PRESERVE_USER_CONFIG=1
+export RICE_USER_NAME="$(git config --global user.name 2>/dev/null || true)"
+export RICE_USER_EMAIL="$(git config --global user.email 2>/dev/null || true)"
 export PATH="/usr/local/bin:$PATH"
 
-HOME="$install_home" BLARCHY_PATH="$BLARCHY_PATH" \
-  bash "$BLARCHY_INSTALL/standalone/user.sh" preserve
+HOME="$install_home" RICE_PATH="$RICE_PATH" \
+  bash "$RICE_INSTALL/standalone/user.sh" preserve
 
-# Compatibility for inherited setup leaves during the v0.2 transition.
-export OMARCHY_PATH="$BLARCHY_PATH"
-export OMARCHY_INSTALL="$BLARCHY_INSTALL"
-export OMARCHY_PRESERVE_USER_CONFIG="$BLARCHY_PRESERVE_USER_CONFIG"
-export OMARCHY_USER_NAME="$BLARCHY_USER_NAME"
-export OMARCHY_USER_EMAIL="$BLARCHY_USER_EMAIL"
+# Compatibility for inherited desktop helpers.
+export OMARCHY_PATH="$RICE_PATH"
+export OMARCHY_INSTALL="$RICE_INSTALL"
+export OMARCHY_PRESERVE_USER_CONFIG="$RICE_PRESERVE_USER_CONFIG"
+export OMARCHY_USER_NAME="$RICE_USER_NAME"
+export OMARCHY_USER_EMAIL="$RICE_USER_EMAIL"
 
-if blarchy-done check finalize-user; then
-  blarchy-finalize-user
-  blarchy-migrate
-else
-  blarchy-finalize-user --first-install
-fi
+bash "$RICE_INSTALL/standalone/finalize-user.sh"
 
 cat <<'DONE'
 
-BLARCHY installation complete.
+Personal Arch desktop installation complete.
 
-Reboot when convenient, then select "BLARCHY (Hyprland uwsm)" in your display
+Reboot when convenient, then select "Personal Arch (Hyprland)" in your display
 manager if it is not selected automatically. Your existing disk layout,
 bootloader, EFI entries, and other operating systems were not changed.
 DONE

@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# omarchy:summary=Install Zed Editor and configure it with the current BLARCHY theme
+# omarchy:summary=Install Zed Editor and configure it with the current RICE theme
 
 echo "Installing Zed Editor..."
 omarchy-pkg-add zed omazed
 
-# Apply the BLARCHY theme to Zed.
+# Apply the RICE theme to Zed.
 omazed setup
 
 setsid gtk-launch dev.zed.Zed

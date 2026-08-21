@@ -63,12 +63,16 @@ cp -a "$ROOT/shell" "$test_root/shell"
 ln -s "$ROOT/config" "$test_root/config"
 ln -s "$ROOT/bin" "$test_root/bin"
 
-cat >"$stub_bin/omarchy-update-available" <<'SH'
+cat >"$stub_bin/checkupdates" <<'SH'
 #!/bin/bash
-echo "Omarchy update available (test)"
-exit 0
+echo "test-package 1.0 -> 1.1"
 SH
-chmod +x "$stub_bin/omarchy-update-available"
+cat >"$stub_bin/yay" <<'SH'
+#!/bin/bash
+[[ ${1:-} == "-Qua" ]] && exit 0
+exit 1
+SH
+chmod +x "$stub_bin/checkupdates" "$stub_bin/yay"
 
 cat >"$stub_bin/curl" <<'SH'
 #!/bin/bash

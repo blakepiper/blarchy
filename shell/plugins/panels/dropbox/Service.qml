@@ -8,7 +8,7 @@ Item {
   id: root
 
   property var settings: ({})
-  property string omarchyPath: Quickshell.env("BLARCHY_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/blarchy"
+  property string omarchyPath: Quickshell.env("RICE_PATH") || Quickshell.env("OMARCHY_PATH") || "/usr/local/share/rice"
 
   property bool installed: false
   property bool running: false

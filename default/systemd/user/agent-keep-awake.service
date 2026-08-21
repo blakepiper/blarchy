@@ -1,0 +1,15 @@
+[Unit]
+Description=Keep RICE awake while a coding agent runs
+After=graphical-session.target
+PartOf=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/agent-keep-awake
+ExecStopPost=/usr/bin/agent-keep-awake --clear
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

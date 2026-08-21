@@ -66,7 +66,7 @@ hl.config({
 
 -- Keep Hyprland's native animation curves and timings. Blix does not add
 -- animation directives, so new windows, tiling changes, and workspaces use
--- the compositor defaults rather than BLARCHY-specific overrides.
+-- the compositor defaults rather than RICE-specific overrides.
 
 hl.config({
   dwindle = {

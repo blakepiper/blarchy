@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Send a BLARCHY desktop notification
+# omarchy:summary=Send a RICE desktop notification
 # omarchy:args=[-a] [--app-name <app-name>] [-g <glyph>] [-u <low|normal|critical>] [--image <path-or-uri>] <headline> [description] [notify-send options]
 # omarchy:examples=omarchy notification send "Reminder" "5 minutes are up" -g 󰢌
 

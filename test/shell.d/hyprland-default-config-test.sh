@@ -119,31 +119,33 @@ pass "focused browsers inhibit idle screensaver"
 unbind_block=$(sed -n '/for _, keys in ipairs({/,/}) do/p' "$ROOT/config/hypr/bindings.lua")
 for direction in LEFT RIGHT UP DOWN; do
   grep -Fq "\"SUPER + CTRL + $direction\"" <<<"$unbind_block" ||
-    fail "BLARCHY bindings unbind inherited SUPER + CTRL + $direction behavior"
+    fail "RICE bindings unbind inherited SUPER + CTRL + $direction behavior"
 done
 grep -Fq 'o.bind("SUPER + CTRL + LEFT", "Focus window left", hl.dsp.focus({ direction = "l" }))' "$ROOT/config/hypr/bindings.lua" ||
-  fail "BLARCHY bindings focus the window to the left"
+  fail "RICE bindings focus the window to the left"
 grep -Fq 'o.bind("SUPER + CTRL + RIGHT", "Focus window right", hl.dsp.focus({ direction = "r" }))' "$ROOT/config/hypr/bindings.lua" ||
-  fail "BLARCHY bindings focus the window to the right"
+  fail "RICE bindings focus the window to the right"
 grep -Fq 'o.bind("SUPER + CTRL + UP", "Focus window above", hl.dsp.focus({ direction = "u" }))' "$ROOT/config/hypr/bindings.lua" ||
-  fail "BLARCHY bindings focus the window above"
+  fail "RICE bindings focus the window above"
 grep -Fq 'o.bind("SUPER + CTRL + DOWN", "Focus window below", hl.dsp.focus({ direction = "d" }))' "$ROOT/config/hypr/bindings.lua" ||
-  fail "BLARCHY bindings focus the window below"
-pass "BLARCHY directional focus bindings override inherited behavior"
+  fail "RICE bindings focus the window below"
+pass "RICE directional focus bindings override inherited behavior"
 
 grep -Fq '"SUPER + C"' <<<"$unbind_block" ||
-  fail "BLARCHY bindings unbind inherited SUPER + C clipboard behavior"
+  fail "RICE bindings unbind inherited SUPER + C clipboard behavior"
 grep -Fq 'o.bind("SUPER + C", "VSCodium", { launch = "codium" })' "$ROOT/config/hypr/bindings.lua" ||
-  fail "BLARCHY bindings open VSCodium with SUPER + C"
+  fail "RICE bindings open VSCodium with SUPER + C"
 pass "VSCodium opens with SUPER + C"
 
 if grep -Fq 'o.bind("SUPER + ALT + SPACE"' "$ROOT/config/hypr/bindings.lua"; then
-  fail "BLARCHY menu does not register both symbolic and physical Space bindings"
+  fail "RICE menu does not register both symbolic and physical Space bindings"
 fi
-grep -Fq 'o.bind("SUPER + ALT + code:65", "BLARCHY menu"' "$ROOT/config/hypr/bindings.lua" ||
-  fail "BLARCHY menu keeps one physical Space binding"
-if grep -Fq 'o.bind("SUPER + code:46", "Lock system (physical L key)"' "$ROOT/config/hypr/bindings.lua"; then
-  fail "lock binding does not register a duplicate physical L fallback"
+grep -Fq 'o.bind("SUPER + ALT + code:65", "Desktop menu"' "$ROOT/config/hypr/bindings.lua" ||
+  fail "desktop menu keeps one physical Space binding"
+grep -Fq 'o.bind("SUPER + code:46", "Lock and switch session"' "$ROOT/config/hypr/bindings.lua" ||
+  fail "lock and session switch keeps one physical L binding"
+if grep -Fq 'o.bind("SUPER + L", "Lock and switch session"' "$ROOT/config/hypr/bindings.lua"; then
+  fail "lock and session switch does not register duplicate symbolic and physical bindings"
 fi
 pass "critical physical key bindings do not toggle twice"
 
@@ -244,40 +246,3 @@ if grep -Fq $'SUPER + CTRL + X	Toggle dictation' <<<"$missing_voxtype_output"; t
   fail "missing Voxtype skips its bindings"
 fi
 pass "missing Voxtype skips dictation bindings"
-
-migration=$(grep -rl 'Move stock Hyprland user overrides into package defaults' "$ROOT/migrations" | head -n 1 || true)
-[[ -n $migration ]] || fail "Hyprland default config migration exists"
-
-migration_home="$tmpdir/migration-home"
-mkdir -p "$migration_home/.config/hypr"
-cat >"$migration_home/.config/hypr/bindings.lua" <<'LUA'
-require("default.hypr.bindings.media")
-require("default.hypr.bindings.clipboard")
-require("default.hypr.bindings.tiling")
-require("default.hypr.bindings.utilities")
-
--- Application bindings without Omarchy's preinstalled web apps, TUIs, or desktop apps.
-o.bind("SUPER + RETURN", "Terminal", { omarchy = "terminal" })
-o.bind("SUPER + SHIFT + RETURN", "Browser", { omarchy = "browser" })
-o.bind("SUPER + SHIFT + F", "File manager", { omarchy = "nautilus" })
-o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)", { omarchy = "nautilus-cwd" })
-o.bind("SUPER + SHIFT + B", "Browser", { omarchy = "browser" })
-o.bind("SUPER + SHIFT + ALT + B", "Browser (private)", { omarchy = "browser --private" })
-o.bind("SUPER + SHIFT + N", "Editor", { omarchy = "editor" })
-LUA
-HOME="$migration_home" OMARCHY_PATH="$ROOT" bash -euo pipefail "$migration" >/dev/null
-cmp -s "$ROOT/config/hypr/bindings.lua" "$migration_home/.config/hypr/bindings.lua" ||
-  fail "plain legacy bindings migrate to the user override stub"
-[[ -f $migration_home/.local/state/omarchy/preinstalls-removed ]] ||
-  fail "plain legacy bindings preserve preinstall removal state"
-pass "migration converts plain legacy bindings to package-owned defaults"
-
-upgrade_script="$ROOT/bin/omarchy-upgrade-to-quattro"
-grep -Fq 'touch "$state_dir/preinstalls-removed"' "$upgrade_script" ||
-  fail "upgrade-to-quattro preserves preinstall removal state"
-
-mark_line=$(awk '/^mark_removed_preinstalls_from_legacy_bindings$/ { print NR; exit }' "$upgrade_script")
-copy_line=$(awk '/^copy_always_config_defaults$/ { print NR; exit }' "$upgrade_script")
-[[ -n $mark_line && -n $copy_line ]] || fail "upgrade-to-quattro preinstall marker and config refresh calls exist"
-(( mark_line < copy_line )) || fail "upgrade-to-quattro detects plain legacy bindings before overwriting Hyprland bindings"
-pass "upgrade-to-quattro preserves preinstall removal before refreshing Hyprland bindings"

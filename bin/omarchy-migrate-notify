@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Compatibility wrapper for the BLARCHY migration notifier
-# omarchy:hidden=true
-
-exec "$(dirname -- "${BASH_SOURCE[0]}")/blarchy-migrate-notify" "$@"

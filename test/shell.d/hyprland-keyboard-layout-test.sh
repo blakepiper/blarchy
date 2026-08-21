@@ -45,7 +45,7 @@ assert_input() {
   pass "$description"
 }
 
-base_options="compose:caps,shift:both_capslock_cancel"
+base_options="compose:caps"
 toggle_options="$base_options,grp:alts_toggle"
 
 assert_input "missing keyboard environment falls back to us" "[us] [] [$base_options]"
@@ -59,14 +59,3 @@ if rg -q 'io\.(open|popen)|os\.execute' "$ROOT/default/hypr/input.lua"; then
   fail "Hyprland input defaults perform no blocking I/O during config reload"
 fi
 pass "Hyprland input defaults perform no blocking I/O during config reload"
-
-hooks_conf="$ROOT/etc/mkinitcpio.conf.d/omarchy_hooks.conf"
-input_lua="$ROOT/default/hypr/input.lua"
-
-hooks_layouts=$(awk -F')' '/\) ;;$/ { gsub(/[[:space:]|]+/, "\n", $1); print $1 }' "$hooks_conf" | grep '^[a-z]\+$' | sort)
-lua_layouts=$(sed -n '/^local non_latin_layouts =/,+1p' "$input_lua" | grep -o '"[^"]*"' | tr -d '"' | tr ' ' '\n' | grep '^[a-z]\+$' | sort)
-
-[[ -n $hooks_layouts ]] || fail "non-latin layout list is readable from omarchy_hooks.conf"
-[[ $hooks_layouts == "$lua_layouts" ]] ||
-  fail "non-latin layout lists stay in sync" "$(diff <(echo "$hooks_layouts") <(echo "$lua_layouts"))"
-pass "non-latin layout lists stay in sync with the initramfs hook"

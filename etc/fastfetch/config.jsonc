@@ -69,13 +69,7 @@
       "type": "custom",
       "key": "│ ├󰍹 Environment",
       "keyColor": "blue",
-      "format": "BLARCHY"
-    },
-    {
-      "type": "command",
-      "key": "│ ├ BLARCHY",
-      "keyColor": "blue",
-      "text": "blarchy version"
+      "format": "Personal Arch"
     },
     {
       "type": "kernel",
@@ -137,12 +131,6 @@
       "type": "uptime",
       "key": "󱫐 Uptime",
       "keyColor": "magenta"
-    },
-    {
-      "type": "command",
-      "key": " Update",
-      "keyColor": "magenta",
-      "text": "updated=$(omarchy-version-pkgs); echo \"$updated\""
     },
     {
       "type": "custom",

@@ -88,9 +88,9 @@ if missing or bad:
 PY
 pass "default bar widget ids resolve to manifests and entry points"
 
-grep -F 'os.getenv("BLARCHY_PATH")' "$ROOT/config/hypr/hyprland.lua" >/dev/null
+grep -F 'os.getenv("RICE_PATH")' "$ROOT/config/hypr/hyprland.lua" >/dev/null
 grep -F 'os.getenv("OMARCHY_PATH")' "$ROOT/config/hypr/hyprland.lua" >/dev/null
-grep -F 'blarchy_path = "/usr/local/share/blarchy"' "$ROOT/config/hypr/hyprland.lua" >/dev/null
+grep -F 'rice_path = "/usr/local/share/rice"' "$ROOT/config/hypr/hyprland.lua" >/dev/null
 grep -F 'require("default.hypr.omarchy")' "$ROOT/config/hypr/hyprland.lua" >/dev/null
 grep -F 'package.path = home' "$ROOT/default/hypr/bootstrap.lua" >/dev/null
 grep -F '/.local/state/?.lua;' "$ROOT/default/hypr/bootstrap.lua" >/dev/null
@@ -313,44 +313,3 @@ jq -e '
 ' "$TMPDIR/home/.config/omarchy/shell.json" >/dev/null
 [[ -f $TMPDIR/home/.local/state/omarchy/restart-shell-called ]] || fail "shell refresh restarts shell"
 pass "shell refresh places optional service widgets when services are available"
-
-if grep -RIl 'upgrade-to-quattro\|Omarchy 4\.0 is upgraded' "$ROOT/migrations" >/dev/null; then
-  fail "4.0 upgrade is not modeled as a migration"
-fi
-pass "4.0 upgrade is handled outside the migration runner"
-
-clock_migration=$(grep -rl 'Remove leading zero from bar clock date' "$ROOT/migrations" | head -n 1 || true)
-[[ -n $clock_migration ]] || fail "clock date format user migration exists"
-
-cat >"$TMPDIR/home/.config/omarchy/shell.json" <<'JSON'
-{
-  "version": 1,
-  "bar": {
-    "layout": {
-      "left": [],
-      "center": [
-        { "id": "omarchy.clock", "formatAlt": "dd MMMM 'W'ww yyyy" },
-        { "id": "omarchy.weather" }
-      ],
-      "right": [
-        { "id": "local.clock", "formatAlt": "dd MMMM 'W'ww yyyy" }
-      ]
-    }
-  },
-  "plugins": []
-}
-JSON
-
-HOME="$TMPDIR/home" OMARCHY_PATH="$ROOT" bash "$clock_migration"
-
-jq -e '
-  .bar.layout.center[0].formatAlt == "d MMMM \u0027W\u0027ww yyyy" and
-  .bar.layout.right[0].formatAlt == "dd MMMM \u0027W\u0027ww yyyy"
-' "$TMPDIR/home/.config/omarchy/shell.json" >/dev/null
-pass "clock date format migration removes leading zero from clock"
-
-before=$(sha256sum "$TMPDIR/home/.config/omarchy/shell.json" | awk '{print $1}')
-HOME="$TMPDIR/home" OMARCHY_PATH="$ROOT" bash "$clock_migration"
-after=$(sha256sum "$TMPDIR/home/.config/omarchy/shell.json" | awk '{print $1}')
-[[ $before == "$after" ]] || fail "clock date format migration is idempotent"
-pass "clock date format migration is idempotent"

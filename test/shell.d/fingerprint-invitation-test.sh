@@ -57,18 +57,18 @@ chmod +x "$test_bin/systemd-run"
 
 run_invitation_hook() {
   cp "$ROOT/install/user/first-run/setup-fingerprint.hook" "$hook_path"
-  HOME="$test_home" PATH="$test_bin:$ROOT/bin:$PATH" TEST_LOG="$log_file" TEST_HW_MARKER="$hw_marker" bash "$hook_path"
+  HOME="$test_home" XDG_STATE_HOME="$test_home/.local/state" PATH="$test_bin:$ROOT/bin:$PATH" TEST_LOG="$log_file" TEST_HW_MARKER="$hw_marker" bash "$hook_path"
 }
 
 run_invitation_hook
 
-[[ ! -f $test_home/.local/state/blarchy/done/fingerprint-setup-invitation ]] || fail "fingerprint invitation stays pending without a reader"
+[[ ! -f $test_home/.local/state/rice/done/fingerprint-setup-invitation ]] || fail "fingerprint invitation stays pending without a reader"
 [[ ! -s $log_file ]] || fail "fingerprint invitation does nothing without a reader"
 
 touch "$hw_marker"
 run_invitation_hook
 
-[[ -f $test_home/.local/state/blarchy/done/fingerprint-setup-invitation ]] || fail "fingerprint invitation records completion"
+[[ -f $test_home/.local/state/rice/done/fingerprint-setup-invitation ]] || fail "fingerprint invitation records completion"
 [[ -f $hook_path ]] || fail "fingerprint invitation keeps its hook installed"
 [[ $(grep -c '^systemd-run:' "$log_file") -eq 2 ]] || fail "fingerprint invitation uses durable user services"
 grep -q -- '--user --collect --quiet --service-type=exec --unit=omarchy-fingerprint-setup-invitation' "$log_file" || fail "fingerprint invitation configures its user service"
@@ -78,7 +78,7 @@ grep -q -- '--user --collect --quiet -p KillMode=process --unit=omarchy-setup-se
 [[ $(grep -c '^notification$' "$log_file") -eq 1 ]] || fail "fingerprint invitation sends one notification"
 [[ $(grep -c '^launch$' "$log_file") -eq 1 ]] || fail "fingerprint invitation handles the notification action"
 
-HOME="$test_home" PATH="$test_bin:$ROOT/bin:$PATH" TEST_LOG="$log_file" TEST_HW_MARKER="$hw_marker" bash "$hook_path"
+HOME="$test_home" XDG_STATE_HOME="$test_home/.local/state" PATH="$test_bin:$ROOT/bin:$PATH" TEST_LOG="$log_file" TEST_HW_MARKER="$hw_marker" bash "$hook_path"
 
 [[ $(grep -c '^systemd-run:' "$log_file") -eq 2 ]] || fail "completed fingerprint invitation does not schedule again"
 [[ $(grep -c '^notification$' "$log_file") -eq 1 ]] || fail "completed fingerprint invitation hook does not notify again"

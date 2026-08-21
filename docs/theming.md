@@ -1,9 +1,9 @@
-# BLARCHY theming
+# RICE theming
 
-BLARCHY themes live under `themes/<name>/` in the source tree (installed at
-`/usr/local/share/blarchy/themes/<name>/`), with optional user themes under
+RICE themes live under `themes/<name>/` in the source tree (installed at
+`/usr/local/share/rice/themes/<name>/`), with optional user themes under
 `~/.config/omarchy/themes/<name>/`. A theme normally starts with a
-`colors.toml`; BLARCHY generates the active theme files from
+`colors.toml`; RICE generates the active theme files from
 `default/themed/*.tpl` when `omarchy-theme-set <name>` runs.
 
 ## Theme activation flow
@@ -70,7 +70,7 @@ The neutral ramp is centered on `background -> bright_foreground`. Dark themes
 should read from darkest to lightest; light themes should read from lightest to
 darkest. Terminal and editor cursors use `bright_foreground`; there is no
 separate cursor palette key. `selection` is the text-selection background stop
-in that ramp; BLARCHY derives `selection_background = selection` and
+in that ramp; RICE derives `selection_background = selection` and
 `selection_foreground = bright_foreground`. Use
 `omarchy dev theme-preview [theme]` to inspect that ramp, including
 `dark_background`, `darker_background`, and a selected-text sample.

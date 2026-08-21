@@ -1,4 +1,4 @@
--- Change the default BLARCHY look'n'feel.
+-- Change the default RICE look'n'feel.
 
 -- https://wiki.hypr.land/Configuring/Basics/Variables/#general
 -- hl.config({

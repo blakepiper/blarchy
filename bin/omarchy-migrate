@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Run pending BLARCHY migrations
-# omarchy:args=[--pending]
-
-exec "$(dirname -- "${BASH_SOURCE[0]}")/blarchy-migrate" "$@"

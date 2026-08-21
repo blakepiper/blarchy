@@ -1,4 +1,4 @@
--- BLARCHY's user-facing defaults live in this small override layer so the
+-- RICE's user-facing defaults live in this small override layer so the
 -- inherited default bindings can continue to receive upstream improvements.
 for _, keys in ipairs({
   "SUPER + SPACE", "SUPER + RETURN", "SUPER + C", "SUPER + F", "SUPER + B", "SUPER + G", "SUPER + S", "SUPER + I", "SUPER + R",
@@ -19,18 +19,16 @@ o.bind("SUPER + SHIFT + S", "Region screenshot", "omarchy-capture-screenshot reg
 o.bind("SUPER + SHIFT + F", "Full screen", hl.dsp.window.fullscreen({ mode = "maximized" }))
 o.bind("SUPER + TAB", "Former workspace", hl.dsp.focus({ workspace = "previous" }))
 
--- Resolve critical shell actions from the active BLARCHY checkout. Hyprland
--- can retain an older PATH after the Omarchy -> BLARCHY migration.
-local blarchy_path = os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "/home/przvl/blarchy"
-local blarchy_bin = blarchy_path .. "/bin/"
-o.bind("SUPER + L", "Lock system", blarchy_bin .. "omarchy-system-lock")
-o.bind("SUPER + I", "Invert screen colors", blarchy_bin .. "omarchy-toggle-invert")
-o.bind("SUPER + R", "Red-glasses color compensation", blarchy_bin .. "omarchy-toggle-red-glasses")
+-- Resolve critical shell actions from the installed runtime.
+local rice_path = os.getenv("RICE_PATH") or os.getenv("OMARCHY_PATH") or "/usr/local/share/rice"
+local rice_bin = rice_path .. "/bin/"
+o.bind("SUPER + I", "Invert screen colors", rice_bin .. "omarchy-toggle-invert")
+o.bind("SUPER + R", "Red-glasses color compensation", rice_bin .. "omarchy-toggle-red-glasses")
 -- Use physical keycodes for these critical bindings. On a US layout, the
 -- symbolic and physical forms both match the same key, so registering both
 -- would toggle the menu twice (or issue the lock action twice) per press.
-o.bind("SUPER + ALT + code:65", "BLARCHY menu", blarchy_bin .. "omarchy-menu toggle root")
-o.bind("SUPER + code:46", "Lock system", blarchy_bin .. "omarchy-system-lock")
+o.bind("SUPER + ALT + code:65", "Desktop menu", rice_bin .. "omarchy-menu toggle root")
+o.bind("SUPER + code:46", "Lock and switch session", rice_bin .. "lock-and-switch-session")
 
 o.bind("SUPER + LEFT", "Snap window left", "omarchy-hyprland-window-snap left")
 o.bind("SUPER + RIGHT", "Snap window right", "omarchy-hyprland-window-snap right")

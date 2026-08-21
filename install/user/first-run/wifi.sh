@@ -1,7 +1,7 @@
 notify_update() {
   (
     if [[ -n $(omarchy-notification-send -u critical -g  "Update System" "$1" -a) ]]; then
-      omarchy-launch-floating-terminal-with-presentation omarchy-update
+      omarchy-launch-floating-terminal-with-presentation 'yay -Syu'
     fi
   ) >/dev/null 2>&1 &
 }

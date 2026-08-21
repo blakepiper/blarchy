@@ -10,7 +10,7 @@ import "BarModel.js" as BarModel
 Item {
   id: root
 
-  // The omarchy-shell host injects omarchyPath from the BLARCHY runtime.
+  // The omarchy-shell host injects omarchyPath from the RICE runtime.
   required property string omarchyPath
   // Injected by the host shell so bar slots can resolve enabled widgets.
   required property var barWidgetRegistry

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Send an IPC call to the running BLARCHY shell
+# omarchy:summary=Send an IPC call to the running RICE shell
 # omarchy:args=[-q] <target> <method> [args...]
 # omarchy:examples=omarchy shell shell ping | omarchy-shell shell toggle omarchy.menu '{"menu":"root"}'
 
@@ -20,7 +20,7 @@ if (( $# == 0 )) || [[ $1 == "-h" || $1 == "--help" ]]; then
   cat <<USAGE
 Usage: omarchy-shell [-q] <target> <method> [args...]
 
-Forwards an IPC call to the running BLARCHY shell. The shell is expected
+Forwards an IPC call to the running RICE shell. The shell is expected
 to already be running; this command does not start it.
 
 Options:
@@ -37,17 +37,17 @@ USAGE
 fi
 
 (( $# >= 2 )) || fail "Usage: omarchy-shell <target> <method> [args...]"
-# BLARCHY uses BLARCHY_PATH, while OMARCHY_PATH remains the compatibility
+# RICE uses RICE_PATH, while OMARCHY_PATH remains the compatibility
 # name used by older callers.  Hyprland may start without either variable, so
 # derive the checkout/install root from this executable as a final fallback.
 if [[ -z ${OMARCHY_PATH:-} ]]; then
-  OMARCHY_PATH=${BLARCHY_PATH:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}
+  OMARCHY_PATH=${RICE_PATH:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}
   export OMARCHY_PATH
 fi
 [[ -f $OMARCHY_PATH/shell/shell.qml ]] || fail "omarchy-shell config not found: $OMARCHY_PATH/shell/shell.qml"
 
 # qs matches instances by display, and a caller from outside the session (an
-# ssh or TTY omarchy-restart-shell, and the migrations it runs for) has none,
+# ssh or TTY omarchy-restart-shell has none,
 # so recover it from the compositor socket.
 if [[ -z ${WAYLAND_DISPLAY:-} ]]; then
   socket=$(ls -t "${XDG_RUNTIME_DIR:-/run/user/$UID}"/wayland-[0-9]* 2>/dev/null | grep -v '\.lock$' | head -n1)

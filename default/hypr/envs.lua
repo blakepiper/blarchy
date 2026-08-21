@@ -25,11 +25,11 @@ hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 hl.env("XCOMPOSEFILE", paths.home .. "/.XCompose")
 
 -- hyprctl setenv doesn't reach keybind dispatcher env; use hl.env.
-hl.env("BLARCHY_PATH", paths.blarchy_path)
+hl.env("RICE_PATH", paths.rice_path)
 -- Compatibility for inherited commands and third-party plugins.
-hl.env("OMARCHY_PATH", paths.blarchy_path)
+hl.env("OMARCHY_PATH", paths.rice_path)
 
-local bin_dir = paths.blarchy_path .. "/bin"
+local bin_dir = paths.rice_path .. "/bin"
 local kept = {}
 for entry in (os.getenv("PATH") or "/usr/local/bin:/usr/bin"):gmatch("[^:]+") do
   if entry ~= bin_dir then table.insert(kept, entry) end

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Overwrite the user tmux config with the BLARCHY default and reload tmux.
+# omarchy:summary=Overwrite the user tmux config with the RICE default and reload tmux.
 
 omarchy-refresh-config tmux/tmux.conf
 omarchy-restart-tmux

@@ -44,12 +44,12 @@ chmod +x "$test_bin/systemd-run"
 
 run_invitation_hook() {
   cp "$ROOT/install/user/first-run/install-voxtype.hook" "$hook_path"
-  HOME="$test_home" PATH="$test_bin:$ROOT/bin:$PATH" TEST_LOG="$log_file" bash "$hook_path"
+  HOME="$test_home" XDG_STATE_HOME="$test_home/.local/state" PATH="$test_bin:$ROOT/bin:$PATH" TEST_LOG="$log_file" bash "$hook_path"
 }
 
 run_invitation_hook
 
-[[ -f $test_home/.local/state/blarchy/done/voxtype-install-invitation ]] || fail "Voxtype invitation records completion"
+[[ -f $test_home/.local/state/rice/done/voxtype-install-invitation ]] || fail "Voxtype invitation records completion"
 [[ -f $hook_path ]] || fail "Voxtype invitation keeps its hook installed"
 [[ $(grep -c '^systemd-run:' "$log_file") -eq 2 ]] || fail "Voxtype invitation uses durable user services"
 grep -q -- '--user --collect --quiet --service-type=exec --unit=omarchy-voxtype-install-invitation' "$log_file" || fail "Voxtype invitation configures its user service"
@@ -59,7 +59,7 @@ grep -q -- '--user --collect --quiet -p KillMode=process --unit=omarchy-voxtype-
 [[ $(grep -c '^notification$' "$log_file") -eq 1 ]] || fail "Voxtype invitation sends one notification"
 [[ $(grep -c '^launch$' "$log_file") -eq 1 ]] || fail "Voxtype invitation handles the notification action"
 
-HOME="$test_home" PATH="$test_bin:$ROOT/bin:$PATH" TEST_LOG="$log_file" bash "$hook_path"
+HOME="$test_home" XDG_STATE_HOME="$test_home/.local/state" PATH="$test_bin:$ROOT/bin:$PATH" TEST_LOG="$log_file" bash "$hook_path"
 
 [[ -f $hook_path ]] || fail "completed Voxtype invitation keeps its hook installed"
 [[ $(grep -c '^systemd-run:' "$log_file") -eq 2 ]] || fail "completed Voxtype invitation does not schedule again"

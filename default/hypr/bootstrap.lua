@@ -1,4 +1,4 @@
--- Hyprland bootstrap for BLARCHY's retained Lua module path.
+-- Hyprland bootstrap for RICE's retained Lua module path.
 
 local home = os.getenv("HOME")
 local reload_prefixes = {
@@ -29,13 +29,13 @@ for _, module in ipairs(modules_to_reload) do
 end
 
 -- Load generated state from ~/.local/state, user modules from ~/.config, and
--- BLARCHY defaults from the installed runtime. OMARCHY_PATH remains a
+-- RICE defaults from the installed runtime. OMARCHY_PATH remains a
 -- compatibility override for older installs and test harnesses.
-local blarchy_path = os.getenv("BLARCHY_PATH") or os.getenv("OMARCHY_PATH") or "/usr/local/share/blarchy"
+local rice_path = os.getenv("RICE_PATH") or os.getenv("OMARCHY_PATH") or "/usr/local/share/rice"
 package.path = home
   .. "/.local/state/?.lua;"
   .. home
   .. "/.config/?.lua;"
-  .. blarchy_path
+  .. rice_path
   .. "/?.lua;"
   .. package.path

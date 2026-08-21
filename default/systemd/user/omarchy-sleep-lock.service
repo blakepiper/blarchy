@@ -1,5 +1,5 @@
 [Unit]
-Description=Lock BLARCHY before suspend
+Description=Lock RICE before suspend
 After=dbus.socket
 Requires=dbus.socket
 

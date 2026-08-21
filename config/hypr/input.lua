@@ -1,5 +1,5 @@
 -- Keep only your personal input overrides here. Uncommented settings below
--- replace BLARCHY's defaults.
+-- replace RICE's defaults.
 
 -- Use natural scrolling for all pointer devices, including external mice.
 hl.config({

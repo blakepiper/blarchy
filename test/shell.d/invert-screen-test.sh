@@ -17,7 +17,7 @@ grep -Fq '1.0 - pixel.rgb' "$shader" ||
   fail "screen inversion shader inverts RGB channels"
 grep -Fq '#version 300 es' "$shader" ||
   fail "screen inversion shader matches Hyprland's GLSL interface"
-pass "screen inversion defaults are wired into BLARCHY"
+pass "screen inversion defaults are wired into RICE"
 
 test_tmp=$(mktemp -d)
 trap 'rm -rf "$test_tmp"' EXIT
@@ -34,8 +34,8 @@ cat >"$fake_bin/hyprctl" <<'HYPRCTL'
 
 set -euo pipefail
 
-shader_state=${BLARCHY_INVERT_TEST_SHADER_STATE:?}
-damage_state=${BLARCHY_INVERT_TEST_DAMAGE_STATE:?}
+shader_state=${RICE_INVERT_TEST_SHADER_STATE:?}
+damage_state=${RICE_INVERT_TEST_DAMAGE_STATE:?}
 case "$1 $2" in
   "getoption decoration:screen_shader")
     jq -cn --arg shader "$(<"$shader_state")" '{str:$shader}'
@@ -43,8 +43,8 @@ case "$1 $2" in
   "getoption debug:damage_tracking")
     jq -cn --argjson damage "$(<"$damage_state")" '{int:$damage}'
     ;;
-  "eval hl.config({ decoration = { screen_shader = \"$BLARCHY_INVERT_TEST_SHADER\" }, debug = { damage_tracking = 0 } })")
-    printf '%s\n' "$BLARCHY_INVERT_TEST_SHADER" >"$shader_state"
+  "eval hl.config({ decoration = { screen_shader = \"$RICE_INVERT_TEST_SHADER\" }, debug = { damage_tracking = 0 } })")
+    printf '%s\n' "$RICE_INVERT_TEST_SHADER" >"$shader_state"
     printf '0\n' >"$damage_state"
     ;;
   "eval hl.config({ decoration = { screen_shader = \"\" }, debug = { damage_tracking = 2 } })")
@@ -59,9 +59,9 @@ HYPRCTL
 chmod +x "$fake_bin/hyprctl"
 
 run_toggle() {
-  PATH="$fake_bin:$PATH" BLARCHY_PATH="$ROOT" BLARCHY_INVERT_STATE_DIR="$toggle_state" \
-    BLARCHY_INVERT_TEST_SHADER_STATE="$shader_state" BLARCHY_INVERT_TEST_DAMAGE_STATE="$damage_state" \
-    BLARCHY_INVERT_TEST_SHADER="$shader" "$toggle" >/dev/null
+  PATH="$fake_bin:$PATH" RICE_PATH="$ROOT" RICE_INVERT_STATE_DIR="$toggle_state" \
+    RICE_INVERT_TEST_SHADER_STATE="$shader_state" RICE_INVERT_TEST_DAMAGE_STATE="$damage_state" \
+    RICE_INVERT_TEST_SHADER="$shader" "$toggle" >/dev/null
 }
 
 run_toggle

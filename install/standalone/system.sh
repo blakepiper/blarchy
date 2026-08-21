@@ -2,19 +2,19 @@
 
 set -euo pipefail
 
-repo_path=${BLARCHY_REPO_PATH:-}
-root_prefix=${BLARCHY_INSTALL_ROOT:-}
-skip_services=${BLARCHY_INSTALL_SKIP_SERVICES:-0}
-runtime_path=/usr/local/share/blarchy
-install_user=${BLARCHY_INSTALL_USER:-${SUDO_USER:-}}
+repo_path=${RICE_REPO_PATH:-}
+root_prefix=${RICE_INSTALL_ROOT:-}
+skip_services=${RICE_INSTALL_SKIP_SERVICES:-0}
+runtime_path=/usr/local/share/rice
+install_user=${RICE_INSTALL_USER:-${SUDO_USER:-}}
 
 if [[ -z $repo_path ]]; then
-  echo "Error: BLARCHY_REPO_PATH is required." >&2
+  echo "Error: RICE_REPO_PATH is required." >&2
   exit 1
 fi
 
 if [[ ! -d $repo_path ]]; then
-  echo "Error: BLARCHY checkout does not exist: $repo_path" >&2
+  echo "Error: RICE checkout does not exist: $repo_path" >&2
   exit 1
 fi
 repo_path=$(cd -- "$repo_path" && pwd -P)
@@ -43,8 +43,8 @@ restore_powerprofilesctl_shebang() {
 
   target=$(target_path /usr/bin/powerprofilesctl)
   [[ -f $target ]] || return 0
-  # Older BLARCHY releases changed this package-owned shebang. Restore only the
-  # exact legacy edit; the BLARCHY-owned wrapper below now selects system Python.
+  # Older RICE releases changed this package-owned shebang. Restore only the
+  # exact legacy edit; the RICE-owned wrapper below now selects system Python.
   sed -i '1s|^#!/bin/python3$|#!/usr/bin/env python3|' "$target"
 }
 
@@ -91,38 +91,25 @@ install_runtime_snapshot() {
     etc
     etc-overrides
     install
-    migrations
     shell
     themes
     LICENSE
     README.md
-    icon.png
     logo.svg
     logo.txt
-    version
   )
 
   runtime_parent=$(target_path /usr/local/share)
   runtime_target=$(target_path "$runtime_path")
   mkdir -p "$runtime_parent"
-  runtime_stage=$(mktemp -d "$runtime_parent/.blarchy-runtime.XXXXXX")
-  runtime_previous="$runtime_parent/.blarchy-runtime.previous.$$"
+  runtime_stage=$(mktemp -d "$runtime_parent/.rice-runtime.XXXXXX")
+  runtime_previous="$runtime_parent/.rice-runtime.previous.$$"
   trap cleanup_runtime_install RETURN
 
   for runtime_item in "${runtime_items[@]}"; do
     [[ -e $repo_path/$runtime_item ]] || continue
     cp -a --no-preserve=ownership "$repo_path/$runtime_item" "$runtime_stage/"
   done
-  # Keep retained upstream lifecycle code in the source checkout for historical
-  # review without publishing it into a standalone installation.
-  rm -f \
-    "$runtime_stage/bin/omarchy-setup-system" \
-    "$runtime_stage/bin/omarchy-setup-hardware" \
-    "$runtime_stage/bin/omarchy-upgrade-to-quattro" \
-    "$runtime_stage/bin/omarchy-dev-pkg-test"
-  rm -rf \
-    "$runtime_stage/default/libalpm" \
-    "$runtime_stage/default/pacman"
   chmod 0755 "$runtime_stage"
 
   if [[ -e $runtime_target || -L $runtime_target ]]; then
@@ -146,7 +133,7 @@ install_user_command_override() {
   local command="$2"
   local target
 
-  target=$(target_path "/etc/systemd/user/$unit.d/10-blarchy-standalone.conf")
+  target=$(target_path "/etc/systemd/user/$unit.d/10-rice-standalone.conf")
   mkdir -p "$(dirname "$target")"
   printf '[Service]\nExecStart=\nExecStart=/usr/local/bin/%s\n' "$command" >"$target"
   chmod 0644 "$target"
@@ -177,7 +164,7 @@ install_sddm_state() {
     fi
   done
   if [[ -z $selected_session ]]; then
-    echo "Error: could not find an installed BLARCHY UWSM Wayland session." >&2
+    echo "Error: could not find the installed personal Hyprland session." >&2
     return 1
   fi
 
@@ -212,54 +199,22 @@ install_sddm_state() {
 install_runtime_snapshot
 restore_powerprofilesctl_shebang
 
-runtime_link=$(target_path /usr/share/omarchy)
-mkdir -p "$(dirname "$runtime_link")"
-previous_compat_target=""
-if [[ -L $runtime_link ]]; then
-  previous_compat_target=$(readlink "$runtime_link")
-fi
-if [[ -e $runtime_link && ! -L $runtime_link ]]; then
-  echo "Error: $runtime_link already exists and is not a symlink." >&2
-  echo "Remove upstream Omarchy packages before installing BLARCHY." >&2
-  exit 1
-fi
-ln -sfn "$runtime_path" "$runtime_link"
-
-conf_target=$(target_path /etc/blarchy.conf)
+conf_target=$(target_path /etc/rice.conf)
 mkdir -p "$(dirname "$conf_target")"
-previous_source_path=""
-if [[ -r $conf_target ]]; then
-  previous_source_path=$(
-    BLARCHY_SOURCE_PATH=""
-    source "$conf_target"
-    printf '%s' "${BLARCHY_SOURCE_PATH:-}"
-  )
-fi
-blarchy_version=$(<"$repo_path/version")
 {
-  printf 'export BLARCHY_PATH=%s\n' "$(shell_quote "$runtime_path")"
-  printf 'export BLARCHY_INSTALL=%s\n' "$(shell_quote "$runtime_path/install")"
-  printf 'export BLARCHY_SOURCE_PATH=%s\n' "$(shell_quote "$repo_path")"
-  printf 'export BLARCHY_INSTALL_MODE=%s\n' "$(shell_quote standalone)"
-  printf 'export BLARCHY_VERSION=%s\n' "$(shell_quote "$blarchy_version")"
+  printf 'export RICE_PATH=%s\n' "$(shell_quote "$runtime_path")"
+  printf 'export RICE_INSTALL=%s\n' "$(shell_quote "$runtime_path/install")"
 } >"$conf_target"
 chmod 0644 "$conf_target"
-
-compat_conf_target=$(target_path /etc/omarchy.conf)
-cat >"$compat_conf_target" <<'COMPAT_CONF'
-# Compatibility environment for commands retaining the Omarchy namespace.
-if [ -r /etc/blarchy.conf ]; then
-  . /etc/blarchy.conf
-fi
-export OMARCHY_PATH="${BLARCHY_PATH:-/usr/local/share/blarchy}"
-export OMARCHY_INSTALL="${BLARCHY_INSTALL:-${OMARCHY_PATH%/}/install}"
-COMPAT_CONF
-chmod 0644 "$compat_conf_target"
 
 bin_dir=$(target_path /usr/local/bin)
 mkdir -p "$bin_dir"
 shopt -s nullglob
-for destination in "$bin_dir"/blarchy* "$bin_dir"/omarchy*; do
+for destination in \
+  "$bin_dir"/agent-keep-awake \
+  "$bin_dir"/lock-and-switch-session \
+  "$bin_dir"/omarchy* \
+  "$bin_dir"/powerprofilesctl-wrapper; do
   [[ -L $destination ]] || continue
   command_name=$(basename "$destination")
   [[ ! -e $(target_path "$runtime_path/bin/$command_name") ]] || continue
@@ -267,16 +222,14 @@ for destination in "$bin_dir"/blarchy* "$bin_dir"/omarchy*; do
   link_target=$(readlink "$destination")
   runtime_command="$runtime_path/bin/$command_name"
   source_command="$repo_path/bin/$command_name"
-  previous_source_command="${previous_source_path:+$previous_source_path/bin/$command_name}"
-  previous_compat_command="${previous_compat_target:+$previous_compat_target/bin/$command_name}"
-  if [[ $link_target == $runtime_command || $link_target == $source_command ||
-    ( -n $previous_source_command && $link_target == $previous_source_command ) ||
-    ( -n $previous_compat_command && $link_target == $previous_compat_command ) ]]; then
+  if [[ $link_target == $runtime_command || $link_target == $source_command ]]; then
     rm -- "$destination"
   fi
 done
 for source_file in \
-  "$(target_path "$runtime_path")"/bin/blarchy* \
+  "$(target_path "$runtime_path")"/bin/agent-keep-awake \
+  "$(target_path "$runtime_path")"/bin/lock-and-switch-session \
+  "$(target_path "$runtime_path")"/bin/powerprofilesctl-wrapper \
   "$(target_path "$runtime_path")"/bin/omarchy*; do
   [[ -f $source_file && -x $source_file ]] || continue
   destination="$bin_dir/$(basename "$source_file")"
@@ -289,26 +242,26 @@ done
 shopt -u nullglob
 
 powerprofilesctl_link="$bin_dir/powerprofilesctl"
-powerprofilesctl_target="$runtime_path/bin/blarchy-powerprofilesctl"
+powerprofilesctl_target="$runtime_path/bin/powerprofilesctl-wrapper"
 if [[ ! -e $powerprofilesctl_link && ! -L $powerprofilesctl_link ]]; then
   ln -s "$powerprofilesctl_target" "$powerprofilesctl_link"
 elif [[ -L $powerprofilesctl_link ]] &&
   [[ $(readlink "$powerprofilesctl_link") == "$powerprofilesctl_target" ]]; then
-  ln -sfn "$runtime_path/bin/blarchy-powerprofilesctl" "$powerprofilesctl_link"
+  ln -sfn "$powerprofilesctl_target" "$powerprofilesctl_link"
 else
   echo "Preserve existing command: $powerprofilesctl_link"
 fi
 
-install_file "$repo_path/etc/profile.d/omarchy.sh" /etc/profile.d/omarchy.sh
-install_file "$repo_path/default/uwsm/env.d/10-omarchy" /usr/share/uwsm/env.d/10-omarchy
-install_file "$repo_path/default/wayland-sessions/omarchy.desktop" \
-  /usr/share/wayland-sessions/omarchy.desktop
+install_file "$repo_path/etc/profile.d/rice.sh" /etc/profile.d/rice.sh
+install_file "$repo_path/default/uwsm/env.d/10-rice" /usr/share/uwsm/env.d/10-rice
+install_file "$repo_path/default/wayland-sessions/rice.desktop" \
+  /usr/share/wayland-sessions/rice.desktop
 install_file "$repo_path/default/xdg-terminal-exec/hyprland-xdg-terminals.list" \
   /usr/share/xdg-terminal-exec/hyprland-xdg-terminals.list
 install_file "$repo_path/default/environment.d/10-omarchy-fcitx.conf" \
   /usr/lib/environment.d/10-omarchy-fcitx.conf
 firefox_policy=$(target_path /etc/firefox/policies/policies.json)
-firefox_policy_marker=$(target_path /etc/blarchy/managed/firefox-policy)
+firefox_policy_marker=$(target_path /etc/rice/managed/firefox-policy)
 if [[ ! -e $firefox_policy || -f $firefox_policy_marker ]]; then
   install_file "$repo_path/default/firefox/policies.json" \
     /etc/firefox/policies/policies.json
@@ -331,7 +284,7 @@ copy_tree "$repo_path/default/systemd/user" /usr/lib/systemd/user
 copy_tree "$repo_path/default/systemd/user@.service.d" /usr/lib/systemd/system/user@.service.d
 
 # Older standalone installs placed this system-unit drop-in outside systemd's
-# unit search path. Remove only the exact BLARCHY-owned copy while migrating it
+# unit search path. Remove only the exact RICE-owned copy while migrating it
 # to the correct location; preserve anything else a user may have put there.
 legacy_user_manager_dropin=$(target_path /usr/lib/systemd/user@.service.d/faster-shutdown.conf)
 if [[ -f $legacy_user_manager_dropin ]] &&
@@ -342,20 +295,18 @@ fi
 
 # The inherited units target package-owned commands in /usr/bin. Standalone
 # installs expose commands from the installed runtime through /usr/local/bin.
-install_user_command_override omarchy-migrate-notify.service omarchy-migrate-notify
-install_user_command_override blarchy-migrate-notify.service blarchy-migrate-notify
 install_user_command_override omarchy-recover-internal-monitor.service omarchy-hw-recover-internal-monitor
 install_user_command_override omarchy-sleep-lock.service omarchy-system-sleep-monitor
 install_user_command_override omarchy-tailscale-receive.service omarchy-tailscale-receive
 
-agent_keep_awake_override=$(target_path "/etc/systemd/user/blarchy-agent-keep-awake.service.d/10-blarchy-standalone.conf")
+agent_keep_awake_override=$(target_path "/etc/systemd/user/agent-keep-awake.service.d/10-rice-standalone.conf")
 mkdir -p "$(dirname "$agent_keep_awake_override")"
 cat >"$agent_keep_awake_override" <<'EOF'
 [Service]
 ExecStart=
-ExecStart=/usr/local/bin/blarchy-agent-keep-awake
+ExecStart=/usr/local/bin/agent-keep-awake
 ExecStopPost=
-ExecStopPost=/usr/local/bin/blarchy-agent-keep-awake --clear
+ExecStopPost=/usr/local/bin/agent-keep-awake --clear
 EOF
 chmod 0644 "$agent_keep_awake_override"
 
@@ -368,17 +319,17 @@ font_link=$(target_path /etc/fonts/conf.d/50-omarchy.conf)
 mkdir -p "$(dirname "$font_link")"
 ln -sfn /usr/share/fontconfig/conf.avail/50-omarchy.conf "$font_link"
 
-copy_tree "$repo_path/default/sddm/omarchy" /usr/share/sddm/themes/omarchy
+copy_tree "$repo_path/default/sddm/rice" /usr/share/sddm/themes/rice
 install_file "$repo_path/default/sddm/hyprland.lua" /usr/share/sddm/hyprland.lua
-install_file "$repo_path/etc/sddm.conf.d/10-theme.conf" /etc/sddm.conf.d/90-blarchy-theme.conf
-install_file "$repo_path/etc/sddm.conf.d/10-wayland.conf" /etc/sddm.conf.d/90-blarchy-wayland.conf
-install_file "$repo_path/etc/sddm.conf.d/20-login.conf" /etc/sddm.conf.d/99-blarchy-login.conf
+install_file "$repo_path/etc/sddm.conf.d/10-theme.conf" /etc/sddm.conf.d/90-rice-theme.conf
+install_file "$repo_path/etc/sddm.conf.d/10-wayland.conf" /etc/sddm.conf.d/90-rice-wayland.conf
+install_file "$repo_path/etc/sddm.conf.d/20-login.conf" /etc/sddm.conf.d/99-rice-login.conf
 install_sddm_state
 
-install_file "$repo_path/icon.png" /usr/share/pixmaps/omarchy.png
-install_file "$repo_path/icon.png" /usr/share/pixmaps/blarchy.png
-install_file "$repo_path/icon.png" /usr/share/icons/hicolor/256x256/apps/omarchy.png
-install_file "$repo_path/icon.png" /usr/share/icons/hicolor/256x256/apps/blarchy.png
+install_file /usr/share/pixmaps/archlinux-logo.png /usr/share/pixmaps/omarchy.png
+install_file /usr/share/pixmaps/archlinux-logo.png /usr/share/pixmaps/rice.png
+install_file /usr/share/pixmaps/archlinux-logo.png /usr/share/icons/hicolor/256x256/apps/omarchy.png
+install_file /usr/share/pixmaps/archlinux-logo.png /usr/share/icons/hicolor/256x256/apps/rice.png
 install_file "$repo_path/applications/icons/imv.png" \
   /usr/share/icons/hicolor/256x256/apps/imv.png
 install_file "$repo_path/applications/icons/Disk Usage.png" \
@@ -402,7 +353,8 @@ for unit in \
   bluetooth.service \
   cups.service \
   cups-browsed.service \
-  power-profiles-daemon.service; do
+  power-profiles-daemon.service \
+  systemd-oomd.service; do
   enable_if_available "$unit"
 done
 
@@ -429,7 +381,7 @@ done
 if systemctl is-enabled NetworkManager.service >/dev/null 2>&1; then
   :
 elif (( alternate_network_enabled )); then
-  echo "Preserve the existing network stack; BLARCHY's network panel requires NetworkManager for configuration."
+  echo "Preserve the existing network stack; RICE's network panel requires NetworkManager for configuration."
 else
   enable_if_available NetworkManager.service
 fi

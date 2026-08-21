@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Control the BLARCHY menu (toggle / summon / close / refresh)
+# omarchy:summary=Control the RICE menu (toggle / summon / close / refresh)
 # omarchy:args=[toggle|summon|close|refresh|ping] [route]
 # omarchy:examples=omarchy menu | omarchy menu toggle system | omarchy menu summon style.theme | omarchy menu refresh
 
@@ -15,7 +15,7 @@ runtime_path=$(cd -- "$bin_dir/.." && pwd)
 
 # Keep the menu command and its shell IPC endpoint in the same runtime tree,
 # even when Hyprland retained an environment from a different installation.
-export BLARCHY_PATH="$runtime_path"
+export RICE_PATH="$runtime_path"
 export OMARCHY_PATH="$runtime_path"
 
 verb="${1-toggle}"

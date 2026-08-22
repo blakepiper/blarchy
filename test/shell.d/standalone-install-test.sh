@@ -84,6 +84,14 @@ HOME="$test_home" RICE_PATH="$ROOT" bash "$ROOT/install/standalone/user.sh" pres
   fail "user seeding installs XFCE desktop config"
 [[ -f $test_home/.config/xfce4/xfconf/xfce-perchannel-xml/pointers.xml ]] ||
   fail "user seeding installs XFCE pointer config"
+[[ -f $test_home/.config/xfce4/xfconf/xfce-perchannel-xml/keyboards.xml ]] ||
+  fail "user seeding installs XFCE keyboard config"
+grep -Fq 'name="Delay" type="int" value="250"' \
+  "$test_home/.config/xfce4/xfconf/xfce-perchannel-xml/keyboards.xml" ||
+  fail "XFCE keyboard config uses the Hyprland repeat delay"
+grep -Fq 'name="Rate" type="int" value="40"' \
+  "$test_home/.config/xfce4/xfconf/xfce-perchannel-xml/keyboards.xml" ||
+  fail "XFCE keyboard config uses the Hyprland repeat rate"
 grep -Fq 'name="libinput_Click_Method_Enabled"' \
   "$test_home/.config/xfce4/xfconf/xfce-perchannel-xml/pointers.xml" ||
   fail "XFCE pointer config enables touchpad clickfinger settings"

@@ -80,6 +80,14 @@ HOME="$test_home" RICE_PATH="$ROOT" bash "$ROOT/install/standalone/user.sh" pres
   fail "user seeding installs Hyprland config"
 [[ -f $test_home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml ]] ||
   fail "user seeding installs XFCE shortcut config"
+[[ -f $test_home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml ]] ||
+  fail "user seeding installs XFCE desktop config"
+grep -Fq 'value="workspace_4_key"' \
+  "$test_home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml" ||
+  fail "XFCE shortcut config includes workspace bindings"
+grep -Fq 'value="exo-open --launch TerminalEmulator"' \
+  "$test_home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml" ||
+  fail "XFCE shortcut config uses the preferred terminal"
 printf 'keep\n' >"$test_home/.config/hypr/input.lua"
 HOME="$test_home" RICE_PATH="$ROOT" bash "$ROOT/install/standalone/user.sh" preserve
 [[ $(<"$test_home/.config/hypr/input.lua") == "keep" ]] ||

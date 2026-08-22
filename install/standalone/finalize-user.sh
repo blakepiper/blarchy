@@ -38,12 +38,12 @@ for skills_dir in ~/.agents/skills ~/.claude/skills ~/.codex/skills ~/.pi/agent/
   ln -sfn "$RICE_PATH/default/rice" "$skills_dir/rice"
 done
 
-mkdir -p ~/Downloads ~/Pictures/Screenshots ~/Videos ~/.config/gtk-3.0
+mkdir -p ~/Desktop ~/Downloads ~/Pictures/Screenshots ~/Videos ~/.config/gtk-3.0
 if [[ ${OMARCHY_PRESERVE_USER_CONFIG:-0} != "1" || ! -f $HOME/.config/user-dirs.dirs ]]; then
   xdg-user-dirs-update --set TEMPLATES "$HOME"
   xdg-user-dirs-update --set PUBLICSHARE "$HOME"
-  xdg-user-dirs-update --set DESKTOP "$HOME"
-  rmdir ~/Templates ~/Public ~/Desktop 2>/dev/null || true
+  xdg-user-dirs-update --set DESKTOP "$HOME/Desktop"
+  rmdir ~/Templates ~/Public 2>/dev/null || true
 fi
 touch ~/.config/gtk-3.0/bookmarks
 for dir in Downloads Projects Pictures Videos; do

@@ -12,6 +12,7 @@ run_logged "$OMARCHY_INSTALL/user/hardware/fix-nouveau-cursor.sh"
 
 run_logged "$OMARCHY_INSTALL/user/default-keyring.sh"
 run_logged "$OMARCHY_INSTALL/user/mise.sh"
+run_logged "$OMARCHY_INSTALL/user/xfce-power.sh"
 run_logged "$OMARCHY_INSTALL/user/xfce-model-usage.sh"
 run_logged "$OMARCHY_INSTALL/user/xfce-coffee.sh"
 run_logged "$OMARCHY_INSTALL/user/xfce-nightlight.sh"

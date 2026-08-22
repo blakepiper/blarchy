@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# omarchy:summary=Render and toggle the XFCE Night Light panel widget
+# omarchy:group=bar
+# omarchy:hidden=true
+# omarchy:args=[toggle|nightlight|daylight|status]
+
+set -u
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/indicators"
+state_file="$state_dir/nightlight-xfce"
+lock_file="$state_dir/nightlight-xfce.lock"
+night_gamma="1:0.8071225:0.6512994"
+day_gamma="1:1:1"
+night_temperature=4000
+day_temperature=6500
+
+script_path=$(readlink -f "$0")
+script_dir=$(dirname "$script_path")
+runtime_path="${RICE_PATH:-${OMARCHY_PATH:-$(cd -- "$script_dir/.." && pwd)}}"
+icon_dir="$runtime_path/default/omarchy/icons"
+if [[ ! -f $icon_dir/nightlight-full-white.svg ]]; then
+  icon_dir="$HOME/.local/share/omarchy/icons"
+fi
+active_icon="$icon_dir/nightlight-full-white.svg"
+inactive_icon="$icon_dir/nightlight-empty-white.svg"
+
+connected_outputs() {
+  xrandr --query 2>/dev/null | awk '$2 == "connected" { print $1 }'
+}
+
+apply_gamma() {
+  local gamma="$1" output applied=0
+
+  while IFS= read -r output; do
+    [[ -n $output ]] || continue
+    if xrandr --output "$output" --gamma "$gamma" >/dev/null 2>&1; then
+      ((applied++))
+    fi
+  done < <(connected_outputs)
+
+  (( applied > 0 ))
+}
+
+status_json() {
+  if [[ -f $state_file ]]; then
+    printf '{"enabled":true,"temperature":%s}\n' "$night_temperature"
+  else
+    printf '{"enabled":false,"temperature":%s}\n' "$day_temperature"
+  fi
+}
+
+print_widget() {
+  local click_command="env RICE_PATH=$runtime_path $script_path toggle"
+
+  if [[ -f $state_file ]]; then
+    apply_gamma "$night_gamma" || true
+    printf '<img>%s</img><click>%s</click><tool>Day Light</tool>\n' "$active_icon" "$click_command"
+  else
+    apply_gamma "$day_gamma" || true
+    printf '<img>%s</img><click>%s</click><tool>Night Light</tool>\n' "$inactive_icon" "$click_command"
+  fi
+}
+
+toggle_state() {
+  mkdir -p -- "$state_dir"
+
+  if [[ -f $state_file ]]; then
+    apply_gamma "$day_gamma" || return 1
+    rm -f -- "$state_file"
+  else
+    apply_gamma "$night_gamma" || return 1
+    : >"$state_file"
+  fi
+}
+
+case ${1:-status} in
+  --status|status)
+    mkdir -p -- "$state_dir"
+    exec 9>"$lock_file"
+    flock -x 9
+    if [[ ${1:-} == "--status" ]]; then
+      status_json
+    else
+      print_widget
+    fi
+    ;;
+  toggle)
+    mkdir -p -- "$state_dir"
+    exec 9>"$lock_file"
+    flock -x 9
+    toggle_state
+    ;;
+  nightlight|on)
+    mkdir -p -- "$state_dir"
+    exec 9>"$lock_file"
+    flock -x 9
+    apply_gamma "$night_gamma" || exit 1
+    : >"$state_file"
+    ;;
+  daylight|off)
+    mkdir -p -- "$state_dir"
+    exec 9>"$lock_file"
+    flock -x 9
+    apply_gamma "$day_gamma" || exit 1
+    rm -f -- "$state_file"
+    ;;
+  *)
+    printf 'Usage: %s [toggle|nightlight|daylight|status]\n' "$script_path" >&2
+    exit 2
+    ;;
+esac

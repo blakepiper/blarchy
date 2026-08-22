@@ -92,6 +92,10 @@ python-pip
 python-terminaltexteffects
 qrencode
 quickshell-git
+qt6-multimedia
+qt6-multimedia-ffmpeg
+qt6-svg
+qt6-virtualkeyboard
 ripgrep
 ristretto
 ruby

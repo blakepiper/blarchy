@@ -5,6 +5,7 @@ set -euo pipefail
 repo_path=${RICE_REPO_PATH:-}
 root_prefix=${RICE_INSTALL_ROOT:-}
 skip_services=${RICE_INSTALL_SKIP_SERVICES:-0}
+skip_sddm_theme=${RICE_INSTALL_SKIP_SDDM_THEME:-0}
 runtime_path=/usr/local/share/rice
 install_user=${RICE_INSTALL_USER:-${SUDO_USER:-}}
 
@@ -60,6 +61,67 @@ copy_tree() {
   # installs), not retain checkout ownership.
   cp -a --no-preserve=ownership "$source_dir/." "$target/"
 }
+
+install_sddm_astronaut_theme() (
+  local revision="292c87b770ff9eab1903dd2c6ddff466faf87fb0"
+  local source_url="https://github.com/Keyitdev/sddm-astronaut-theme.git"
+  local theme_parent theme_target theme_stage theme_source theme_previous marker
+
+  (( skip_sddm_theme == 0 )) || return 0
+
+  theme_parent=$(target_path /usr/share/sddm/themes)
+  theme_target="$theme_parent/sddm-astronaut-theme"
+  marker="$theme_target/.rice-source-revision"
+  mkdir -p "$theme_parent"
+
+  if [[ -f $marker ]] && [[ $(<"$marker") == "$revision" ]] &&
+    [[ -f $theme_target/Main.qml && -f $theme_target/Themes/hyprland_kath.conf ]] &&
+    grep -Fxq 'ConfigFile=Themes/hyprland_kath.conf' "$theme_target/metadata.desktop"; then
+    copy_tree "$theme_target/Fonts" /usr/share/fonts/sddm-astronaut-theme
+    return 0
+  fi
+
+  theme_stage=$(mktemp -d "$theme_parent/.sddm-astronaut-theme.XXXXXX")
+  theme_source="$theme_stage/theme"
+  theme_previous="$theme_parent/.sddm-astronaut-theme.previous.$$"
+
+  cleanup_sddm_theme() {
+    rm -rf -- "$theme_stage"
+    if [[ -e $theme_previous || -L $theme_previous ]]; then
+      if [[ ! -e $theme_target && ! -L $theme_target ]]; then
+        mv "$theme_previous" "$theme_target"
+      else
+        rm -rf -- "$theme_previous"
+      fi
+    fi
+  }
+  trap cleanup_sddm_theme EXIT
+
+  echo "Install SDDM Astronaut hyprland_kath theme"
+  git init --quiet "$theme_source"
+  git -C "$theme_source" remote add origin "$source_url"
+  git -C "$theme_source" fetch --quiet --depth 1 origin "$revision"
+  git -C "$theme_source" checkout --quiet --detach FETCH_HEAD
+  rm -rf -- "$theme_source/.git"
+  sed -i \
+    's|^ConfigFile=.*|ConfigFile=Themes/hyprland_kath.conf|' \
+    "$theme_source/metadata.desktop"
+  printf '%s\n' "$revision" >"$theme_source/.rice-source-revision"
+  chmod -R a+rX "$theme_source"
+
+  if [[ -e $theme_target || -L $theme_target ]]; then
+    mv "$theme_target" "$theme_previous"
+  fi
+  mv "$theme_source" "$theme_target"
+  copy_tree "$theme_target/Fonts" /usr/share/fonts/sddm-astronaut-theme
+
+  if [[ -e $theme_previous || -L $theme_previous ]]; then
+    rm -rf -- "$theme_previous"
+  fi
+  theme_previous=""
+  trap - EXIT
+  rm -rf -- "$theme_stage"
+)
 
 shell_quote() {
   local value="$1"
@@ -154,7 +216,7 @@ install_sddm_state() {
 
   state_dir=$(target_path /var/lib/sddm)
   state_target="$state_dir/state.conf"
-  session_dir=$(target_path /usr/share/wayland-sessions)
+  session_dir=$(target_path /usr/share/rice-sessions/wayland)
   selected_session=""
   for session_file in "$session_dir"/*.desktop; do
     [[ -f $session_file ]] || continue
@@ -256,6 +318,10 @@ install_file "$repo_path/etc/profile.d/rice.sh" /etc/profile.d/rice.sh
 install_file "$repo_path/default/uwsm/env.d/10-rice" /usr/share/uwsm/env.d/10-rice
 install_file "$repo_path/default/wayland-sessions/rice.desktop" \
   /usr/share/wayland-sessions/rice.desktop
+install_file "$repo_path/default/wayland-sessions/rice.desktop" \
+  /usr/share/rice-sessions/wayland/rice.desktop
+install_file "$repo_path/default/xsessions/xfce.desktop" \
+  /usr/share/rice-sessions/x11/xfce.desktop
 install_file "$repo_path/default/xdg-terminal-exec/hyprland-xdg-terminals.list" \
   /usr/share/xdg-terminal-exec/hyprland-xdg-terminals.list
 install_file "$repo_path/default/environment.d/10-omarchy-fcitx.conf" \
@@ -320,6 +386,7 @@ mkdir -p "$(dirname "$font_link")"
 ln -sfn /usr/share/fontconfig/conf.avail/50-omarchy.conf "$font_link"
 
 install_file "$repo_path/default/sddm/hyprland.lua" /usr/share/sddm/hyprland.lua
+install_sddm_astronaut_theme
 install_file "$repo_path/etc/sddm.conf.d/10-theme.conf" /etc/sddm.conf.d/90-rice-theme.conf
 install_file "$repo_path/etc/sddm.conf.d/10-wayland.conf" /etc/sddm.conf.d/90-rice-wayland.conf
 install_file "$repo_path/etc/sddm.conf.d/20-login.conf" /etc/sddm.conf.d/99-rice-login.conf

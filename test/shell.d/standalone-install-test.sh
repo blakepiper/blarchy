@@ -52,7 +52,7 @@ for provider in rust rustup cargo rustfmt; do
 done
 
 for package_name in \
-  hyprland quickshell-git sddm steam \
+  hyprland quickshell-git qt6-multimedia-ffmpeg qt6-virtualkeyboard sddm steam \
   xfce4-session xfce4-panel xfce4-screensaver xfwm4; do
   grep -Fxq "$package_name" "$ROOT/install/packages" ||
     fail "personal package manifest includes $package_name"
@@ -89,6 +89,7 @@ pass "user defaults seed idempotently"
 RICE_REPO_PATH="$ROOT" \
   RICE_INSTALL_ROOT="$test_root" \
   RICE_INSTALL_USER="$(id -un)" \
+  RICE_INSTALL_SKIP_SDDM_THEME=1 \
   RICE_INSTALL_SKIP_SERVICES=1 \
   bash "$ROOT/install/standalone/system.sh"
 
@@ -107,13 +108,22 @@ grep -Fxq "export RICE_INSTALL='/usr/local/share/rice/install'" "$test_root/etc/
   fail "runtime environment exports RICE_INSTALL"
 [[ -f $test_root/usr/share/wayland-sessions/rice.desktop ]] ||
   fail "personal Hyprland session is installed"
-grep -Fxq 'Current=maldives' "$test_root/etc/sddm.conf.d/90-rice-theme.conf" ||
-  fail "SDDM uses a stock theme with a session chooser"
+[[ -f $test_root/usr/share/rice-sessions/wayland/rice.desktop ]] ||
+  fail "SDDM chooser has the managed Hyprland Wayland session"
+[[ -f $test_root/usr/share/rice-sessions/x11/xfce.desktop ]] ||
+  fail "SDDM chooser has the managed XFCE X11 session"
+grep -Fxq 'Current=sddm-astronaut-theme' "$test_root/etc/sddm.conf.d/90-rice-theme.conf" ||
+  fail "SDDM uses the Astronaut theme"
+grep -Fxq 'SessionDir=/usr/share/rice-sessions/wayland' "$test_root/etc/sddm.conf.d/90-rice-wayland.conf" ||
+  fail "SDDM limits Wayland sessions to the managed chooser directory"
+grep -Fxq 'SessionDir=/usr/share/rice-sessions/x11' "$test_root/etc/sddm.conf.d/90-rice-wayland.conf" ||
+  fail "SDDM limits X11 sessions to the managed chooser directory"
 pass "system integration publishes the desktop runtime"
 
 RICE_REPO_PATH="$ROOT" \
   RICE_INSTALL_ROOT="$test_root" \
   RICE_INSTALL_USER="$(id -un)" \
+  RICE_INSTALL_SKIP_SDDM_THEME=1 \
   RICE_INSTALL_SKIP_SERVICES=1 \
   bash "$ROOT/install/standalone/system.sh"
 [[ -d $runtime && ! -L $runtime ]] || fail "runtime survives an idempotent rerun"

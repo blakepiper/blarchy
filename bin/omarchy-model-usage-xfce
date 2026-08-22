@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+
+# omarchy:summary=Render AI usage for the XFCE panel
+# omarchy:group=bar
+# omarchy:hidden=true
+
 """Render the model-usage widget for the XFCE Generic Monitor plugin."""
 
 from __future__ import annotations
@@ -10,7 +15,6 @@ import html
 import json
 import os
 import shlex
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -403,7 +407,7 @@ def provider_lines(provider: dict[str, Any]) -> list[str]:
 
 
 def details_text(data: dict[str, Any]) -> str:
-  lines = ["AI usage", ""]
+  lines: list[str] = []
   for provider in data.get("providers", []):
     lines.extend(provider_lines(provider))
     lines.append("")
@@ -432,15 +436,16 @@ def rendered_output(data: dict[str, Any]) -> str:
 
 def show_details(data: dict[str, Any]) -> int:
   content = details_text(data)
-  zenity = shutil.which("zenity")
-  if zenity:
+  dialog = SCRIPT_PATH.parent / "xfce-model-usage-dialog"
+  if dialog.is_file():
     result = subprocess.run(
-      [zenity, "--text-info", "--title=AI usage", "--width=720", "--height=520", "--ok-label=Close"],
+      [str(dialog)],
       input=content,
       text=True,
       check=False,
     )
-    return result.returncode
+    if result.returncode == 0:
+      return 0
   print(content)
   return 0
 

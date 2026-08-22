@@ -6,7 +6,7 @@ description: >
   ~/.config/alacritty/.
   Triggers: Hyprland, window rules, animations, keybindings, monitors, gaps, borders,
   blur, opacity, omarchy-shell, bar, terminal config, themes, background,
-  night light, idle, lock screen, screenshots, reminders, layer rules, workspace
+  idle, lock screen, screenshots, reminders, layer rules, workspace
   settings, display config, and user-facing personal-rice or retained omarchy commands.
   Excludes repository
   source development through `omarchy dev link` workflows.
@@ -33,7 +33,7 @@ It is not for contributing to the repository source.
 - Layer rules, workspace settings, display/monitor configuration
 - Themes, backgrounds, fonts, appearance changes
 - User-facing `omarchy` commands (`omarchy theme ...`, `omarchy refresh ...`, `omarchy restart ...`, etc.)
-- Screenshots, screen recording, reminders, night light, idle behavior, lock screen
+- Screenshots, screen recording, reminders, idle behavior, lock screen
 
 **If you're about to edit a config file in ~/.config/ on this system, STOP and use this skill first.**
 
@@ -151,7 +151,7 @@ Run `omarchy --help` for the full list. The most common groups:
 |-------|---------|---------|
 | `omarchy refresh` | Reset config to defaults (backs up first) | `omarchy refresh shell` |
 | `omarchy restart` | Restart a service/app | `omarchy restart shell` |
-| `omarchy toggle` | Toggle feature on/off | `omarchy toggle nightlight` |
+| `omarchy toggle` | Toggle feature on/off | `omarchy toggle <feature>` |
 | `omarchy theme` | Theme management | `omarchy theme set <name>` |
 | `omarchy bar` | Bar layout and widgets | `omarchy bar move omarchy.clock --section right` |
 | `omarchy plugin` | Manage/clone shell plugins | `omarchy plugin clone omarchy.clock` |
@@ -178,8 +178,7 @@ defaults, so overrides go here:
 ├── monitors.lua       # Display configuration
 ├── input.lua          # Keyboard/mouse settings
 ├── looknfeel.lua      # Appearance (gaps, borders, animations)
-├── autostart.lua      # Startup applications
-└── hyprsunset.conf    # Night light / blue light filter
+└── autostart.lua      # Startup applications
 ```
 
 **Key behaviors:**
@@ -463,7 +462,6 @@ This skill intentionally does not cover repository source development. Do not us
 - "Add a keybinding for Super+E to open file manager" -> Check existing bindings first, call `hl.unbind` if needed, then `o.bind` in `~/.config/hypr/bindings.lua`
 - "Configure my external monitor" -> Edit `~/.config/hypr/monitors.lua`
 - "Make the window gaps smaller" -> Edit `~/.config/hypr/looknfeel.lua`
-- "Set up night light to turn on at sunset" -> `omarchy toggle nightlight` or edit `~/.config/hypr/hyprsunset.conf`
 - "Set a reminder to pickup jack in 15 minutes" -> `omarchy reminder 15 "Pickup Jack"`
 - "Show my reminders" -> `omarchy reminder show`
 - "Clear all reminders" -> `omarchy reminder clear`

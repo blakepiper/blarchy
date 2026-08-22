@@ -82,6 +82,11 @@ HOME="$test_home" RICE_PATH="$ROOT" bash "$ROOT/install/standalone/user.sh" pres
   fail "user seeding installs XFCE shortcut config"
 [[ -f $test_home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml ]] ||
   fail "user seeding installs XFCE desktop config"
+[[ -f $test_home/.config/xfce4/xfconf/xfce-perchannel-xml/pointers.xml ]] ||
+  fail "user seeding installs XFCE pointer config"
+grep -Fq 'name="libinput_Click_Method_Enabled"' \
+  "$test_home/.config/xfce4/xfconf/xfce-perchannel-xml/pointers.xml" ||
+  fail "XFCE pointer config enables touchpad clickfinger settings"
 grep -Fq 'value="workspace_4_key"' \
   "$test_home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml" ||
   fail "XFCE shortcut config includes workspace bindings"

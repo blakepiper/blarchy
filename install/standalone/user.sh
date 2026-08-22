@@ -42,7 +42,6 @@ copy_tree() {
 }
 
 copy_tree "$runtime_path/config" "$HOME/.config"
-copy_item "$runtime_path/etc/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
 copy_item "$runtime_path/default/applications/mimeapps.list" "$HOME/.config/mimeapps.list"
 copy_tree "$runtime_path/default/nautilus-python/extensions" \
   "$HOME/.local/share/nautilus-python/extensions"

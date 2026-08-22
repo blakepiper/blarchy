@@ -7,7 +7,6 @@ source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/base-test.sh"
 hypr_entry="$ROOT/config/hypr/hyprland.lua"
 hypr_paths="$ROOT/default/hypr/paths.lua"
 shell_root="$ROOT/shell/shell.qml"
-fastfetch_config="$ROOT/etc/fastfetch/config.jsonc"
 menu_config="$ROOT/default/omarchy/omarchy-menu.jsonc"
 
 grep -Fq 'os.getenv("RICE_PATH")' "$hypr_entry" &&
@@ -36,19 +35,17 @@ native_path=$(RICE_PATH=/tmp/installed-runtime OMARCHY_PATH=/tmp/legacy-runtime 
   fail "RICE_PATH takes precedence over the compatibility override" "$native_path"
 pass "desktop runtime path selection is deterministic"
 
-jq -e '
-  .logo.type == "builtin" and
-  .logo.source == "arch" and
-  any(.modules[]; type == "object" and .type == "os" and .key == " OS" and .format == "{pretty-name}") and
-  all(.modules[]; type != "object" or .key != "│ ├󰍹 Environment")
-' "$fastfetch_config" >/dev/null || fail "Fastfetch reports ordinary Arch Linux without a custom environment label"
-pass "Fastfetch uses the default Arch logo and ordinary OS identity"
+[[ ! -e $ROOT/etc/fastfetch/config.jsonc ]] ||
+  fail "Fastfetch has no repository-owned customization"
+! rg -q 'fastfetch/config.jsonc' "$ROOT/install/standalone/user.sh" ||
+  fail "user install leaves Fastfetch on its built-in defaults"
+pass "Fastfetch uses its built-in defaults"
 
 grep -Fq "'yay -Syu'" "$menu_config" ||
   fail "menu exposes the Arch/AUR update route"
 if rg -q 'basecamp/omarchy|pkgs\.omarchy\.org|mirror\.omarchy\.org' \
   "$hypr_entry" "$ROOT/default/hypr/autostart.lua" "$ROOT/shell/plugins/bar/widgets/SystemUpdate.qml" \
-  "$fastfetch_config" "$menu_config"; then
+  "$menu_config"; then
   fail "active desktop behavior references Omarchy update infrastructure"
 fi
 pass "desktop update actions use normal Arch package sources"

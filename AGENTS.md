@@ -85,3 +85,8 @@ running UI for clipping, overlap, focus, stale state, and regressions.
 
 Keep commits atomic and messages succinct. Stage only task-related files and
 preserve unrelated worktree changes.
+
+After completing requested repository changes and their verification, commit
+the task-related files and push the current branch to its configured remote.
+Do not leave finished work uncommitted or unpushed unless the user explicitly
+asks for that or pushing would overwrite/diverge from remote work.

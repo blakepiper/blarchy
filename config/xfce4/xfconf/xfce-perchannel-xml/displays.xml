@@ -22,7 +22,7 @@
       </property>
     </property>
   </property>
-  <property name="laptop-hdmi-left" type="empty">
+  <property name="laptop-hdmi-left" type="string" value="laptop-hdmi-left">
     <property name="eDP-1" type="string" value="Laptop">
       <property name="Active" type="bool" value="true"/>
       <property name="EDID" type="string" value="09cb2d9f37626cbda52fb7b3ecb90f9f3fe4da7a"/>

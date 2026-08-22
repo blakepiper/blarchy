@@ -417,14 +417,7 @@ def details_text(data: dict[str, Any]) -> str:
 
 
 def rendered_output(data: dict[str, Any]) -> str:
-  providers = data.get("providers", [])
-  percents = [
-    normalized_percent(window.get("percent"))
-    for provider in providers
-    for window in provider.get("limits", [])
-    if normalized_percent(window.get("percent")) >= 0
-  ]
-  summary = "AI usage" if not percents else f"AI {round((1 - max(percents)) * 100)}% left"
+  summary = "AI"
   tooltip = details_text(data)
   click_command = shlex.quote(str(SCRIPT_PATH)) + " details"
   return (

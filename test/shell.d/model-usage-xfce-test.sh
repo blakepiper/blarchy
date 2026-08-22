@@ -36,7 +36,8 @@ data = {
 }
 rendered = module["rendered_output"](data)
 details = module["details_text"](data)
-assert "<txt>AI 75% left</txt>" in rendered
+assert "<txt>AI</txt>" in rendered
+assert "75% left" not in rendered.split("<tool>", 1)[0]
 assert "<txtclick>" in rendered
 assert "AI usage" not in details
 assert "Session: 25% used · 75% left" in details

@@ -90,6 +90,9 @@ grep -Fq 'name="libinput_Click_Method_Enabled"' \
 grep -Fq 'value="workspace_4_key"' \
   "$test_home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml" ||
   fail "XFCE shortcut config includes workspace bindings"
+grep -Fq 'value="move_window_workspace_4_key"' \
+  "$test_home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml" ||
+  fail "XFCE shortcut config includes move-to-workspace bindings"
 grep -Fq 'value="exo-open --launch TerminalEmulator"' \
   "$test_home/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml" ||
   fail "XFCE shortcut config uses the preferred terminal"

@@ -107,9 +107,9 @@ grep -Fxq "export RICE_INSTALL='/usr/local/share/rice/install'" "$test_root/etc/
   fail "runtime environment exports RICE_INSTALL"
 [[ -f $test_root/usr/share/wayland-sessions/rice.desktop ]] ||
   fail "personal Hyprland session is installed"
-[[ -d $test_root/usr/share/sddm/themes/rice ]] ||
-  fail "personal SDDM theme is installed"
-pass "system integration publishes the personal runtime"
+grep -Fxq 'Current=maldives' "$test_root/etc/sddm.conf.d/90-rice-theme.conf" ||
+  fail "SDDM uses a stock theme with a session chooser"
+pass "system integration publishes the desktop runtime"
 
 RICE_REPO_PATH="$ROOT" \
   RICE_INSTALL_ROOT="$test_root" \

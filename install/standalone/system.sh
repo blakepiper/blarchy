@@ -319,7 +319,6 @@ font_link=$(target_path /etc/fonts/conf.d/50-omarchy.conf)
 mkdir -p "$(dirname "$font_link")"
 ln -sfn /usr/share/fontconfig/conf.avail/50-omarchy.conf "$font_link"
 
-copy_tree "$repo_path/default/sddm/rice" /usr/share/sddm/themes/rice
 install_file "$repo_path/default/sddm/hyprland.lua" /usr/share/sddm/hyprland.lua
 install_file "$repo_path/etc/sddm.conf.d/10-theme.conf" /etc/sddm.conf.d/90-rice-theme.conf
 install_file "$repo_path/etc/sddm.conf.d/10-wayland.conf" /etc/sddm.conf.d/90-rice-wayland.conf

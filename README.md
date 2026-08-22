@@ -48,7 +48,7 @@ The installer:
 - bootstraps yay when it is missing;
 - installs the Arch and AUR packages in [`install/packages`](./install/packages);
 - publishes a copied runtime at `/usr/local/share/rice`;
-- installs the Hyprland session, BLARCHY SDDM theme, and system integration;
+- installs the Hyprland session and SDDM system integration;
 - seeds missing user configuration without overwriting existing files;
 - preserves an existing display manager or network stack when one is already
   configured.
@@ -67,8 +67,8 @@ SDDM offers both **Hyprland** and **Xfce Session**. It remembers the most recent
 selection.
 
 In either desktop, <kbd>Super</kbd> + <kbd>L</kbd> locks the current session and
-opens the BLARCHY greeter. From there, the user can unlock the existing session
-or choose the other desktop without logging out first. Hyprland also provides
+opens SDDM's stock greeter. Its session dropdown can select Hyprland or XFCE
+without logging out of the locked session first. Hyprland also provides
 <kbd>Super</kbd> + <kbd>Ctrl</kbd> + <kbd>L</kbd> when only a normal lock is wanted.
 
 ## Everyday updates
@@ -96,7 +96,7 @@ the desktop.
 | Role | Default |
 | --- | --- |
 | Sessions | Hyprland and XFCE |
-| Login and session switching | SDDM with the BLARCHY greeter |
+| Login and session switching | SDDM stock greeter with a session dropdown |
 | Shell | Quickshell top bar, launcher, menus, and notifications |
 | Terminal | Alacritty |
 | Browser | Firefox with uBlock Origin |

@@ -107,9 +107,6 @@ for _ in {1..80}; do
   sleep 0.1
 done
 
-shell_ipc_quiet omarchy.system-update refresh >/dev/null 2>&1 || true
-sleep 0.8
-
 geometry=$(shell_ipc shell debugBarGeometry)
 jq -e '
   any(.[]; .id == "omarchy.menu" and .visible == true and .width > 0 and .height > 0) and

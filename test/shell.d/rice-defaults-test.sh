@@ -64,9 +64,10 @@ grep -Fxq 'text/plain=codium.desktop' "$ROOT/default/applications/mimeapps.list"
   fail "text MIME default is VSCodium"
 pass "personal application defaults use Firefox, Alacritty, Nautilus, and VSCodium"
 
-grep -Fq 'Pending system updates' "$ROOT/shell/plugins/bar/widgets/SystemUpdate.qml" ||
-  fail "top-bar update indicator describes ordinary package updates"
-pass "the bar describes ordinary package updates"
+if jq -e 'any(.bar.layout[][]; (.id // .) == "omarchy.system-update")' "$ROOT/config/omarchy/shell.json" >/dev/null; then
+  fail "top-bar system update indicator is absent"
+fi
+pass "the bar omits the system update indicator"
 
 grep -Fxq 'omarchy-mise-install codex' "$ROOT/install/user/mise.sh" || fail "Codex has a mise installation path"
 grep -Fxq 'omarchy-mise-install claude' "$ROOT/install/user/mise.sh" || fail "Claude Code has a mise installation path"
@@ -91,8 +92,7 @@ grep -Fq 'omarchy-shell notifications showHistory' "$ROOT/shell/plugins/bar/indi
   fail "notification indicator opens notification history"
 pass "notification indicator exposes history while retaining a DND control"
 
-grep -Fq "'yay -Syu'" "$ROOT/shell/plugins/bar/widgets/SystemUpdate.qml" ||
-  fail "top-bar system update action invokes yay directly"
-grep -Fq "'yay -Syu'" "$ROOT/default/omarchy/omarchy-menu.jsonc" ||
-  fail "desktop menu invokes yay directly"
-pass "normal updates use standard Arch and AUR behavior"
+if grep -Fq "'yay -Syu'" "$ROOT/default/omarchy/omarchy-menu.jsonc"; then
+  fail "desktop menu exposes a system package update action"
+fi
+pass "the desktop menu omits the system package update action"

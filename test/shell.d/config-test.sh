@@ -16,16 +16,10 @@ pass "default shell.json is valid JSON"
 jq -e '.version == 1 and (.bar.layout.left | type == "array") and (.bar.layout.center | type == "array") and (.bar.layout.right | type == "array")' "$ROOT/config/omarchy/shell.json" >/dev/null
 pass "default shell.json has versioned bar layout"
 
-# Pinning the whole row made this fail every time an unrelated widget moved,
-# so assert the adjacency the name is about and let the rest of the row change.
 jq -e '
-  def ids: map(.id // .);
-  (.bar.layout.center | ids) as $ids |
-  ($ids | index("omarchy.weather")) as $weather |
-  ($ids | index("omarchy.system-update")) as $update |
-  $weather != null and $update == $weather + 1
+  all(.bar.layout[][]; (.id // .) != "omarchy.system-update")
 ' "$ROOT/config/omarchy/shell.json" >/dev/null
-pass "default center layout keeps update next to weather"
+pass "default center layout omits the system update indicator"
 
 jq -e '
   (.bar.centerAnchor // "") as $anchor |
@@ -135,7 +129,7 @@ cat >"$TMPDIR/home/.config/omarchy/shell.json" <<'JSON'
   "bar": {
     "layout": {
       "left": [{ "id": "omarchy.menu" }, { "id": "omarchy.workspaces" }, { "id": "omarchy.active-window" }],
-      "center": [{ "id": "omarchy.clock" }, { "id": "omarchy.weather" }, { "id": "omarchy.system-update" }, { "id": "omarchy.tailscale" }],
+      "center": [{ "id": "omarchy.clock" }, { "id": "omarchy.weather" }, { "id": "omarchy.tailscale" }],
       "right": [{ "id": "omarchy.tray" }, { "id": "omarchy.microphone" }, { "id": "omarchy.bluetooth" }]
     }
   },

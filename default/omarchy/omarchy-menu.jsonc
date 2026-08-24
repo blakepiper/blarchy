@@ -278,7 +278,6 @@
   "remove.development.elixir.phoenix": {"icon":"","label":"Phoenix","when":"[[ -d $HOME/.local/share/mise/installs/elixir ]]","action":"omarchy-launch-floating-terminal-with-presentation 'omarchy-remove-dev-env phoenix'"},
 
   // Update
-  "update.system": {"icon":"","label":"System Packages","action":"omarchy-launch-floating-terminal-with-presentation 'yay -Syu'"},
   "update.config": {"icon":"","label":"Config"},
   "update.themes": {"icon":"󰸌","label":"Extra Themes","action":"omarchy-launch-floating-terminal-with-presentation omarchy-theme-update"},
   "update.process": {"icon":"","label":"Process"},

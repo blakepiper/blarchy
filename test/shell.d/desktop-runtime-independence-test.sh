@@ -41,11 +41,12 @@ pass "desktop runtime path selection is deterministic"
   fail "user install leaves Fastfetch on its built-in defaults"
 pass "Fastfetch uses its built-in defaults"
 
-grep -Fq "'yay -Syu'" "$menu_config" ||
+if grep -Fq "'yay -Syu'" "$menu_config"; then
   fail "menu exposes the Arch/AUR update route"
+fi
 if rg -q 'basecamp/omarchy|pkgs\.omarchy\.org|mirror\.omarchy\.org' \
   "$hypr_entry" "$ROOT/default/hypr/autostart.lua" "$ROOT/shell/plugins/bar/widgets/SystemUpdate.qml" \
   "$menu_config"; then
   fail "active desktop behavior references Omarchy update infrastructure"
 fi
-pass "desktop update actions use normal Arch package sources"
+pass "desktop menu omits the system package update route"

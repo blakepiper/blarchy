@@ -147,16 +147,8 @@ assertEqual(
   'menu opens the emoji picker from Trigger'
 )
 assert(
-  defaultById['update.system'].icon === '',
-  'menu system-package update entry uses the Arch glyph'
-)
-assert(
-  !defaultById['update.system'].iconFont,
-  'menu system-package update entry does not depend on the Omarchy logo font'
-)
-assert(
-  defaultById['update.system'].action.includes('yay -Syu'),
-  'menu updates Arch and AUR packages with yay'
+  !defaultById['update.system'],
+  'menu omits the system-package update entry'
 )
 assert(
   defaultById['setup.input'].action.includes('input.lua'),

@@ -58,7 +58,7 @@ layout {
 // Programs started with the compositor session.
 spawn-at-startup "mako"
 spawn-at-startup "waybar"
-spawn-at-startup "swaybg" "-c" "#1a1b26"
+spawn-sh-at-startup "swaybg -i ~/.config/swaybg/wallpaper.jpg -m fill"
 spawn-at-startup "/usr/lib/polkit-kde-authentication-agent-1"
 spawn-at-startup "gnome-keyring-daemon" "--start" "--components=secrets"
 spawn-at-startup "udiskie" "--tray"

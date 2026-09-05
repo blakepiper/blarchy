@@ -111,6 +111,12 @@ check "helpers referenced by login-proof path" bash -c \
   "grep -q '~/.local/bin/night-mode' '$repo_path/config/waybar/config.jsonc' '$repo_path/config/niri/config.kdl'"
 check "user setup installs night-mode" grep -q 'bin/night-mode' "$repo_path/install/user.sh"
 
+# Wallpaper and terminal theme.
+check "wallpaper bundled" test -f "$repo_path/config/swaybg/wallpaper.jpg"
+check "niri shows the wallpaper" grep -q 'swaybg -i ~/.config/swaybg/wallpaper.jpg' "$repo_path/config/niri/config.kdl"
+check "kitty uses the Ubuntu theme" grep -q 'background #300a24' "$repo_path/config/kitty/kitty.conf"
+check_fail "kitty has no leftover Tokyo Night colors" grep -q '1a1b26' "$repo_path/config/kitty/kitty.conf"
+
 # External display discovery.
 check "displays parses" bash -n "$repo_path/bin/displays"
 check "displays prints usage" bash "$repo_path/bin/displays" --help

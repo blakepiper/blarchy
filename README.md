@@ -84,8 +84,8 @@ git pull --ff-only
 | Launcher | fuzzel |
 | Notifications | mako |
 | Lock / idle | swaylock + swayidle (locks after 10 min) |
-| Wallpaper | swaybg (solid color; point it at an image in `config/niri/config.kdl`) |
-| Terminal | kitty |
+| Wallpaper | swaybg (bundled Ubuntu wallpaper at `~/.config/swaybg/wallpaper.jpg`) |
+| Terminal | kitty (Ubuntu aubergine theme) |
 | Multiplexer | prettymux (`Super` + `Shift` + `Enter`) and tmux |
 | Browser | Firefox |
 | File manager | Nautilus |

@@ -4,7 +4,7 @@
   "height": 32,
   "spacing": 4,
   "modules-left": ["niri/workspaces"],
-  "modules-center": ["clock"],
+  "modules-center": ["custom/night-mode", "idle_inhibitor", "clock"],
   "modules-right": ["custom/ai-usage", "pulseaudio", "network", "battery", "tray"],
   "niri/workspaces": {
     "format": "{icon}",
@@ -25,6 +25,21 @@
     "on-click": "kitty --title ai-usage ~/.local/bin/ai-usage details",
     "on-click-right": "~/.local/bin/ai-usage refresh",
     "tooltip": true
+  },
+  "custom/night-mode": {
+    "exec": "~/.local/bin/night-mode status",
+    "return-type": "json",
+    "interval": 5,
+    "signal": 8,
+    "on-click": "~/.local/bin/night-mode next",
+    "tooltip": true
+  },
+  "idle_inhibitor": {
+    "format": "{icon}",
+    "format-icons": {
+      "activated": "",
+      "deactivated": ""
+    }
   },
   "pulseaudio": {
     "format": "{volume}% {icon}",

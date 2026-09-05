@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# night-mode: warm-screen toggle for the Waybar top bar.
+#
+# Wayland hands the gamma ramps back as soon as the client that set them
+# disconnects, so a warm screen is a process that has to stay running.
+# This script records which mode is wanted in a session state file and maps
+# it to a color temperature: `run` owns the long-lived gammastep process,
+# `next` cycles off -> night (3500 K) -> night-plus (2200 K) -> off, and
+# `status` prints one JSON object for Waybar's custom module.
+#
+# Usage: night-mode [run|next|status]
+
+set -euo pipefail
+
+night_temperature=3500
+night_plus_temperature=2200
+waybar_signal=8
+state_file="${XDG_RUNTIME_DIR:-/tmp}/blarchy-night-mode"
+
+mode=$(cat "$state_file" 2>/dev/null || printf 'off\n')
+
+stop_running() {
+  pkill -f 'gammastep -m wayland -P -O' 2>/dev/null || true
+}
+
+run_mode() {
+  local temperature=""
+
+  case $mode in
+    night) temperature=$night_temperature ;;
+    night-plus) temperature=$night_plus_temperature ;;
+    *) exit 0 ;;
+  esac
+  exec gammastep -m wayland -P -O "$temperature"
+}
+
+next_mode() {
+  case $mode in
+    off) mode=night ;;
+    night) mode=night-plus ;;
+    *) mode=off ;;
+  esac
+  printf '%s\n' "$mode" >"$state_file"
+  stop_running
+  if [[ $mode != off ]]; then
+    setsid --fork -- "$0" run </dev/null >/dev/null 2>&1
+  fi
+  pkill -RTMIN+"$waybar_signal" waybar 2>/dev/null || true
+}
+
+print_status() {
+  local icon class tooltip
+
+  case $mode in
+    night)
+      icon='' class=night tooltip="Night mode: $night_temperature K"
+      ;;
+    night-plus)
+      icon='' class=night-plus tooltip="Night+ mode: $night_plus_temperature K"
+      ;;
+    *)
+      mode=off icon='' class=off tooltip='Night mode: off'
+      ;;
+  esac
+  printf '{"text":"%s","class":"%s","tooltip":"%s"}\n' "$icon" "$class" "$tooltip"
+}
+
+command=${1:-status}
+case $command in
+  run) run_mode ;;
+  next) next_mode ;;
+  status) print_status ;;
+  *)
+    echo "Usage: night-mode [run|next|status]" >&2
+    exit 1
+    ;;
+esac

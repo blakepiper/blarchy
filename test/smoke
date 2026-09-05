@@ -98,6 +98,19 @@ done
 check "ai-usage --waybar emits JSON" bash -c \
   "'$repo_path/bin/ai-usage' --waybar | python3 -c 'import json,sys; json.load(sys.stdin)'"
 
+# Night-mode toggle and caffeinate widget.
+check "night-mode parses" bash -n "$repo_path/bin/night-mode"
+check "night-mode status emits JSON" bash -c \
+  "'$repo_path/bin/night-mode' status | python3 -c 'import json,sys; json.load(sys.stdin)'"
+check "gammastep in packages" grep -qx 'gammastep' "$repo_path/install/packages"
+check "procps-ng in packages" grep -qx 'procps-ng' "$repo_path/install/packages"
+check "waybar has night-mode module" grep -q 'custom/night-mode' "$repo_path/config/waybar/config.jsonc"
+check "waybar has caffeinate module" grep -q 'idle_inhibitor' "$repo_path/config/waybar/config.jsonc"
+check "niri restores night-mode at login" grep -q 'night-mode.*run' "$repo_path/config/niri/config.kdl"
+check "helpers referenced by login-proof path" bash -c \
+  "grep -q '~/.local/bin/night-mode' '$repo_path/config/waybar/config.jsonc' '$repo_path/config/niri/config.kdl'"
+check "user setup installs night-mode" grep -q 'bin/night-mode' "$repo_path/install/user.sh"
+
 # Removed desktops stay removed.
 check_fail "no hypr config" test -e "$repo_path/config/hypr"
 check_fail "no xfce config" test -e "$repo_path/config/xfce4"
@@ -105,7 +118,7 @@ check_fail "no quickshell dir" test -e "$repo_path/shell"
 check "bin/ holds only managed helpers" python3 -c "
 from pathlib import Path
 names = sorted(p.name for p in Path('$repo_path/bin').iterdir())
-assert names == ['ai-usage', 'ai-usage-scanners'], names
+assert names == ['ai-usage', 'ai-usage-scanners', 'night-mode'], names
 "
 
 if (( failures > 0 )); then

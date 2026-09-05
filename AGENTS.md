@@ -29,6 +29,12 @@ the intended desktop user, and running `./install.sh`.
   (AUR `prettymux-bin`, so it updates with `yay -Syu`).
 - The AI usage widget is `bin/ai-usage` with scanners in
   `bin/ai-usage-scanners/`, surfaced as Waybar's `custom/ai-usage` module.
+- The night-mode toggle is `bin/night-mode` (session state file plus a
+  long-lived gammastep process), surfaced as Waybar's `custom/night-mode`
+  module. Caffeinate uses Waybar's native `idle_inhibitor` module.
+- Helpers in `bin/` are managed files: `install/user.sh` copies them to
+  `~/.local/bin`, and desktop configs must reference them by that absolute
+  path because login-session PATH does not include `~/.local/bin`.
 - Do not add a branded lifecycle command surface; the interface is
   `./install.sh`, `yay -Syu`, and `./test/smoke`.
 

@@ -29,12 +29,20 @@ window#waybar {
 
 #clock,
 #custom-ai-usage,
+#custom-night-mode,
+#idle_inhibitor,
 #pulseaudio,
 #network,
 #battery,
 #tray {
   padding: 0 10px;
   color: #c0caf5;
+}
+
+#custom-night-mode.night,
+#custom-night-mode.night-plus,
+#idle_inhibitor.activated {
+  color: #e0af68;
 }
 
 #custom-ai-usage {

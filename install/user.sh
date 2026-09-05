@@ -59,5 +59,6 @@ mkdir -p "$HOME/.local/bin"
 cp -a "$repo/bin/ai-usage" "$HOME/.local/bin/ai-usage"
 rm -rf "$HOME/.local/bin/ai-usage-scanners"
 cp -a "$repo/bin/ai-usage-scanners" "$HOME/.local/bin/ai-usage-scanners"
+cp -a "$repo/bin/night-mode" "$HOME/.local/bin/night-mode"
 
 echo "User setup complete"

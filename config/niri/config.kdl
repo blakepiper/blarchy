@@ -62,6 +62,8 @@ spawn-at-startup "udiskie" "--tray"
 spawn-at-startup "sh" "-c" "wl-paste --type text --watch cliphist store"
 spawn-at-startup "sh" "-c" "wl-paste --type image --watch cliphist store"
 spawn-at-startup "swayidle" "-w" "timeout" "600" "swaylock -f" "timeout" "900" "niri msg action power-off-monitors" "before-sleep" "swaylock -f"
+// Restore the night-mode temperature when it was left on (exits at once when off).
+spawn-at-startup "sh" "-c" "~/.local/bin/night-mode run"
 
 screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 prefer-no-csd
@@ -97,6 +99,7 @@ binds {
 
     // Lock and power.
     Mod+L { spawn "swaylock" "-f"; }
+    Mod+N { spawn-sh "~/.local/bin/night-mode next"; }
     Mod+Shift+E { quit; }
     Mod+Shift+P { power-off-monitors; }
 

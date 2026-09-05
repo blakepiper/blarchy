@@ -21,6 +21,7 @@ libnotify
 swaylock
 swayidle
 swaybg
+gammastep
 
 # Terminal
 kitty
@@ -78,6 +79,7 @@ lazygit
 jq
 man-db
 bash-completion
+procps-ng
 unzip
 tldr
 pacman-contrib

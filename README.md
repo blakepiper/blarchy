@@ -80,7 +80,7 @@ git pull --ff-only
 | --- | --- |
 | Compositor | Niri (scrollable tiling) |
 | Login | greetd + tuigreet |
-| Bar | Waybar (workspaces, AI usage, audio, network, battery, tray) |
+| Bar | Waybar (workspaces, night mode, caffeinate, AI usage, audio, network, battery, tray) |
 | Launcher | fuzzel |
 | Notifications | mako |
 | Lock / idle | swaylock + swayidle (locks after 10 min) |
@@ -111,6 +111,7 @@ git pull --ff-only
 | <kbd>Super</kbd> + <kbd>O</kbd> | Overview |
 | <kbd>Super</kbd> + <kbd>P</kbd> | Toggle floating |
 | <kbd>Super</kbd> + <kbd>L</kbd> | Lock screen |
+| <kbd>Super</kbd> + <kbd>N</kbd> | Cycle night mode off → night → night-plus |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Region screenshot (saved to `~/Pictures/Screenshots` and copied to clipboard) |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> | Fullscreen |
 | <kbd>Super</kbd> + <kbd>Tab</kbd> | Previous workspace |
@@ -137,6 +138,19 @@ tooltip. It refreshes every five minutes and caches under
 - Left-click opens the full breakdown in kitty.
 - Right-click forces a refresh.
 - `ai-usage details` and `ai-usage refresh` do the same from a terminal.
+
+## Night mode and caffeinate
+
+Two toggles sit in the center of the bar, next to the clock:
+
+- **Night mode** (sun/moon icon) warms the screen through `gammastep`.
+  Click it — or press <kbd>Super</kbd> + <kbd>N</kbd> — to cycle
+  off → night (3500 K) → night-plus (2200 K). The mode lasts for the
+  login session; a fresh boot starts with it off.
+- **Caffeinate** (coffee icon) inhibits idle sleep while active, so the
+  screen neither locks nor powers off. Click again to release it.
+
+Both reflect their state in the bar immediately.
 
 ## Optional extras
 

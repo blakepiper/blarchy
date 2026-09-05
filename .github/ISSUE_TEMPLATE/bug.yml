@@ -1,17 +1,17 @@
 name: Bug
-description: Report a reproducible BLARCHY problem
+description: Report a reproducible blarchy problem
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        BLARCHY is a personal Arch + Hyprland environment. Please include enough detail to reproduce the problem on the supported standalone install path.
+        Blarchy is a personal Arch + Niri environment. Please include enough detail to reproduce the problem on the supported install path (`./install.sh` on a minimal Arch system).
 
   - type: input
     id: system-details
     attributes:
       label: System details
-      placeholder: e.g. BLARCHY commit, kernel, GPU, and relevant hardware
+      placeholder: e.g. blarchy commit, kernel, GPU, and relevant hardware
     validations:
       required: true
 
@@ -19,6 +19,6 @@ body:
     id: steps
     attributes:
       label: What's wrong?
-      description: Describe the issue, include reproduction steps, and attach `omarchy debug --no-sudo --print` output when relevant
+      description: Describe the issue, include reproduction steps, and attach `./test/smoke` output when relevant
     validations:
       required: true

@@ -75,7 +75,7 @@ assert 'cliphist store' in text, 'cliphist watcher missing'
 "
 check_fail "niri config has no struts block (unsupported key)" grep -q 'struts' "$repo_path/config/niri/config.kdl"
 check_fail "niri config has no raw-string matchers" grep -q 'r#"' "$repo_path/config/niri/config.kdl"
-check_fail "kitty config has no omarchy include" grep -q 'omarchy' "$repo_path/config/kitty/kitty.conf"
+check_fail "kitty config is self-contained (no external includes)" grep -q '^include' "$repo_path/config/kitty/kitty.conf"
 check "screenshot binding copies to clipboard" grep -q 'wl-copy' "$repo_path/config/niri/config.kdl"
 check "libnotify in packages (notification senders)" grep -qx 'libnotify' "$repo_path/install/packages"
 check "papers (not evince) in packages" grep -qx 'papers' "$repo_path/install/packages"
@@ -102,7 +102,11 @@ check "ai-usage --waybar emits JSON" bash -c \
 check_fail "no hypr config" test -e "$repo_path/config/hypr"
 check_fail "no xfce config" test -e "$repo_path/config/xfce4"
 check_fail "no quickshell dir" test -e "$repo_path/shell"
-check_fail "no omarchy helpers" bash -c "compgen -G '$repo_path/bin/omarchy-*'"
+check "bin/ holds only managed helpers" python3 -c "
+from pathlib import Path
+names = sorted(p.name for p in Path('$repo_path/bin').iterdir())
+assert names == ['ai-usage', 'ai-usage-scanners'], names
+"
 
 if (( failures > 0 )); then
   printf '%d check(s) failed\n' "$failures" >&2

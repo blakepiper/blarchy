@@ -5,7 +5,7 @@
     <!-- L: narrower and aligned to the same 15px grid as the rest of the wordmark -->
     <path d="M165 15h45v210h60v30H165V15z"/>
 
-    <!-- A R C H Y retained from the Omarchy wordmark and shifted left 120px -->
+    <!-- A R C H Y letterforms shifted left 120px -->
     <g transform="translate(-120 0)">
       <path clip-rule="evenodd" d="m555 225h-15v15h-15v15h-15v-105.001l-44.998.001v105.002h-45.002v-105.002h-15v-30.001h15v-75h15.002v-14.997h15v-15.002h105zm-89.998-105.001h44.998v-74.997h-44.998z" fill-rule="evenodd"/>
       <path clip-rule="evenodd" d="m720 120h-15v15h-14.998v14.999l-60.002.001v15.002l90-.002v.002h.002l-.002 89.998h-15v15h-13v15h-17v-89.998h-45v90l-45-.002v-89.998h-14.998v-30h14.998v-15.002h-14.998v-30.001h14.998v-75h15v-14.997h15v-15.002h105.002zm-90-.001h45v-74.997h-45z" fill-rule="evenodd"/>

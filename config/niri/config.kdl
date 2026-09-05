@@ -1,6 +1,6 @@
 // Blarchy Niri configuration. Niri validates this file on save and
 // refuses to apply a broken one, so mistakes fail safe.
-// Full reference: https://github.com/YaLTeR/niri/wiki/Configuration:-Overview
+// Full reference: https://github.com/niri-wm/niri/wiki/Configuration:-Introduction
 
 input {
   keyboard {

@@ -11,7 +11,7 @@ jobs:
     container: archlinux:latest
     steps:
       - run: pacman -Syu --needed --noconfirm git python shellcheck niri curl
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: ./test/smoke
       - name: Resolve current repository packages
         shell: bash

@@ -6,7 +6,7 @@
 # no desktop), booted, connected to wifi, with git installed and a
 # non-root user that has sudo access:
 #
-#   sudo pacman -S --needed git
+#   sudo pacman -Syu --needed git
 #   git clone https://github.com/blakepiper/blarchy.git ~/blarchy
 #   cd ~/blarchy
 #   ./install.sh

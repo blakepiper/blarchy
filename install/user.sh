@@ -63,7 +63,7 @@ fi
 BASHRC
 fi
 
-# Waybar and terminals call the AI widget by absolute path, independent of
+# Desktop configs call these helpers by absolute path, independent of
 # login-shell PATH. These are managed files: always refresh them on rerun.
 mkdir -p "$HOME/.local/bin"
 cp -a "$repo/bin/ai-usage" "$HOME/.local/bin/ai-usage"

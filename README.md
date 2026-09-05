@@ -218,7 +218,7 @@ any desired configuration changes manually. There is no self-updater.
 | File manager | Nautilus |
 | Editor | VSCodium (`codium`) and Neovim |
 | Audio | PipeWire and WirePlumber |
-| Battery | Charge clamped to 80% on laptops (battery lifespan) |
+| Battery | 80% charge limit on laptops with kernel charge-control support |
 | AI usage widget | `ai-usage` in the bar (Claude Code, Codex, OpenCode Go) |
 | AI coding agents | Claude Code (`claude`), Codex (`codex`), pi (`pi`), OpenCode (`opencode`) |
 | Packages | pacman and yay |
@@ -260,7 +260,7 @@ Firefox after changing it; `about:policies` shows active policies and errors.
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> | Fullscreen |
 | <kbd>Super</kbd> + <kbd>Tab</kbd> | Previous workspace |
 | <kbd>Super</kbd> + <kbd>1..9</kbd> | Go to workspace |
-| <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>1..9</kbd> | Send window to workspace |
+| <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>1..9</kbd> | Send column to workspace |
 | <kbd>Super</kbd> + arrows | Focus window/column |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + arrows | Move window/column |
 | <kbd>Super</kbd> + <kbd>Ctrl</kbd> + arrows | Focus monitor |
@@ -348,7 +348,7 @@ yay -S spotify   # optional music player
 bin/          desktop helpers (ai-usage, night-mode, displays, clipboard-history)
 config/       user configuration defaults (niri, kitty, waybar, fuzzel, ...)
 docs/         hardware detection notes
-etc/          system files installed by the installer (greetd)
+etc/          system defaults (greetd, Firefox policies, battery charge limit)
 install/      package manifests, hardware detection, system/user setup
 test/         smoke checks runnable on any machine
 install.sh    the installer

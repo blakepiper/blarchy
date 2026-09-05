@@ -147,6 +147,21 @@ check "battery-limit script parses" bash -n "$repo_path/etc/lib/blarchy/battery-
 check "system setup installs the battery unit" grep -q 'blarchy-battery-limit' "$repo_path/install/system.sh"
 
 # Removed desktops stay removed.
+check "text logo names the current desktop" grep -qx 'Arch Linux + Niri' "$repo_path/logo.txt"
+check_fail "no obsolete branding in shipped files or docs" grep -rqiE \
+  'omarchy|omakub|hyprland|xfce' \
+  "$repo_path/logo.txt" "$repo_path/logo.svg" "$repo_path/README.md" \
+  "$repo_path/docs" "$repo_path/config" "$repo_path/bin" "$repo_path/etc" "$repo_path/install"
+check "OpenCode separates runtime and TUI settings" python3 -c "
+import json
+from pathlib import Path
+config = Path('$repo_path/config/opencode')
+runtime = json.loads((config / 'opencode.json').read_text())
+tui = json.loads((config / 'tui.json').read_text())
+assert not {'theme', 'keybinds', 'tui'} & runtime.keys()
+assert runtime['autoupdate'] is False
+assert tui['theme'] == 'system'
+"
 check_fail "no hypr config" test -e "$repo_path/config/hypr"
 check_fail "no xfce config" test -e "$repo_path/config/xfce4"
 check_fail "no quickshell dir" test -e "$repo_path/shell"

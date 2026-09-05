@@ -36,7 +36,7 @@ cd ~/blarchy
 The installer:
 
 - enables Arch multilib (Steam, NVIDIA lib32 drivers);
-- installs `rustup` with a stable toolchain and bootstraps `yay`;
+- installs build prerequisites and bootstraps `yay` for AUR packages;
 - investigates your hardware (CPU, GPU, laptop vs desktop, Bluetooth,
   VM guest, fingerprint reader, wifi) and adds exactly the drivers and
   tools it finds — see [docs/HARDWARE.md](./docs/HARDWARE.md);

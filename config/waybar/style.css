@@ -1,0 +1,50 @@
+/* Waybar styling. Tokyo Night palette to match kitty and Niri. */
+
+* {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 12px;
+  border: none;
+  border-radius: 0;
+}
+
+window#waybar {
+  background: #1a1b26;
+  color: #c0caf5;
+  border-bottom: 1px solid #24283b;
+}
+
+#workspaces button {
+  padding: 0 8px;
+  color: #565f89;
+  background: transparent;
+}
+
+#workspaces button.focused {
+  color: #7dcfff;
+}
+
+#workspaces button.urgent {
+  color: #f7768e;
+}
+
+#clock,
+#custom-ai-usage,
+#pulseaudio,
+#network,
+#battery,
+#tray {
+  padding: 0 10px;
+  color: #c0caf5;
+}
+
+#custom-ai-usage {
+  color: #bb9af7;
+}
+
+#battery.warning {
+  color: #e0af68;
+}
+
+#battery.critical {
+  color: #f7768e;
+}

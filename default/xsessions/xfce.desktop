@@ -1,8 +1,0 @@
-[Desktop Entry]
-Version=1.0
-Name=Xfce Session
-Comment=Run Xfce as an X11 desktop session
-Exec=startxfce4
-TryExec=startxfce4
-Type=Application
-DesktopNames=XFCE

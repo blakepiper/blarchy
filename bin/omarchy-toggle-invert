@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Toggle inverted monitor colors
-
-set -euo pipefail
-
-rice_path=${RICE_PATH:-${OMARCHY_PATH:-/usr/local/share/rice}}
-source "$rice_path/bin/omarchy-screen-filter.sh"
-screen_filter_toggle invert

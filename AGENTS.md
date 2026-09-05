@@ -4,82 +4,69 @@
 - Use Bash 5 `[[ ]]` string/file tests and `(( ))` numeric tests
 - Do not quote variables inside `[[ ]]`; quote literals in exact comparisons
 - Quote paths with spaces rather than escaping their spaces
-- Use `#!/bin/bash` for executable shell scripts
+- Use `#!/bin/bash` for executable scripts (`install.sh`, `test/*`)
 - Sourced leaves under `install/` intentionally omit shebangs
 
 # Repository purpose
 
-This repository reproduces an Arch Linux desktop. The supported path
-is cloning it onto an already bootable minimal Arch system and running
-`./install.sh` as the intended desktop user.
+This repository reproduces an Arch Linux desktop built on Niri. The
+supported path is installing Arch with `archinstall` (base system, no
+desktop), booting it, connecting to wifi, cloning this repository as
+the intended desktop user, and running `./install.sh`.
 
 - Arch and the AUR own packages; normal updates use `yay -Syu`.
 - This repository has no release channel, self-updater, version command, or
   migration framework.
-- The package source of truth is `install/packages`.
-- The installer publishes a copied runtime at `/usr/local/share/rice`.
-- `$RICE_PATH` is canonical. `$OMARCHY_PATH`, `~/.config/omarchy`,
-  `omarchy-*` helpers, and `omarchy.*` plugin IDs remain inherited internal
-  compatibility namespaces.
-- Do not add a new branded lifecycle command surface.
+- The package sources of truth are `install/packages` (pacman) and
+  `install/packages-aur` (AUR, installed through yay).
+- Hardware-specific drivers and services are derived at install time by
+  `install/hardware.sh`. Never hardcode machine-specific drivers into the
+  base package list.
+- The desktop stack is Niri + Waybar + fuzzel + mako + swaylock/swayidle
+  + swaybg + kitty. Do not reintroduce a second compositor, desktop
+  environment, display manager, or bar without explicit user approval.
+- The terminal emulator is kitty. The terminal multiplexer is prettymux
+  (AUR `prettymux-bin`, so it updates with `yay -Syu`).
+- The AI usage widget is `bin/ai-usage` with scanners in
+  `bin/ai-usage-scanners/`, surfaced as Waybar's `custom/ai-usage` module.
+- Do not add a branded lifecycle command surface; the interface is
+  `./install.sh`, `yay -Syu`, and `./test/smoke`.
 
 # Installer boundaries
 
 The installer must remain idempotent and safe for an existing Arch machine.
 It must not partition, format, mount, write under `/boot`, configure a
 bootloader, create EFI entries, replace pacman repositories, or directly run
-`mkinitcpio`. Preserve existing network and display managers when configured,
-and preserve existing user files during a normal install.
+`mkinitcpio`. Preserve an existing display manager when one is already
+enabled, and preserve existing user files during a normal install.
 
-Root-scoped integration belongs in `install/standalone/system.sh`; user setup
-belongs under `install/user/` or `install/standalone/user.sh`. Source-specific
-installer variables must not leak into runtime defaults.
+Root-scoped integration belongs in `install/system.sh`; hardware detection
+belongs in `install/hardware.sh`; user setup belongs in `install/user.sh`.
+Source-specific installer variables must not leak into runtime defaults.
 
 The installer standardizes AUR builds on the Arch `rustup` provider. Install it
 in the prerequisite pacman transaction and initialize a stable default only
 when the user has no default toolchain. Do not temporarily install and remove
 the conflicting `rust` provider.
 
-# Commands and privileges
+# Desktop configuration
 
-Prefer existing `omarchy-cmd-*`, `omarchy-pkg-*`, and
-`omarchy-notification-send` helpers in maintained desktop scripts. Commands
-declared by `install/packages` are runtime invariants and do not need defensive
-presence checks.
+Niri configuration lives in `config/niri/config.kdl` and is validated by
+Niri itself on save. Keep keybindings in the Super-based scheme documented
+in the README; Niri-specific adaptations (columns, workspaces, monitors,
+overview) are expected and welcome.
 
-Use `sudo` for privileged work run from an interactive terminal. Use `pkexec`
-for privileged actions launched from a graphical process that has no terminal
-for password entry.
+User defaults seed from `config/` into `~/.config` without overwriting.
+System files seed from `etc/` and converge on the repository state.
 
-Command metadata near the top of `bin/omarchy-*` files is parsed by
-`bin/omarchy`. Keep metadata valid and update `GROUP_DESCRIPTIONS` when
-adding a new command prefix.
+# Tests and verification
 
-# Desktop runtime
+Run `./test/smoke` for every change touching the installer, package
+manifests, desktop configs, or the AI widget. It runs on any machine
+with bash and python3.
 
-Hyprland user overrides live under `config/hypr/`. The Quickshell desktop is a
-single process rooted at `shell/shell.qml`; do not launch separate component
-instances. First-party plugins live under `shell/plugins/`, while user plugins
-live under `~/.config/omarchy/plugins/`.
-
-Use `bin/omarchy-shell` for shell IPC. Panel, overlay, and menu plugins expose
-`open(payloadJson)` and `close()`. Entry points are `Item`s rather than
-`ShellRoot`s.
-
-Widget files can contain raw Nerd Font glyphs. Avoid whole-file rewrites that
-can strip multibyte codepoints.
-
-# Tests and visual verification
-
-Run focused tests for the changed area, then use:
-
-- `./test/cli` for command routing and metadata
-- `./test/shell` for shell tests
-- `./test/all` for the aggregate non-graphical suite
-
-Graphical acceptance tests run only in a disposable Arch VM installed through
-the current `./install.sh`. Visual changes also require inspection in the
-running UI for clipping, overlap, focus, stale state, and regressions.
+Full graphical acceptance happens in a disposable Arch VM installed
+through the current `./install.sh`.
 
 # Git
 

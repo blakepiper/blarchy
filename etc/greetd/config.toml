@@ -1,0 +1,9 @@
+# greetd configuration: tuigreet prompting for a user, launching the
+# Niri Wayland session. Installed to /etc/greetd/config.toml.
+
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --time --remember --sessions /usr/share/wayland-sessions --asterisks --greeting 'Welcome to blarchy'"
+user = "greeter"

@@ -1,0 +1,5 @@
+color=1a1b26
+font=JetBrainsMono Nerd Font
+show-failed-attempts
+ignore-empty-password
+daemonize

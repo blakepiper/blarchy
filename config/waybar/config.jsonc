@@ -1,0 +1,52 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 32,
+  "spacing": 4,
+  "modules-left": ["niri/workspaces"],
+  "modules-center": ["clock"],
+  "modules-right": ["custom/ai-usage", "pulseaudio", "network", "battery", "tray"],
+  "niri/workspaces": {
+    "format": "{icon}",
+    "format-icons": {
+      "default": "",
+      "focused": "",
+      "urgent": ""
+    }
+  },
+  "clock": {
+    "format": "{:%a %b %d  %H:%M}",
+    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+  },
+  "custom/ai-usage": {
+    "exec": "ai-usage --waybar",
+    "return-type": "json",
+    "interval": 300,
+    "on-click": "kitty --title ai-usage ai-usage details",
+    "on-click-right": "ai-usage refresh",
+    "tooltip": true
+  },
+  "pulseaudio": {
+    "format": "{volume}% {icon}",
+    "format-muted": " muted",
+    "format-icons": ["", "", ""],
+    "on-click": "pavucontrol"
+  },
+  "network": {
+    "format-wifi": " {essid}",
+    "format-ethernet": "󰈀 {ipaddr}",
+    "format-disconnected": "󰖪 offline",
+    "tooltip-format": "{ifname}: {ipaddr}/{cidr}"
+  },
+  "battery": {
+    "format": "{capacity}% {icon}",
+    "format-icons": ["", "", "", "", ""],
+    "states": {
+      "warning": 30,
+      "critical": 15
+    }
+  },
+  "tray": {
+    "spacing": 8
+  }
+}

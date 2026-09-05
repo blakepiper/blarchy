@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Reload Hyprland configuration used by RICE theme switching.
-
-hyprctl reload >/dev/null

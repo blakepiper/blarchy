@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# This is a retained compatibility-hook example. Normal RICE updates use
-# `yay -Syu`, which does not invoke post-update hooks. It runs only when a
-# command explicitly calls `omarchy-hook post-update`.
-# To put it into use, remove .sample from this file name.
-
-# Example: Show notification after the system has been updated.
-# omarchy-notification-send -u low "Update Performed" "Your system is now up to date"

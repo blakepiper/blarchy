@@ -1,0 +1,7 @@
+# AUR packages, installed through yay so that `yay -Syu` keeps them
+# updated like any other package.
+#
+# One package per line. Trailing "# comment" is allowed.
+
+prettymux-bin # prebuilt prettymux terminal multiplexer (yay -Syu updates it)
+vscodium-bin # VS Code without Microsoft telemetry (`codium` command)

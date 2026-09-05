@@ -18,6 +18,10 @@ input {
     accel-speed 0.2
   }
 
+  mouse {
+    natural-scroll
+  }
+
   // The mouse never steals focus on its own: Niri only follows the mouse
   // when asked, so leaving that node out keeps window management
   // deterministic under the keyboard.

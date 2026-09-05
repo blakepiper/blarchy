@@ -82,5 +82,6 @@ cp -a "$repo/bin/night-mode" "$HOME/.local/bin/night-mode"
 cp -a "$repo/bin/displays" "$HOME/.local/bin/displays"
 cp -a "$repo/bin/clipboard-history" "$HOME/.local/bin/clipboard-history"
 cp -a "$repo/bin/network-settings" "$HOME/.local/bin/network-settings"
+cp -a "$repo/bin/topbar-panel" "$HOME/.local/bin/topbar-panel"
 
 echo "User setup complete"

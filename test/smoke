@@ -102,10 +102,13 @@ check "greetd config exists" test -f "$repo_path/etc/greetd/config.toml"
 check "AI helpers compile" python3 -c '
 import pathlib, sys
 root = pathlib.Path(sys.argv[1])
-for path in [root / "bin/ai-usage", *root.glob("bin/ai-usage-scanners/*.py")]:
+for path in [root / "bin/ai-usage", root / "bin/topbar-panel", *root.glob("bin/ai-usage-scanners/*.py")]:
   compile(path.read_text(), str(path), "exec")
 ' "$repo_path"
 if ! python3 "$repo_path/test/regressions.py"; then
+  failures=$((failures + 1))
+fi
+if ! python3 "$repo_path/test/topbar.py"; then
   failures=$((failures + 1))
 fi
 if command -v niri >/dev/null 2>&1; then
@@ -179,7 +182,7 @@ check_fail "no quickshell dir" test -e "$repo_path/shell"
 check "bin/ holds only managed helpers" python3 -c "
 from pathlib import Path
 names = sorted(p.name for p in Path('$repo_path/bin').iterdir() if p.name != '__pycache__')
-assert names == ['ai-usage', 'ai-usage-scanners', 'clipboard-history', 'displays', 'network-settings', 'night-mode'], names
+assert names == ['ai-usage', 'ai-usage-scanners', 'clipboard-history', 'displays', 'network-settings', 'night-mode', 'topbar-panel'], names
 "
 check "network settings helper parses" bash -n "$repo_path/bin/network-settings"
 if command -v dconf >/dev/null 2>&1; then

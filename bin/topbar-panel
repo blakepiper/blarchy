@@ -1,0 +1,648 @@
+#!/usr/bin/python3
+"""Small layer-shell controls shared by Waybar's AI, audio and Wi-Fi buttons."""
+
+import concurrent.futures
+import json
+import os
+from pathlib import Path
+import runpy
+import subprocess
+import sys
+
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GtkLayerShell", "0.1")
+from gi.repository import Gdk, Gio, GLib, Gtk, GtkLayerShell
+
+HELPERS = Path(__file__).resolve().parent
+WORKERS = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+CSS = b"""
+window { background: transparent; }
+#panel { background: #271e26; color: #eee7eb; border: 1px solid #604653;
+  border-radius: 14px; padding: 20px; font-family: sans-serif; font-size: 14px; }
+.title { font-size: 20px; font-weight: bold; }
+.dim { color: #bcaab5; font-size: 12px; }
+.error { color: #ffb4bc; }
+button { background: #49303f; color: #eee7eb; border: none;
+  border-radius: 7px; padding: 9px 12px; box-shadow: none; text-shadow: none; }
+button:hover { background: #604653; }
+button:disabled { color: #ab98a4; }
+entry { background: #392a35; color: #eee7eb; border-radius: 7px; }
+scale highlight, progressbar progress { background: #e97845; border: none; }
+progressbar trough { background: #49303f; min-height: 6px; border: none; }
+"""
+
+
+def command(*args):
+  result = subprocess.run(args, capture_output=True, text=True, timeout=15,
+                          env={**os.environ, "LC_ALL": "C"})
+  if result.returncode:
+    raise RuntimeError(result.stderr.strip() or "The operation could not be completed.")
+  return result.stdout.strip()
+
+
+def label(text, style=None):
+  widget = Gtk.Label(label=str(text), xalign=0)
+  widget.set_line_wrap(True)
+  widget.set_max_width_chars(46)
+  if style:
+    widget.get_style_context().add_class(style)
+  return widget
+
+
+def button(text, action):
+  widget = Gtk.Button(label=text)
+  widget.connect("clicked", lambda *_: action())
+  return widget
+
+
+def row(*widgets):
+  box = Gtk.Box(spacing=10)
+  for widget in widgets:
+    box.pack_start(widget, isinstance(widget, Gtk.Label), isinstance(widget, Gtk.Label), 0)
+  return box
+
+
+def volume_percent(sink):
+  values = [channel["value"] for channel in sink.get("volume", {}).values()]
+  return round(sum(values) / len(values) / 65536 * 100) if values else 0
+
+
+class Panel(Gtk.ApplicationWindow):
+  def __init__(self, app, kind):
+    super().__init__(application=app, title="Topbar controls")
+    self.kind = kind
+    self.alive = True
+    self.timer = 0
+    self.set_decorated(False)
+    self.set_app_paintable(True)
+    self.set_visual(self.get_screen().get_rgba_visual())
+    GtkLayerShell.init_for_window(self)
+    GtkLayerShell.set_namespace(self, "topbar-panel")
+    GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
+    GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
+    GtkLayerShell.set_exclusive_zone(self, -1)
+    display = Gdk.Display.get_default()
+    _, x, y = display.get_default_seat().get_pointer().get_position()
+    GtkLayerShell.set_monitor(self, display.get_monitor_at_point(x, y))
+    for edge in (GtkLayerShell.Edge.TOP, GtkLayerShell.Edge.BOTTOM,
+                 GtkLayerShell.Edge.LEFT, GtkLayerShell.Edge.RIGHT):
+      GtkLayerShell.set_anchor(self, edge, True)
+    # Leave the bar accessible so another button can switch the open panel.
+    GtkLayerShell.set_margin(self, GtkLayerShell.Edge.TOP, 52)
+    backdrop = Gtk.EventBox()
+    backdrop.set_visible_window(False)
+    backdrop.connect("button-press-event", self.outside_click)
+    self.add(backdrop)
+    self.card = Gtk.EventBox()
+    self.card.set_name("panel")
+    self.card.set_halign(Gtk.Align.END)
+    self.card.set_valign(Gtk.Align.START)
+    self.card.set_margin_end(10)
+    self.card.set_margin_bottom(10)
+    backdrop.add(self.card)
+    outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+    outer.set_border_width(20)
+    outer.set_size_request(410, -1)
+    self.card.add(outer)
+    titles = {"audio": "Sound", "wifi": "Wi-Fi", "ai": "AI usage"}
+    close = button("×", self.destroy)
+    close.set_tooltip_text("Close (Esc)")
+    outer.pack_start(row(label(titles[kind], "title"), close), False, False, 0)
+    self.content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+    scroll = Gtk.ScrolledWindow()
+    scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+    scroll.set_propagate_natural_height(True)
+    monitor = display.get_monitor_at_point(x, y).get_geometry()
+    scroll.set_max_content_height(max(180, monitor.height - 210))
+    scroll.add(self.content)
+    outer.pack_start(scroll, True, True, 0)
+    self.status = label("", "dim")
+    outer.pack_start(self.status, False, False, 0)
+    self.connect("key-press-event", self.keypress)
+    self.connect("destroy", self.closed)
+    self.show_all()
+    if kind == "ai":
+      self.load_ai()
+    elif kind == "audio":
+      self.load_audio()
+    else:
+      try:
+        active_nm = subprocess.run(["systemctl", "is-active", "--quiet", "NetworkManager.service"]).returncode == 0
+        self.wifi = Wifi(self) if active_nm else IwdWifi(self)
+      except (GLib.Error, ValueError, RuntimeError) as error:
+        self.message(str(error), True)
+
+  def outside_click(self, _widget, event):
+    # Events from buttons/entries remain inside the card.
+    clicked = Gtk.get_event_widget(event)
+    if clicked is not self.card and (clicked is None or not clicked.is_ancestor(self.card)):
+      self.destroy()
+    return False
+
+  def keypress(self, _widget, event):
+    if event.keyval == Gdk.KEY_Escape:
+      self.destroy()
+      return True
+    return False
+
+  def closed(self, *_):
+    self.alive = False
+    if self.timer:
+      GLib.source_remove(self.timer)
+    if hasattr(self, "wifi"):
+      self.wifi.close()
+
+  def message(self, text, error=False):
+    self.status.set_text(str(text))
+    context = self.status.get_style_context()
+    (context.add_class if error else context.remove_class)("error")
+
+  def clear(self):
+    for child in self.content.get_children():
+      child.destroy()
+
+  def add(self, widget):
+    # Gtk.Window.add during construction; all later additions use content.
+    if hasattr(self, "content"):
+      self.content.pack_start(widget, False, False, 0)
+      widget.show_all()
+    else:
+      super().add(widget)
+
+  def work(self, task, done):
+    def complete(future):
+      if not self.alive:
+        return False
+      try:
+        value = future.result()
+      except Exception as error:
+        self.message(str(error), True)
+      else:
+        done(value)
+      return False
+    WORKERS.submit(task).add_done_callback(lambda future: GLib.idle_add(complete, future))
+
+  def load_ai(self, refresh=False):
+    self.message("Refreshing usage…" if refresh else "Loading usage…")
+    self.clear()
+    def fetch():
+      ai = runpy.run_path(str(HELPERS / "ai-usage"))
+      return ai, ai["fetch_data"](force=refresh)
+    def show(result):
+      ai, data = result
+      for provider in data.get("providers", []):
+        self.add(label(provider.get("name", "Provider"), "title"))
+        if provider.get("tier"):
+          self.add(label(provider["tier"], "dim"))
+        for limit in provider.get("limits", []):
+          used = ai["normalized_percent"](limit.get("percent"))
+          if used < 0:
+            continue
+          self.add(row(label(limit.get("label", "Usage")), label(f"{round((1-used)*100)}% left")))
+          self.add(Gtk.ProgressBar(fraction=1 - used))
+          reset = ai["reset_text"](str(limit.get("resetAt") or ""))
+          if reset:
+            self.add(label(reset, "dim"))
+        if provider.get("status") or not provider.get("limits"):
+          self.add(label(provider.get("status") or "No signed-in usage data", "dim"))
+        self.add(label(ai["provider_lines"](provider)[-1].strip(), "dim"))
+      self.add(button("Refresh usage", lambda: self.load_ai(True)))
+      self.message(ai["details_text"](data).splitlines()[-1])
+      if refresh:
+        subprocess.run(["pkill", "-RTMIN+9", "-x", "waybar"], check=False)
+    self.work(fetch, show)
+
+  def load_audio(self):
+    self.message("Loading audio devices…")
+    def fetch():
+      sinks = json.loads(command("pactl", "-f", "json", "list", "sinks"))
+      sources = json.loads(command("pactl", "-f", "json", "list", "sources"))
+      microphones = [source for source in sources if not source.get("monitor_source")]
+      default_source = command("pactl", "get-default-source") if microphones else ""
+      microphone = next((source for source in microphones if source["name"] == default_source), None)
+      return sinks, command("pactl", "get-default-sink") if sinks else "", microphone
+    def show(data):
+      sinks, default, mic = data
+      self.clear()
+      current = next((sink for sink in sinks if sink["name"] == default), None)
+      if not current:
+        self.message("No audio output is available.")
+        self.add(button("Refresh devices", self.load_audio))
+        return
+      self.add(label("Output volume", "dim"))
+      scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 100, 1)
+      scale.set_value(min(100, volume_percent(current)))
+      scale.set_value_pos(Gtk.PositionType.RIGHT)
+      scale.set_digits(0)
+      scale.connect("format-value", lambda _scale, value: f"{value:.0f}%")
+      def changed(widget):
+        if self.timer:
+          GLib.source_remove(self.timer)
+        amount = round(widget.get_value())
+        def apply():
+          self.timer = 0
+          self.work(lambda: command("pactl", "set-sink-volume", default, f"{amount}%"),
+                    lambda _: self.message(""))
+          return False
+        self.timer = GLib.timeout_add(80, apply)
+      scale.connect("value-changed", changed)
+      self.add(scale)
+      self.add(button("Unmute output" if current["mute"] else "Mute output",
+                      lambda: self.audio_action("set-sink-mute", default, "toggle")))
+      self.add(label("Output device", "dim"))
+      for sink in sinks:
+        name = sink["name"]
+        ports = sink.get("ports", [])
+        if name != default and ports and all(port.get("availability") == "not available" for port in ports):
+          continue
+        item = button(("✓  " if name == default else "") + sink["description"],
+                      lambda name=name: self.switch_output(name))
+        item.get_child().set_line_wrap(True)
+        item.get_child().set_max_width_chars(40)
+        self.add(item)
+      if mic is not None:
+        self.add(button("Unmute microphone" if mic["mute"] else "Mute microphone",
+                        lambda: self.audio_action("set-source-mute", mic["name"], "toggle")))
+      self.add(button("Refresh devices", self.load_audio))
+      self.message("Scroll on the bar to adjust volume. Right-click to mute.")
+    self.work(fetch, show)
+
+  def audio_action(self, *args):
+    self.work(lambda: command("pactl", *args), lambda _: self.load_audio())
+
+  def switch_output(self, name):
+    def change():
+      command("pactl", "set-default-sink", name)
+      for stream in json.loads(command("pactl", "-f", "json", "list", "sink-inputs")):
+        command("pactl", "move-sink-input", str(stream["index"]), name)
+    self.work(change, lambda _: self.load_audio())
+
+
+class Wifi:
+  def __init__(self, panel):
+    gi.require_version("NM", "1.0")
+    from gi.repository import NM
+    self.NM = NM
+    self.editing = False
+    self.connecting = False
+    self.connect_button = None
+    self.panel = panel
+    self.client = NM.Client.new(None)
+    if not self.client.get_nm_running():
+      raise RuntimeError("NetworkManager is not running.")
+    self.device = next((device for device in self.client.get_devices()
+                        if isinstance(device, NM.DeviceWifi)), None)
+    if self.device is None:
+      raise RuntimeError("No Wi-Fi adapter is available. Wired networking remains active.")
+    self.handlers = [(self.client, self.client.connect("notify::wireless-enabled", lambda *_: self.render())),
+                     (self.device, self.device.connect("notify::state", self.state_changed)),
+                     (self.device, self.device.connect("notify::last-scan", lambda *_: self.render()))]
+    self.render()
+    self.scan()
+
+  def close(self):
+    for obj, handler in self.handlers:
+      obj.disconnect(handler)
+
+  def state_changed(self, *_):
+    state = self.device.get_state()
+    if state == self.NM.DeviceState.ACTIVATED:
+      self.editing = False
+      self.connecting = False
+      self.panel.message("Connected")
+    elif state == self.NM.DeviceState.FAILED:
+      self.connecting = False
+      if self.connect_button:
+        self.connect_button.set_sensitive(True)
+      self.panel.message("Connection failed. Check the password and try again.", True)
+    elif self.NM.DeviceState.PREPARE <= state < self.NM.DeviceState.ACTIVATED:
+      self.panel.message("Connecting…")
+      return
+    self.render()
+
+  def scan(self):
+    if not self.client.wireless_get_enabled():
+      return
+    self.panel.message("Scanning for networks…")
+    def done(device, result, *_):
+      if not self.panel.alive:
+        return
+      try:
+        device.request_scan_finish(result)
+        self.panel.message("Choose a network to connect.")
+      except GLib.Error as error:
+        self.panel.message(error.message, True)
+      self.render()
+    self.device.request_scan_async(None, done, None)
+
+  def render(self):
+    if self.editing or not self.panel.alive:
+      return
+    self.panel.clear()
+    enabled = self.client.wireless_get_enabled()
+    toggle = Gtk.Switch(active=enabled)
+    toggle.connect("notify::active", lambda widget, _: self.client.wireless_set_enabled(widget.get_active()))
+    self.panel.add(row(label("Wi-Fi"), toggle))
+    if not enabled:
+      self.panel.message("Wi-Fi is off.")
+      return
+    active = self.device.get_active_access_point()
+    networks = {}
+    for ap in self.device.get_access_points():
+      ssid = ap.get_ssid()
+      if not ssid:
+        continue
+      key = bytes(ssid.get_data())
+      if key not in networks or ap.get_strength() > networks[key].get_strength() or ap == active:
+        networks[key] = ap
+    for raw, ap in sorted(networks.items(), key=lambda item: (item[1] != active, -item[1].get_strength())):
+      name = raw.decode("utf-8", errors="replace")
+      connected = active is not None and ap.get_ssid().equal(active.get_ssid())
+      security = bool(ap.get_flags() & getattr(self.NM, "80211ApFlags").PRIVACY)
+      caption = f"{'✓  ' if connected else ''}{name}\n{ap.get_strength()}% · {'Connected' if connected else 'Secured' if security else 'Open network'}"
+      item = button(caption, lambda ap=ap, name=name, connected=connected: self.choose(ap, name, connected))
+      item.get_child().set_line_wrap(True)
+      item.get_child().set_max_width_chars(40)
+      self.panel.add(item)
+    self.panel.add(button("Scan again", self.scan))
+    if not networks:
+      self.panel.message("No networks found. Try scanning again.")
+
+  def finish(self, method):
+    def done(client, result, *_):
+      if not self.panel.alive:
+        return
+      try:
+        getattr(client, method)(result)
+      except GLib.Error as error:
+        self.connecting = False
+        if self.connect_button:
+          self.connect_button.set_sensitive(True)
+        self.panel.message(error.message, True)
+      else:
+        self.panel.message("Connecting…" if method != "deactivate_connection_finish" else "Disconnected")
+    return done
+
+  def choose(self, ap, name, connected):
+    if connected:
+      connection = self.device.get_active_connection()
+      self.client.deactivate_connection_async(connection, None, self.finish("deactivate_connection_finish"), None)
+      return
+    saved = next((c for c in self.device.get_available_connections() if ap.connection_valid(c)), None)
+    if saved:
+      self.panel.message("Connecting…")
+      flags = ap.get_rsn_flags() | ap.get_wpa_flags()
+      security = getattr(self.NM, "80211ApSecurityFlags")
+      if flags & (security.KEY_MGMT_PSK | security.KEY_MGMT_SAE):
+        self.panel.add(button("Update password", lambda: self.credentials(ap, name, saved)))
+      self.client.activate_connection_async(saved, self.device, ap.get_path(), None,
+                                          self.finish("activate_connection_finish"), None)
+      return
+    flags = ap.get_rsn_flags() | ap.get_wpa_flags()
+    if flags & getattr(self.NM, "80211ApSecurityFlags").KEY_MGMT_802_1X:
+      self.panel.message("This enterprise network needs a configured 802.1X profile before connecting.", True)
+      return
+    security = getattr(self.NM, "80211ApSecurityFlags")
+    if ap.get_flags() & getattr(self.NM, "80211ApFlags").PRIVACY and not flags & (
+        security.KEY_MGMT_PSK | security.KEY_MGMT_SAE | security.KEY_MGMT_OWE):
+      self.panel.message("This network needs a configured legacy security profile before connecting.", True)
+      return
+    self.credentials(ap, name)
+
+  def credentials(self, ap, name, saved=None):
+    self.editing = True
+    self.connecting = False
+    flags = ap.get_rsn_flags() | ap.get_wpa_flags()
+    self.panel.clear()
+    self.panel.add(label(name, "title"))
+    password = Gtk.Entry(visibility=False, placeholder_text="Wi-Fi password")
+    secured = bool(ap.get_flags() & getattr(self.NM, "80211ApFlags").PRIVACY) and not flags & getattr(self.NM, "80211ApSecurityFlags").KEY_MGMT_OWE
+    if secured:
+      self.panel.add(password)
+      reveal = Gtk.CheckButton(label="Show password")
+      reveal.connect("toggled", lambda widget: password.set_visibility(widget.get_active()))
+      self.panel.add(reveal)
+    else:
+      self.panel.add(label("This is an open network.", "dim"))
+    def connect():
+      if self.connecting:
+        return
+      security = getattr(self.NM, "80211ApSecurityFlags")
+      key_mgmt = "wpa-psk" if flags & security.KEY_MGMT_PSK else "sae"
+      if secured:
+        secret_text = password.get_text()
+        valid = (1 <= len(secret_text.encode()) <= 63 if key_mgmt == "sae" else
+                 8 <= len(secret_text.encode()) <= 63 or
+                 len(secret_text) == 64 and all(c in "0123456789abcdefABCDEF" for c in secret_text))
+        if not valid:
+          self.panel.message("Enter a valid Wi-Fi password." + (" Use 8–63 characters for WPA/WPA2." if key_mgmt == "wpa-psk" else ""), True)
+          return
+      self.connecting = True
+      self.connect_button.set_sensitive(False)
+      connection = saved or self.NM.SimpleConnection.new()
+      wireless = self.NM.SettingWireless.new()
+      wireless.set_property("ssid", ap.get_ssid())
+      connection.add_setting(wireless)
+      if secured:
+        secret = self.NM.SettingWirelessSecurity.new()
+        secret.set_property("key-mgmt", key_mgmt)
+        secret.set_property("psk", password.get_text())
+        connection.add_setting(secret)
+      self.panel.message("Connecting…")
+      if saved:
+        def committed(remote, result, *_):
+          if not self.panel.alive:
+            return
+          try:
+            remote.commit_changes_finish(result)
+          except GLib.Error as error:
+            self.connecting = False
+            self.connect_button.set_sensitive(True)
+            self.panel.message(error.message, True)
+            return
+          self.client.activate_connection_async(remote, self.device, ap.get_path(), None,
+                                              self.finish("activate_connection_finish"), None)
+        saved.commit_changes_async(True, None, committed, None)
+      else:
+        self.client.add_and_activate_connection_async(connection, self.device, ap.get_path(), None,
+                                                     self.finish("add_and_activate_connection_finish"), None)
+    def back():
+      self.editing = False
+      self.render()
+    self.connect_button = button("Connect", connect)
+    self.panel.add(row(button("Back", back), self.connect_button))
+    password.connect("activate", lambda *_: connect())
+    password.grab_focus()
+    self.panel.message("")
+
+
+class IwdWifi:
+  """Use iwd's existing station and credential-agent APIs without starting NM."""
+  SERVICE = "net.connman.iwd"
+  AGENT_PATH = "/org/blarchy/TopbarAgent"
+  AGENT_XML = """<node><interface name="net.connman.iwd.Agent">
+    <method name="Release"/>
+    <method name="Cancel"><arg type="s" direction="in"/></method>
+    <method name="RequestPassphrase"><arg type="o" direction="in"/><arg type="s" direction="out"/></method>
+    <method name="RequestPrivateKeyPassphrase"><arg type="o" direction="in"/><arg type="s" direction="out"/></method>
+    <method name="RequestUserNameAndPassword"><arg type="o" direction="in"/><arg type="s" direction="out"/><arg type="s" direction="out"/></method>
+    <method name="RequestUserPassword"><arg type="o" direction="in"/><arg type="s" direction="in"/><arg type="s" direction="out"/></method>
+  </interface></node>"""
+
+  def __init__(self, panel):
+    self.panel = panel
+    self.pending = None
+    self.bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
+    self.objects = Gio.DBusObjectManagerClient.new_for_bus_sync(
+      Gio.BusType.SYSTEM, Gio.DBusObjectManagerClientFlags.DO_NOT_AUTO_START,
+      self.SERVICE, "/", None, None, None, None)
+    self.station = next((obj.get_interface(self.SERVICE + ".Station")
+                         for obj in self.objects.get_objects()
+                         if obj.get_interface(self.SERVICE + ".Station")), None)
+    if self.station is None:
+      raise RuntimeError("No Wi-Fi station is available.")
+    self.device = self.objects.get_interface(self.station.get_object_path(), self.SERVICE + ".Device")
+    interface = Gio.DBusNodeInfo.new_for_xml(self.AGENT_XML).interfaces[0]
+    self.registration = self.bus.register_object(self.AGENT_PATH, interface, self.agent, None, None)
+    self.call("/net/connman/iwd", "AgentManager", "RegisterAgent", GLib.Variant("(o)", (self.AGENT_PATH,)))
+    self.handler = self.objects.connect("interface-proxy-properties-changed", lambda *_: self.render())
+    self.render()
+
+  @staticmethod
+  def prop(proxy, name, default=None):
+    value = proxy.get_cached_property(name)
+    return value.unpack() if value is not None else default
+
+  def call(self, path, interface, method, params=None):
+    def done(bus, result, *_):
+      if not self.panel.alive:
+        return
+      try:
+        bus.call_finish(result)
+        self.render()
+      except GLib.Error as error:
+        self.panel.message(error.message, True)
+    self.bus.call(self.SERVICE, path, self.SERVICE + "." + interface, method,
+                  params, None, Gio.DBusCallFlags.NONE, 120000, None, done, None)
+
+  def close(self):
+    self.cancel()
+    self.objects.disconnect(self.handler)
+    self.bus.call(self.SERVICE, "/net/connman/iwd", self.SERVICE + ".AgentManager",
+                  "UnregisterAgent", GLib.Variant("(o)", (self.AGENT_PATH,)), None,
+                  Gio.DBusCallFlags.NONE, 3000, None, None, None)
+    self.bus.unregister_object(self.registration)
+
+  def cancel(self):
+    if self.pending:
+      self.pending.return_dbus_error(self.SERVICE + ".Agent.Error.Canceled", "Canceled")
+      self.pending = None
+
+  def agent(self, _bus, _sender, _path, _interface, method, _params, invocation):
+    if method in ("Release", "Cancel"):
+      self.cancel()
+      invocation.return_value(None)
+      self.render()
+      return
+    self.cancel()
+    self.pending = invocation
+    self.panel.clear()
+    self.panel.add(label("Network credentials", "title"))
+    username = Gtk.Entry(placeholder_text="Username")
+    if method == "RequestUserNameAndPassword":
+      self.panel.add(username)
+    password = Gtk.Entry(visibility=False, placeholder_text="Password")
+    self.panel.add(password)
+    reveal = Gtk.CheckButton(label="Show password")
+    reveal.connect("toggled", lambda widget: password.set_visibility(widget.get_active()))
+    self.panel.add(reveal)
+    def submit():
+      pending, self.pending = self.pending, None
+      if pending:
+        if method == "RequestUserNameAndPassword":
+          pending.return_value(GLib.Variant("(ss)", (username.get_text(), password.get_text())))
+        else:
+          pending.return_value(GLib.Variant("(s)", (password.get_text(),)))
+      self.panel.message("Connecting…")
+      self.render()
+    def cancel():
+      self.cancel()
+      self.render()
+    self.panel.add(row(button("Cancel", cancel), button("Connect", submit)))
+    password.connect("activate", lambda *_: submit())
+    password.grab_focus()
+    self.panel.message("Enter the credentials for this network.")
+
+  def render(self):
+    if self.pending or not self.panel.alive:
+      return
+    self.panel.clear()
+    enabled = self.prop(self.device, "Powered", False)
+    toggle = Gtk.Switch(active=enabled)
+    def power(widget, _):
+      self.device.call("org.freedesktop.DBus.Properties.Set",
+                       GLib.Variant("(ssv)", (self.SERVICE + ".Device", "Powered",
+                                              GLib.Variant("b", widget.get_active()))),
+                       Gio.DBusCallFlags.NONE, 5000, None, self.power_done, None)
+    toggle.connect("notify::active", power)
+    self.panel.add(row(label("Wi-Fi"), toggle))
+    if not enabled:
+      self.panel.message("Wi-Fi is off.")
+      return
+    networks = [obj.get_interface(self.SERVICE + ".Network") for obj in self.objects.get_objects()
+                if obj.get_interface(self.SERVICE + ".Network")]
+    networks = [net for net in networks if self.prop(net, "Device") == self.device.get_object_path()]
+    for net in sorted(networks, key=lambda n: (not self.prop(n, "Connected", False), self.prop(n, "Name", ""))):
+      connected = self.prop(net, "Connected", False)
+      text = ("✓  " if connected else "") + self.prop(net, "Name", "Network")
+      text += "\n" + ("Connected" if connected else "Open network" if self.prop(net, "Type") == "open" else "Secured")
+      def connect(net=net, connected=connected):
+        self.panel.message("Disconnecting…" if connected else "Connecting…")
+        self.call(self.station.get_object_path() if connected else net.get_object_path(),
+                  "Station" if connected else "Network", "Disconnect" if connected else "Connect")
+      self.panel.add(button(text, connect))
+    self.panel.add(button("Scan again", lambda: self.call(self.station.get_object_path(), "Station", "Scan")))
+    self.panel.message("Scanning…" if self.prop(self.station, "Scanning", False)
+                       else self.prop(self.station, "State", "Choose a network."))
+
+  def power_done(self, device, result, *_):
+    try:
+      device.call_finish(result)
+    except GLib.Error as error:
+      if self.panel.alive:
+        self.panel.message(error.message, True)
+
+
+class App(Gtk.Application):
+  def __init__(self):
+    super().__init__(application_id="org.blarchy.TopbarControls",
+                     flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+    self.panel = None
+
+  def do_startup(self):
+    Gtk.Application.do_startup(self)
+    provider = Gtk.CssProvider()
+    provider.load_from_data(CSS)
+    Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provider,
+                                             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+  def do_command_line(self, command_line):
+    args = command_line.get_arguments()[1:]
+    if len(args) != 1 or args[0] not in ("ai", "audio", "wifi"):
+      return 2
+    kind = args[0]
+    if self.panel and self.panel.alive:
+      same = self.panel.kind == kind
+      self.panel.destroy()
+      if same:
+        return 0
+    self.panel = Panel(self, kind)
+    self.panel.present()
+    return 0
+
+
+if __name__ == "__main__":
+  raise SystemExit(App().run(sys.argv))

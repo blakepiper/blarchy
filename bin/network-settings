@@ -1,11 +1,5 @@
 #!/bin/bash
 set -euo pipefail
 
-# Use the active network stack; never start a competing manager.
-if systemctl is-active --quiet NetworkManager.service; then
-  exec kitty --title 'Network settings' nmtui
-elif systemctl is-active --quiet iwd.service; then
-  exec kitty --title 'Wi-Fi settings' iwctl
-else
-  notify-send 'Network settings' 'No supported network manager is running. Check your installed network configuration.'
-fi
+# The panel uses the active network stack; never start a competing manager.
+exec "$(dirname -- "$(readlink -f -- "$0")")/topbar-panel" wifi

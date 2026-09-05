@@ -18,6 +18,9 @@ gnome-themes-extra
 
 # Bar, launcher, notifications, lock, wallpaper (standard Niri stack)
 waybar
+python-gobject
+gtk3
+gtk-layer-shell
 fuzzel
 mako
 libnotify
@@ -33,12 +36,14 @@ kitty
 greetd
 greetd-tuigreet
 networkmanager
+libnm
 wireless-regdb
 pipewire
 pipewire-alsa
 pipewire-pulse
 wireplumber
 pavucontrol
+libpulse # pactl for topbar sound controls
 playerctl
 
 # Everyday applications

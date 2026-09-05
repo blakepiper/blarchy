@@ -245,9 +245,15 @@ individual application preferences can override them.
 imv for common image formats, mpv for common video/audio formats, and Nautilus
 for folders. Existing association files are preserved on retries.
 
-Click the network indicator to open NetworkManager's `nmtui` menu in Kitty.
-On installations using iwd instead, it opens `iwctl`; it never enables a
-second network manager. Click the Bluetooth indicator to open Blueman for
+Click AI, volume, or Wi-Fi in the bar to open a dropdown panel. AI shows
+provider usage and a refresh button; sound offers volume, mute, microphone
+mute, and output selection; Wi-Fi lists networks with connection and password
+controls. Escape, clicking outside, or clicking the same bar button closes the
+panel. Scroll over volume to adjust it, or right-click to mute. Wi-Fi uses the
+existing NetworkManager or iwd service without enabling another manager.
+Natural scrolling is enabled for both the mouse and touchpad.
+
+Click the Bluetooth indicator to open Blueman for
 pairing and managing devices. Bluetooth tools install only when an adapter
 is detected, and the indicator is hidden when no controller is available.
 
@@ -389,7 +395,7 @@ yay -S spotify   # optional music player
 ## Repository map
 
 ```text
-bin/          desktop helpers (AI usage, night mode, displays, clipboard, network)
+bin/          desktop helpers (topbar panels, AI usage, night mode, displays, clipboard, network)
 config/       user configuration defaults (niri, kitty, waybar, fuzzel, ...)
 docs/         hardware detection notes
 etc/          system defaults (greetd, Firefox policies, dark mode, battery limit)

@@ -56,6 +56,7 @@ class RegressionTests(unittest.TestCase):
     self.assertFalse((scanners / "__pycache__").exists())
     self.assertTrue(os.access(self.root / ".local/bin/clipboard-history", os.X_OK))
     self.assertTrue(os.access(self.root / ".local/bin/network-settings", os.X_OK))
+    self.assertTrue(os.access(self.root / ".local/bin/topbar-panel", os.X_OK))
 
   def test_desktop_defaults(self):
     defaults = configparser.ConfigParser()
@@ -122,20 +123,19 @@ printf '%s' "${BLARCHY_HW_PACKAGES[*]-}"
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, expected)
 
-  def test_network_settings_uses_active_manager(self):
-    for name, body in {
-      "systemctl": '[[ $* == "is-active --quiet $TEST_NETWORK.service" ]]',
-      "kitty": 'printf "%s\\n" "$@"',
-      "notify-send": 'printf "%s\\n" "$@"',
-    }.items():
-      stub = self.root / name
-      stub.write_text("#!/bin/bash\n" + body + "\n")
-      stub.chmod(0o755)
-    for manager, expected in (("NetworkManager", "nmtui"), ("iwd", "iwctl"), ("none", "No supported network manager")):
-      result = self.bash('bash bin/network-settings', TEST_NETWORK=manager,
-                         PATH=f"{self.root}:{os.environ['PATH']}")
-      self.assertEqual(result.returncode, 0, result.stderr)
-      self.assertIn(expected, result.stdout)
+  def test_network_settings_opens_sibling_panel(self):
+    # The helper must also work when the managed bin directory has spaces and
+    # ~/.local/bin is absent from the login PATH.
+    directory = self.root / "desktop helpers"
+    directory.mkdir()
+    helper = directory / "network-settings"
+    helper.write_text((REPO / "bin/network-settings").read_text())
+    panel = directory / "topbar-panel"
+    panel.write_text('#!/bin/bash\nprintf "%s\\n" "$@"\n')
+    panel.chmod(0o755)
+    result = self.bash('bash "$1"', helper)
+    self.assertEqual(result.returncode, 0, result.stderr)
+    self.assertEqual(result.stdout, "wifi\n")
 
   def test_bash_suggestions_startup(self):
     env = {**os.environ, "HOME": str(self.root), "BLARCHY_REPO": str(REPO)}
@@ -294,7 +294,8 @@ source bin/clipboard-history
     self.assertEqual(result["text"], "AI 20%")
     self.assertEqual(result["class"], "warning")
     config = json.loads((REPO / "config/waybar/config.jsonc").read_text())
-    self.assertIn("--hold", config["custom/ai-usage"]["on-click"])
+    self.assertEqual(config["custom/ai-usage"]["on-click"], "~/.local/bin/topbar-panel ai")
+    self.assertEqual(config["pulseaudio"]["on-click"], "~/.local/bin/topbar-panel audio")
     self.assertTrue(all(config["idle_inhibitor"]["format-icons"].values()))
     for mode in ("off", "night", "night-plus"):
       (self.root / "blarchy-night-mode").write_text(mode)

@@ -28,8 +28,9 @@
     "exec": "~/.local/bin/ai-usage --waybar",
     "return-type": "json",
     "interval": 300,
+    "signal": 9,
     "max-length": 12,
-    "on-click": "kitty --hold --title ai-usage ~/.local/bin/ai-usage details",
+    "on-click": "~/.local/bin/topbar-panel ai",
     "on-click-right": "~/.local/bin/ai-usage refresh",
     "tooltip": true
   },
@@ -63,8 +64,9 @@
       "headset": "",
       "default": ["", "", ""]
     },
-    "on-click": "pavucontrol",
-    "tooltip-format": "{desc}\nClick for audio settings",
+    "on-click": "~/.local/bin/topbar-panel audio",
+    "on-click-right": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+    "tooltip-format": "{desc}\nClick for sound controls · Right-click to mute",
     "scroll-step": 5
   },
   "network": {

@@ -101,6 +101,29 @@ install_yay() {
   trap - EXIT
 }
 
+install_terminal_code() {
+  local installer
+  local terminal_code_bin="$HOME/.local/bin/tode"
+
+  if [[ -x $terminal_code_bin ]]; then
+    echo "terminal-code already installed at $terminal_code_bin"
+    echo "Update it separately with: tode --upgrade"
+    return
+  fi
+
+  installer=$(mktemp)
+  echo "Install terminal-code from upstream"
+  if ! curl -fsSL https://tode.sh/install -o "$installer"; then
+    rm -f -- "$installer"
+    return 1
+  fi
+  if ! XDG_BIN_HOME="$HOME/.local/bin" bash "$installer"; then
+    rm -f -- "$installer"
+    return 1
+  fi
+  rm -f -- "$installer"
+}
+
 sudo -v
 
 echo "Update Arch and install build prerequisites"
@@ -127,6 +150,8 @@ if (( ${#aur_packages[@]} )); then
   echo "Build and install AUR packages: ${aur_packages[*]}"
   yay -Syu --needed --noconfirm --removemake --cleanafter "${aur_packages[@]}"
 fi
+
+install_terminal_code
 
 echo "Validate desktop configuration"
 niri validate --config "$repo_path/config/niri/config.kdl"

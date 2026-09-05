@@ -62,7 +62,9 @@ check "blesh in AUR list" grep -q '^blesh-git\( #.*\)\?$' "$repo_path/install/pa
 check "yay checks development updates by default" grep -q '^yay -Y --devel --save$' "$repo_path/install.sh"
 check "kitty opens the configured Bash shell" grep -qx 'shell /bin/bash' "$repo_path/config/kitty/kitty.conf"
 check "blesh config parses" bash -n "$repo_path/config/blesh/init.sh"
-check "vscodium in AUR list" grep -q 'vscodium-bin' "$repo_path/install/packages-aur"
+check_fail "vscodium absent from AUR list" grep -qi -E 'vscodium|codium' "$repo_path/install/packages-aur"
+check "terminal-code has an upstream installer" grep -q 'https://tode.sh/install' "$repo_path/install.sh"
+check "terminal-code has a separate update path" grep -q 'tode --upgrade' "$repo_path/install.sh"
 for agent in claude-code openai-codex-bin oh-my-pi-bin opencode-bin; do
   check "$agent in AUR list" grep -qx "$agent\( #.*\)\?" "$repo_path/install/packages-aur"
 done
@@ -74,6 +76,7 @@ import sys
 text = open('$repo_path/config/niri/config.kdl').read()
 assert 'spawn \"kitty\"' in text, 'kitty spawn missing'
 assert 'spawn \"fuzzel\"' in text, 'fuzzel spawn missing'
+assert 'spawn-sh \"~/.local/bin/tode\"' in text, 'terminal-code spawn missing'
 assert 'Mod+Shift+S { screenshot; }' in text, 'native screenshot binding missing'
 assert 'cliphist store' in text, 'cliphist watcher missing'
 "

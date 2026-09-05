@@ -82,7 +82,7 @@ binds {
   Mod+Shift+Return { spawn "prettymux"; }
   Mod+Space { spawn "fuzzel"; }
   Mod+D { spawn "fuzzel"; }
-  Mod+C { spawn "codium"; }
+  Mod+C { spawn-sh "~/.local/bin/tode"; }
   Mod+F { spawn "nautilus"; }
   Mod+B { spawn "firefox"; }
 

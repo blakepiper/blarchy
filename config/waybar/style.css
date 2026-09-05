@@ -1,34 +1,72 @@
-/* Waybar styling. Classic Ubuntu: aubergine bar, warm-white text,
-   orange accents, Tango status colors. */
+/* Floating aubergine treatment adapted from YaLTeR's Waybar configuration. */
 
 * {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 12px;
+  font-size: 13px;
+  font-feature-settings: "tnum";
   border: none;
   border-radius: 0;
 }
 
 window#waybar {
-  background: #300a24;
+  background: transparent;
   color: #eeeeec;
-  border-bottom: 1px solid #772953;
+}
+
+window#waybar.hidden {
+  opacity: 0.2;
+}
+
+button {
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  transition-property: none;
+}
+
+button:hover {
+  background: none;
+  box-shadow: none;
+  text-shadow: none;
+  border: none;
+  -gtk-icon-effect: none;
+  -gtk-icon-shadow: none;
+}
+
+#workspaces {
+  margin: 0 4px;
+  padding: 0 4px;
+  background: rgba(48, 10, 36, 0.94);
+  border: 1px solid rgba(119, 41, 83, 0.9);
+  border-radius: 999px;
 }
 
 #workspaces button {
   padding: 0 8px;
-  color: #937f8b;
+  color: #b9a8b2;
   background: transparent;
+  border-radius: 999px;
+}
+
+#workspaces button:hover {
+  color: #ffffff;
+  background: rgba(119, 41, 83, 0.55);
 }
 
 #workspaces button.focused {
-  color: #e95420;
+  color: #ffffff;
+  background: #772953;
+  box-shadow: inset 0 -3px #e95420;
 }
 
 #workspaces button.urgent {
-  color: #ef2929;
+  color: #ffffff;
+  background: #ef2929;
 }
 
 #clock,
+#cpu,
+#memory,
 #custom-ai-usage,
 #custom-night-mode,
 #idle_inhibitor,
@@ -37,12 +75,40 @@ window#waybar {
 #bluetooth,
 #battery,
 #tray {
+  margin: 0 2px;
   padding: 0 10px;
-  color: #eeeeec;
+  color: #f0f0ff;
+  background: rgba(48, 10, 36, 0.94);
+  border: 1px solid rgba(119, 41, 83, 0.9);
+  border-radius: 999px;
+}
+
+#clock {
+  font-weight: bold;
 }
 
 #custom-ai-usage {
-  color: #ad7fa8;
+  color: #d3a4d0;
+}
+
+#custom-ai-usage.ok {
+  color: #8ae234;
+}
+
+#custom-ai-usage.warning,
+#battery.warning {
+  color: #fce94f;
+}
+
+#custom-ai-usage.critical,
+#network.disconnected,
+#bluetooth.disabled,
+#battery.critical {
+  color: #ef2929;
+}
+
+#custom-ai-usage.unknown {
+  color: #b9a8b2;
 }
 
 #custom-night-mode.night,
@@ -51,10 +117,30 @@ window#waybar {
   color: #e95420;
 }
 
-#battery.warning {
-  color: #c4a000;
+#idle_inhibitor {
+  background: rgba(58, 32, 48, 0.96);
 }
 
-#battery.critical {
-  color: #ef2929;
+#pulseaudio.muted {
+  color: #c6c6c6;
+}
+
+#battery {
+  margin-left: 4px;
+}
+
+#battery.charging,
+#battery.plugged {
+  color: #8ae234;
+}
+
+#tray > .passive {
+  -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+  -gtk-icon-effect: highlight;
+  color: #ffffff;
+  background: #ef2929;
+  border-radius: 999px;
 }

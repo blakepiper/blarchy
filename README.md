@@ -219,7 +219,7 @@ any desired configuration changes manually. There is no self-updater.
 | --- | --- |
 | Compositor | Niri (scrollable tiling) |
 | Login | greetd + tuigreet |
-| Bar | Waybar (workspaces, night mode, caffeinate, AI usage, audio, network, Bluetooth, battery, tray) |
+| Bar | Waybar (workspaces, CPU, memory, night mode, caffeinate, AI usage, audio, network, Bluetooth, battery, tray) |
 | Launcher | fuzzel |
 | Notifications | mako |
 | Lock / idle | swaylock + swayidle (locks after 10 min) |

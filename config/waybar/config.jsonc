@@ -2,10 +2,13 @@
   "layer": "top",
   "position": "top",
   "height": 32,
-  "spacing": 4,
+  "margin-top": 4,
+  "margin-left": 4,
+  "margin-right": 4,
+  "spacing": 0,
   "modules-left": ["niri/workspaces"],
   "modules-center": ["custom/night-mode", "idle_inhibitor", "clock"],
-  "modules-right": ["custom/ai-usage", "pulseaudio", "network", "bluetooth", "battery", "tray"],
+  "modules-right": ["cpu", "memory", "custom/ai-usage", "pulseaudio", "network", "bluetooth", "battery", "tray"],
   "niri/workspaces": {
     "format": "{icon}",
     "format-icons": {
@@ -18,10 +21,19 @@
     "format": "{:%a %b %d  %H:%M}",
     "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
   },
+  "cpu": {
+    "format": "{usage}% ",
+    "tooltip": false
+  },
+  "memory": {
+    "format": "{}% ",
+    "tooltip": false
+  },
   "custom/ai-usage": {
     "exec": "~/.local/bin/ai-usage --waybar",
     "return-type": "json",
     "interval": 300,
+    "max-length": 40,
     "on-click": "kitty --hold --title ai-usage ~/.local/bin/ai-usage details",
     "on-click-right": "~/.local/bin/ai-usage refresh",
     "tooltip": true
@@ -37,21 +49,35 @@
   "idle_inhibitor": {
     "format": "{icon}",
     "format-icons": {
-      "activated": "☕",
-      "deactivated": "♨"
+      "activated": "",
+      "deactivated": ""
     }
   },
   "pulseaudio": {
     "format": "{volume}% {icon}",
-    "format-muted": " muted",
-    "format-icons": ["", "", ""],
+    "format-bluetooth": "{volume}% {icon}",
+    "format-bluetooth-muted": " {icon}",
+    "format-muted": "",
+    "format-source": "{volume}% ",
+    "format-source-muted": "",
+    "format-icons": {
+      "headphone": "",
+      "hands-free": "",
+      "headset": "",
+      "phone": "",
+      "portable": "",
+      "car": "",
+      "default": ["", "", ""]
+    },
     "on-click": "pavucontrol"
   },
   "network": {
     "format-wifi": " {essid}",
-    "format-ethernet": "󰈀 {ipaddr}",
-    "format-disconnected": "󰖪 offline",
-    "tooltip-format": "{ifname}: {ipaddr}/{cidr}\nClick to configure",
+    "format-ethernet": "",
+    "format-linked": "",
+    "format-disconnected": "⚠ offline",
+    "format-alt": "{ifname}: {ipaddr}/{cidr}",
+    "tooltip-format": "{ifname} via {gwaddr}\n{ipaddr}/{cidr}\nClick to configure",
     "on-click": "~/.local/bin/network-settings"
   },
   "bluetooth": {
@@ -64,6 +90,9 @@
   },
   "battery": {
     "format": "{capacity}% {icon}",
+    "format-charging": "{capacity}% ",
+    "format-plugged": "{capacity}% ",
+    "format-alt": "{time} {icon}",
     "format-icons": ["", "", "", "", ""],
     "states": {
       "warning": 30,

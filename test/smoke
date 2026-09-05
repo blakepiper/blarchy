@@ -130,6 +130,7 @@ check "Dark Reader for Firefox in packages" grep -qx 'firefox-dark-reader' "$rep
 check "Firefox policies are valid JSON" python3 -m json.tool "$repo_path/etc/firefox/policies/policies.json"
 check "waybar has night-mode module" grep -q 'custom/night-mode' "$repo_path/config/waybar/config.jsonc"
 check "waybar has caffeinate module" grep -q 'idle_inhibitor' "$repo_path/config/waybar/config.jsonc"
+check "waybar has CPU and memory modules" grep -q '"modules-right": \["cpu", "memory"' "$repo_path/config/waybar/config.jsonc"
 check "niri restores night-mode at login" grep -q 'night-mode.*run' "$repo_path/config/niri/config.kdl"
 check "helpers referenced by login-proof path" bash -c \
   "grep -q '~/.local/bin/night-mode' '$repo_path/config/waybar/config.jsonc' '$repo_path/config/niri/config.kdl'"

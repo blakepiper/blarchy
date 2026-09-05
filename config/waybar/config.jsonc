@@ -10,7 +10,7 @@
   "modules-center": ["clock"],
   "modules-right": ["cpu", "memory", "custom/ai-usage", "pulseaudio", "network", "bluetooth", "battery", "tray"],
   "niri/workspaces": {
-    "format": "{index}"
+    "format": "{value}"
   },
   "clock": {
     "format": "{:%a %d %b  %H:%M}",

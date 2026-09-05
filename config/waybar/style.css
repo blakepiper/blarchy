@@ -183,3 +183,17 @@ tooltip label {
   padding: 8px;
   color: #eee7eb;
 }
+
+/* Hide Niri's spare empty workspace, keeping all four named buttons visible.
+ * Additional workspaces still appear when occupied or focused. */
+#workspaces button.empty:not(.active):not(.focused):not(#niri-workspace-1):not(#niri-workspace-2):not(#niri-workspace-3):not(#niri-workspace-4) {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  font-size: 0;
+}
+
+#workspaces button.empty:not(.active):not(.focused):not(#niri-workspace-1):not(#niri-workspace-2):not(#niri-workspace-3):not(#niri-workspace-4) label {
+  font-size: 0;
+}

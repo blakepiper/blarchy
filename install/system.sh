@@ -31,6 +31,22 @@ install -m 0644 "$repo/etc/systemd/system/blarchy-battery-limit.service" \
 install -Dm 0755 "$repo/etc/lib/blarchy/battery-limit" /usr/local/lib/blarchy/battery-limit
 install -Dm 0644 "$repo/etc/firefox/policies/policies.json" /etc/firefox/policies/policies.json
 
+# System dark defaults remain overridable by each user's dconf settings.
+install -Dm 0644 "$repo/etc/dconf/db/blarchy.d/00-interface" /etc/dconf/db/blarchy.d/00-interface
+mkdir -p /etc/dconf/profile
+if [[ ! -e /etc/dconf/profile/user ]]; then
+  printf 'user-db:user\n' >/etc/dconf/profile/user
+fi
+if ! grep -qx 'system-db:blarchy' /etc/dconf/profile/user; then
+  printf '\nsystem-db:blarchy\n' >>/etc/dconf/profile/user
+fi
+dconf update
+
+# Use the login password to unlock the keyring, and keep it in sync on passwd.
+# shellcheck source=install/pam.sh
+source "$repo/install/pam.sh"
+blarchy_configure_keyring_pam /etc/pam.d
+
 # Make sure a Niri Wayland session exists for tuigreet to offer.
 # The niri package normally ships this file; only fall back when missing.
 if [[ ! -f /usr/share/wayland-sessions/niri.desktop ]]; then

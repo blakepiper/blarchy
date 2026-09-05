@@ -34,7 +34,7 @@ check_fail() {
 
 # Installer scripts parse.
 check "install.sh parses" bash -n "$repo_path/install.sh"
-for leaf in hardware.sh system.sh user.sh; do
+for leaf in hardware.sh system.sh user.sh pam.sh; do
   check "install/$leaf parses" bash -n "$repo_path/install/$leaf"
 done
 if command -v shellcheck >/dev/null 2>&1; then
@@ -42,7 +42,8 @@ if command -v shellcheck >/dev/null 2>&1; then
   check "shellcheck install leaves" shellcheck -S warning \
     "$repo_path/install/hardware.sh" \
     "$repo_path/install/system.sh" \
-    "$repo_path/install/user.sh"
+    "$repo_path/install/user.sh" \
+    "$repo_path/install/pam.sh"
 else
   printf 'skip: shellcheck not installed\n'
 fi
@@ -151,10 +152,10 @@ check "battery-limit script parses" bash -n "$repo_path/etc/lib/blarchy/battery-
 check "system setup installs the battery unit" grep -q 'blarchy-battery-limit' "$repo_path/install/system.sh"
 
 # Removed desktops stay removed.
-check "text logo names the current desktop" grep -qx 'Arch Linux + Niri' "$repo_path/logo.txt"
+check_fail "unused text logo is removed" test -e "$repo_path/logo.txt"
 check_fail "no obsolete branding in shipped files or docs" grep -rqiE \
   'omarchy|omakub|hyprland|xfce' \
-  "$repo_path/logo.txt" "$repo_path/logo.svg" "$repo_path/README.md" \
+  "$repo_path/logo.svg" "$repo_path/README.md" \
   "$repo_path/docs" "$repo_path/config" "$repo_path/bin" "$repo_path/etc" "$repo_path/install"
 check "OpenCode separates runtime and TUI settings" python3 -c "
 import json
@@ -172,8 +173,21 @@ check_fail "no quickshell dir" test -e "$repo_path/shell"
 check "bin/ holds only managed helpers" python3 -c "
 from pathlib import Path
 names = sorted(p.name for p in Path('$repo_path/bin').iterdir() if p.name != '__pycache__')
-assert names == ['ai-usage', 'ai-usage-scanners', 'clipboard-history', 'displays', 'night-mode'], names
+assert names == ['ai-usage', 'ai-usage-scanners', 'clipboard-history', 'displays', 'network-settings', 'night-mode'], names
 "
+check "network settings helper parses" bash -n "$repo_path/bin/network-settings"
+if command -v dconf >/dev/null 2>&1; then
+  check "dark-mode defaults compile" bash -c '
+    temporary=$(mktemp -d)
+    trap '\''rm -rf -- "$temporary"'\'' EXIT
+    dconf compile "$temporary/database" "$1/etc/dconf/db/blarchy.d"
+  ' test "$repo_path"
+else
+  printf 'skip: dconf validation (available in Arch CI)\n'
+fi
+check_fail "removed and hardware-only utilities absent from base packages" grep -xE \
+  'zoxide|fzf|bluez|bluez-utils|blueman|power-profiles-daemon|brightnessctl' "$repo_path/install/packages"
+check "Git defaults to main" git config --file "$repo_path/config/git/config" --get --fixed-value init.defaultBranch main
 
 if (( failures > 0 )); then
   printf '%d check(s) failed\n' "$failures" >&2

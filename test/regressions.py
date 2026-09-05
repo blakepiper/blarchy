@@ -1,6 +1,7 @@
 """Offline behavior checks; all writable fixtures live in temporary directories."""
 
 import datetime as dt
+import configparser
 import json
 import os
 from pathlib import Path
@@ -39,9 +40,13 @@ class RegressionTests(unittest.TestCase):
     blerc = self.root / ".config/blesh/init.sh"
     self.assertEqual(blerc.read_text(), (REPO / "config/blesh/init.sh").read_text())
     blerc.write_text("# custom suggestion settings\n")
+    mimeapps = self.root / ".config/mimeapps.list"
+    self.assertEqual(mimeapps.read_text(), (REPO / "config/mimeapps.list").read_text())
+    mimeapps.write_text("[Default Applications]\ntext/html=custom.desktop;\n")
     subprocess.run(command, env=env, check=True, capture_output=True)
     self.assertEqual(kitty.read_text(), "user customization\n")
     self.assertEqual(blerc.read_text(), "# custom suggestion settings\n")
+    self.assertIn("custom.desktop", mimeapps.read_text())
     bashrc = (self.root / ".bashrc").read_text()
     self.assertEqual(bashrc.count("# >>> blarchy >>>"), 1)
     self.assertEqual(bashrc.count("source /usr/share/blesh/ble.sh --attach=none"), 1)
@@ -50,6 +55,87 @@ class RegressionTests(unittest.TestCase):
     self.assertEqual(len(list(scanners.glob("*.py"))), 3)
     self.assertFalse((scanners / "__pycache__").exists())
     self.assertTrue(os.access(self.root / ".local/bin/clipboard-history", os.X_OK))
+    self.assertTrue(os.access(self.root / ".local/bin/network-settings", os.X_OK))
+
+  def test_desktop_defaults(self):
+    defaults = configparser.ConfigParser()
+    defaults.read(REPO / "config/mimeapps.list")
+    for mime, desktop in {
+      "x-scheme-handler/https": "firefox.desktop;",
+      "application/pdf": "org.gnome.Papers.desktop;",
+      "image/png": "imv.desktop;",
+      "video/mp4": "mpv.desktop;",
+      "inode/directory": "org.gnome.Nautilus.desktop;",
+    }.items():
+      self.assertEqual(defaults["Default Applications"][mime], desktop)
+    defaults.read(REPO / "etc/dconf/db/blarchy.d/00-interface")
+    self.assertEqual(defaults["org/gnome/desktop/interface"]["color-scheme"], "'prefer-dark'")
+    defaults.read(REPO / "config/gtk-3.0/settings.ini")
+    self.assertTrue(defaults["Settings"].getboolean("gtk-application-prefer-dark-theme"))
+    bar = json.loads((REPO / "config/waybar/config.jsonc").read_text())
+    self.assertEqual(bar["network"]["on-click"], "~/.local/bin/network-settings")
+    self.assertIn("bluetooth", bar["modules-right"])
+    self.assertEqual(bar["bluetooth"]["on-click"], "blueman-manager")
+    self.assertEqual(bar["bluetooth"]["format-no-controller"], "")
+
+  def test_keyring_pam_retry(self):
+    original = "# Keep these authentication rules\nauth include system-local-login\n"
+    for service in ("greetd", "passwd"):
+      (self.root / service).write_text(original)
+    script = 'source install/pam.sh; blarchy_configure_keyring_pam "$1"'
+    for _ in range(2):
+      result = self.bash(script, self.root)
+      self.assertEqual(result.returncode, 0, result.stderr)
+    greetd = (self.root / "greetd").read_text()
+    self.assertTrue(greetd.startswith(original))
+    self.assertEqual(greetd.count("auth optional pam_gnome_keyring.so"), 1)
+    self.assertEqual(greetd.count("session optional pam_gnome_keyring.so auto_start"), 1)
+    self.assertEqual((self.root / "passwd").read_text().count("password optional pam_gnome_keyring.so"), 1)
+    (self.root / "greetd").unlink()
+    self.assertNotEqual(self.bash(script, self.root).returncode, 0)
+    self.assertFalse((self.root / "greetd").exists())
+
+  def test_hardware_only_packages(self):
+    script = '''source install/hardware.sh
+lsusb() { return 1; }
+lspci() { return 1; }
+blarchy_detect_form_factor "$1" >/dev/null
+blarchy_detect_bluetooth "$1" >/dev/null
+printf '%s' "${BLARCHY_HW_PACKAGES[*]-}"
+'''
+    for chassis, backlight, bluetooth, expected in (
+      ("3", False, False, ""),
+      ("9", False, False, "power-profiles-daemon brightnessctl"),
+      ("3", True, False, "brightnessctl"),
+      ("3", False, True, "bluez bluez-utils blueman"),
+    ):
+      with tempfile.TemporaryDirectory(dir=self.root) as temporary:
+        sysfs = Path(temporary)
+        dmi = sysfs / "class/dmi/id"
+        dmi.mkdir(parents=True)
+        (dmi / "chassis_type").write_text(chassis)
+        if backlight:
+          (sysfs / "class/backlight/panel").mkdir(parents=True)
+        if bluetooth:
+          (sysfs / "class/bluetooth/hci0").mkdir(parents=True)
+        result = self.bash(script, sysfs)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, expected)
+
+  def test_network_settings_uses_active_manager(self):
+    for name, body in {
+      "systemctl": '[[ $* == "is-active --quiet $TEST_NETWORK.service" ]]',
+      "kitty": 'printf "%s\\n" "$@"',
+      "notify-send": 'printf "%s\\n" "$@"',
+    }.items():
+      stub = self.root / name
+      stub.write_text("#!/bin/bash\n" + body + "\n")
+      stub.chmod(0o755)
+    for manager, expected in (("NetworkManager", "nmtui"), ("iwd", "iwctl"), ("none", "No supported network manager")):
+      result = self.bash('bash bin/network-settings', TEST_NETWORK=manager,
+                         PATH=f"{self.root}:{os.environ['PATH']}")
+      self.assertEqual(result.returncode, 0, result.stderr)
+      self.assertIn(expected, result.stdout)
 
   def test_bash_suggestions_startup(self):
     env = {**os.environ, "HOME": str(self.root), "BLARCHY_REPO": str(REPO)}

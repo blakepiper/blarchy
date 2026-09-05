@@ -209,7 +209,7 @@ any desired configuration changes manually. There is no self-updater.
 | --- | --- |
 | Compositor | Niri (scrollable tiling) |
 | Login | greetd + tuigreet |
-| Bar | Waybar (workspaces, night mode, caffeinate, AI usage, audio, network, battery, tray) |
+| Bar | Waybar (workspaces, night mode, caffeinate, AI usage, audio, network, Bluetooth, battery, tray) |
 | Launcher | fuzzel |
 | Notifications | mako |
 | Lock / idle | swaylock + swayidle (locks after 10 min) |
@@ -224,6 +224,27 @@ any desired configuration changes manually. There is no self-updater.
 | AI usage widget | `ai-usage` in the bar (Claude Code, Codex, OpenCode Go) |
 | AI coding agents | Claude Code (`claude`), Codex (`codex`), pi (`pi`), OpenCode (`opencode`) |
 | Packages | pacman and yay |
+
+## Application defaults and connections
+
+GTK applications use Adwaita Dark, and applications that follow the desktop
+color-scheme preference use dark mode. These are defaults, not locked settings;
+individual application preferences can override them.
+
+`~/.config/mimeapps.list` selects Firefox for web links, Papers for PDFs,
+imv for common image formats, mpv for common video/audio formats, and Nautilus
+for folders. Existing association files are preserved on retries.
+
+Click the network indicator to open NetworkManager's `nmtui` menu in Kitty.
+On installations using iwd instead, it opens `iwctl`; it never enables a
+second network manager. Click the Bluetooth indicator to open Blueman for
+pairing and managing devices. Bluetooth tools install only when an adapter
+is detected, and the indicator is hidden when no controller is available.
+
+The greetd password login unlocks the login keyring through optional PAM
+hooks. Password changes through `passwd` also update the keyring password.
+An existing keyring with a different password still needs to be unlocked
+with its old password; the installer does not reset stored secrets.
 
 ## Terminal suggestions
 
@@ -358,10 +379,10 @@ yay -S spotify   # optional music player
 ## Repository map
 
 ```text
-bin/          desktop helpers (ai-usage, night-mode, displays, clipboard-history)
+bin/          desktop helpers (AI usage, night mode, displays, clipboard, network)
 config/       user configuration defaults (niri, kitty, waybar, fuzzel, ...)
 docs/         hardware detection notes
-etc/          system defaults (greetd, Firefox policies, battery charge limit)
+etc/          system defaults (greetd, Firefox policies, dark mode, battery limit)
 install/      package manifests, hardware detection, system/user setup
 test/         smoke checks runnable on any machine
 install.sh    the installer

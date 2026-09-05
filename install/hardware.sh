@@ -128,10 +128,11 @@ blarchy_nvidia_packages() {
 }
 
 blarchy_detect_form_factor() {
+  local sys_root="${1:-/sys}"
   local chassis=""
 
-  if [[ -r /sys/class/dmi/id/chassis_type ]]; then
-    chassis=$(< /sys/class/dmi/id/chassis_type)
+  if [[ -r $sys_root/class/dmi/id/chassis_type ]]; then
+    chassis=$(< "$sys_root/class/dmi/id/chassis_type")
   fi
   # 8 portable, 9 laptop, 10 notebook, 11 hand held, 14 sub notebook,
   # 31 convertible/detachable.
@@ -140,21 +141,27 @@ blarchy_detect_form_factor() {
       BLARCHY_IS_LAPTOP=1
       ;;
   esac
-  if compgen -G '/sys/class/power_supply/BAT*' >/dev/null; then
+  if compgen -G "$sys_root/class/power_supply/BAT*" >/dev/null; then
     BLARCHY_IS_LAPTOP=1
   fi
   if (( BLARCHY_IS_LAPTOP == 1 )); then
-    blarchy_hw_note "Laptop form factor (power-profiles-daemon, brightnessctl enabled)"
+    BLARCHY_HW_PACKAGES+=(power-profiles-daemon)
+    blarchy_hw_note "Laptop form factor (power-profiles-daemon enabled)"
   else
     blarchy_hw_note "Desktop form factor"
+  fi
+  if compgen -G "$sys_root/class/backlight/*" >/dev/null || (( BLARCHY_IS_LAPTOP )); then
+    BLARCHY_HW_PACKAGES+=(brightnessctl)
   fi
 }
 
 blarchy_detect_bluetooth() {
-  if compgen -G '/sys/class/bluetooth/hci*' >/dev/null ||
+  local sys_root="${1:-/sys}"
+  if compgen -G "$sys_root/class/bluetooth/hci*" >/dev/null ||
     { command -v lsusb >/dev/null 2>&1 && lsusb 2>/dev/null | grep -qi bluetooth; } ||
     { command -v lspci >/dev/null 2>&1 && lspci 2>/dev/null | grep -qi bluetooth; }; then
     BLARCHY_HAS_BLUETOOTH=1
+    BLARCHY_HW_PACKAGES+=(bluez bluez-utils blueman)
     blarchy_hw_note "Bluetooth adapter present (bluetooth.service will be enabled)"
   else
     blarchy_hw_note "No Bluetooth adapter detected; bluetooth.service left disabled"

@@ -5,7 +5,7 @@
   "spacing": 4,
   "modules-left": ["niri/workspaces"],
   "modules-center": ["custom/night-mode", "idle_inhibitor", "clock"],
-  "modules-right": ["custom/ai-usage", "pulseaudio", "network", "battery", "tray"],
+  "modules-right": ["custom/ai-usage", "pulseaudio", "network", "bluetooth", "battery", "tray"],
   "niri/workspaces": {
     "format": "{icon}",
     "format-icons": {
@@ -51,7 +51,16 @@
     "format-wifi": " {essid}",
     "format-ethernet": "󰈀 {ipaddr}",
     "format-disconnected": "󰖪 offline",
-    "tooltip-format": "{ifname}: {ipaddr}/{cidr}"
+    "tooltip-format": "{ifname}: {ipaddr}/{cidr}\nClick to configure",
+    "on-click": "~/.local/bin/network-settings"
+  },
+  "bluetooth": {
+    "format": " {status}",
+    "format-connected": " {num_connections}",
+    "format-no-controller": "",
+    "tooltip-format": "{controller_alias}\nClick to configure",
+    "tooltip-format-connected": "{device_enumerate}\nClick to configure",
+    "on-click": "blueman-manager"
   },
   "battery": {
     "format": "{capacity}% {icon}",

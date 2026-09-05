@@ -81,5 +81,6 @@ cp -a "$repo/bin/ai-usage-scanners/"*.py "$HOME/.local/bin/ai-usage-scanners/"
 cp -a "$repo/bin/night-mode" "$HOME/.local/bin/night-mode"
 cp -a "$repo/bin/displays" "$HOME/.local/bin/displays"
 cp -a "$repo/bin/clipboard-history" "$HOME/.local/bin/clipboard-history"
+cp -a "$repo/bin/network-settings" "$HOME/.local/bin/network-settings"
 
 echo "User setup complete"

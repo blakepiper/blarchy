@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - run: pacman -Syu --needed --noconfirm git python shellcheck niri curl
+      - run: pacman -Syu --needed --noconfirm git python shellcheck niri curl dconf
       - uses: actions/checkout@v7
       - run: ./test/smoke
       - name: Resolve current repository packages
@@ -18,3 +18,4 @@ jobs:
         run: |
           mapfile -t packages < <(sed 's/#.*//; s/[[:space:]]//g; /^$/d' install/packages)
           pacman -Sp --print-format '%n %v' "${packages[@]}"
+          pacman -Sp --print-format '%n %v' bluez bluez-utils blueman power-profiles-daemon brightnessctl

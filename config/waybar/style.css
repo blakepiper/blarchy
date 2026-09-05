@@ -34,6 +34,7 @@ window#waybar {
 #idle_inhibitor,
 #pulseaudio,
 #network,
+#bluetooth,
 #battery,
 #tray {
   padding: 0 10px;

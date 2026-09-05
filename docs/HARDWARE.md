@@ -12,8 +12,9 @@ machine gets exactly its own stack.
 | Intel GPU | PCI display-class vendor ID in sysfs | `vulkan-intel`, `intel-media-driver` |
 | AMD GPU | PCI display-class vendor ID in sysfs | `vulkan-radeon` |
 | NVIDIA GPU | PCI display-class IDs plus NVIDIA's compatibility table | `nvidia-open-dkms`, installed kernel headers, `nvidia-utils` |
-| Laptop chassis or battery | DMI `chassis_type`, `/sys/class/power_supply/BAT*` | enables `power-profiles-daemon` |
-| Bluetooth adapter | sysfs, `lsusb`, `lspci` | enables `bluetooth.service` |
+| Laptop chassis or battery | DMI `chassis_type`, `/sys/class/power_supply/BAT*` | `power-profiles-daemon`, `brightnessctl`; enables power and battery-limit services |
+| Desktop with a backlight | `/sys/class/backlight/*` | `brightnessctl` |
+| Bluetooth adapter | sysfs, `lsusb`, `lspci` | `bluez`, `bluez-utils`, `blueman`; enables `bluetooth.service` |
 | QEMU/KVM, VMware, VirtualBox | `systemd-detect-virt` | matching guest tools |
 | Fingerprint reader | `lsusb` | `fprintd` |
 | Wireless interface | `/sys/class/net/w*` | informational; existing archinstall networking is preserved |

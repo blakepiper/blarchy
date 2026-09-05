@@ -12,6 +12,9 @@ xdg-desktop-portal-gtk
 xdg-desktop-portal-gnome
 polkit-kde-agent
 gnome-keyring
+dconf
+gsettings-desktop-schemas
+gnome-themes-extra
 
 # Bar, launcher, notifications, lock, wallpaper (standard Niri stack)
 waybar
@@ -31,16 +34,12 @@ greetd
 greetd-tuigreet
 networkmanager
 wireless-regdb
-bluez
-bluez-utils
 pipewire
 pipewire-alsa
 pipewire-pulse
 wireplumber
 pavucontrol
 playerctl
-power-profiles-daemon
-brightnessctl
 
 # Everyday applications
 firefox
@@ -63,12 +62,10 @@ noto-fonts-emoji
 # Shell and command-line tools
 nodejs # runtime behind Claude Code plus an npm fallback
 starship
-fzf
 ripgrep
 fd
 bat
 eza
-zoxide
 btop
 fastfetch
 lazygit

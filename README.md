@@ -301,7 +301,7 @@ Firefox after changing it; `about:policies` shows active policies and errors.
 | <kbd>Super</kbd> + <kbd>N</kbd> | Cycle night mode off → night → night-plus |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Region screenshot (saved to `~/Pictures/Screenshots` and copied to clipboard) |
 | <kbd>Super</kbd> + <kbd>V</kbd> | Clipboard history (choose an entry, then paste normally) |
-| <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> | Fullscreen |
+| <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> | Maximize column |
 | <kbd>Super</kbd> + <kbd>Tab</kbd> | Previous workspace |
 | <kbd>Super</kbd> + <kbd>1..9</kbd> | Go to workspace |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>1..9</kbd> | Send column to workspace |

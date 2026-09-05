@@ -88,7 +88,7 @@ binds {
 
   // Window operations.
   Mod+Q repeat=false { close-window; }
-  Mod+Shift+F { fullscreen-window; }
+  Mod+Shift+F { maximize-column; }
   Mod+P { toggle-window-floating; }
   Mod+O repeat=false { toggle-overview; }
   Mod+Tab { focus-workspace-previous; }

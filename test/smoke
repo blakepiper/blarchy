@@ -77,6 +77,8 @@ text = open('$repo_path/config/niri/config.kdl').read()
 assert 'spawn \"kitty\"' in text, 'kitty spawn missing'
 assert 'spawn \"fuzzel\"' in text, 'fuzzel spawn missing'
 assert 'spawn-sh \"~/.local/bin/tode\"' in text, 'terminal-code spawn missing'
+assert 'Mod+Shift+F { maximize-column; }' in text, 'maximize binding missing'
+assert 'Mod+Shift+F { fullscreen-window; }' not in text, 'fullscreen binding still present'
 assert 'Mod+Shift+S { screenshot; }' in text, 'native screenshot binding missing'
 assert 'cliphist store' in text, 'cliphist watcher missing'
 "

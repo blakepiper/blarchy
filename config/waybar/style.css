@@ -12,8 +12,9 @@
 window#waybar {
   background: rgba(31, 23, 30, 0.97);
   color: #eee7eb;
-  border: 1px solid #493640;
-  border-radius: 12px;
+  border: none;
+  border-bottom: 1px solid #493640;
+  border-radius: 0;
 }
 
 window#waybar.hidden {
@@ -45,13 +46,13 @@ button:hover {
 }
 
 #workspaces {
-  margin: 5px 8px 5px 0;
+  margin: 2px 8px 2px 0;
 }
 
 #workspaces button {
   min-width: 28px;
   margin: 0 2px;
-  border-radius: 7px;
+  border-radius: 4px;
   color: #ab98a4;
 }
 
@@ -82,9 +83,9 @@ button:hover {
 #bluetooth,
 #battery,
 #tray {
-  margin: 5px 1px;
+  margin: 2px 1px;
   padding: 0 9px;
-  border-radius: 7px;
+  border-radius: 4px;
 }
 
 #clock {

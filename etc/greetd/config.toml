@@ -1,9 +1,12 @@
 # greetd configuration: tuigreet prompting for a user, launching the
 # Niri Wayland session. Installed to /etc/greetd/config.toml.
+# Theme components are the original tuigreet set; values are ANSI names
+# (the Linux console cannot render truecolor, so warm yellow stands in
+# for Ubuntu orange).
 
 [terminal]
 vt = 1
 
 [default_session]
-command = "tuigreet --time --remember --sessions /usr/share/wayland-sessions --asterisks --greeting 'Welcome to blarchy'"
+command = "tuigreet --time --remember --sessions /usr/share/wayland-sessions --asterisks --greeting 'Welcome to blarchy' --theme 'border=yellow;text=white;time=yellow;container=black;title=yellow;greeting=white;prompt=yellow;input=white'"
 user = "greeter"

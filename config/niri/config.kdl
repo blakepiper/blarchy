@@ -48,8 +48,8 @@ layout {
 
     focus-ring {
         width 2
-        active-color "#7dcfff"
-        inactive-color "#3b4261"
+        active-color "#e95420"
+        inactive-color "#5e4356"
     }
 
     border { off; }
@@ -73,7 +73,7 @@ prefer-no-csd
 
 overview {
     zoom 0.7
-    backdrop-color "#24283b"
+    backdrop-color "#2c001e"
 }
 
 binds {

@@ -1,4 +1,5 @@
-/* Waybar styling. Tokyo Night palette to match kitty and Niri. */
+/* Waybar styling. Classic Ubuntu: aubergine bar, warm-white text,
+   orange accents, Tango status colors. */
 
 * {
   font-family: "JetBrainsMono Nerd Font", monospace;
@@ -8,23 +9,23 @@
 }
 
 window#waybar {
-  background: #1a1b26;
-  color: #c0caf5;
-  border-bottom: 1px solid #24283b;
+  background: #300a24;
+  color: #eeeeec;
+  border-bottom: 1px solid #772953;
 }
 
 #workspaces button {
   padding: 0 8px;
-  color: #565f89;
+  color: #937f8b;
   background: transparent;
 }
 
 #workspaces button.focused {
-  color: #7dcfff;
+  color: #e95420;
 }
 
 #workspaces button.urgent {
-  color: #f7768e;
+  color: #ef2929;
 }
 
 #clock,
@@ -36,23 +37,23 @@ window#waybar {
 #battery,
 #tray {
   padding: 0 10px;
-  color: #c0caf5;
+  color: #eeeeec;
+}
+
+#custom-ai-usage {
+  color: #ad7fa8;
 }
 
 #custom-night-mode.night,
 #custom-night-mode.night-plus,
 #idle_inhibitor.activated {
-  color: #e0af68;
-}
-
-#custom-ai-usage {
-  color: #bb9af7;
+  color: #e95420;
 }
 
 #battery.warning {
-  color: #e0af68;
+  color: #c4a000;
 }
 
 #battery.critical {
-  color: #f7768e;
+  color: #ef2929;
 }

@@ -115,7 +115,9 @@ check "user setup installs night-mode" grep -q 'bin/night-mode' "$repo_path/inst
 check "wallpaper bundled" test -f "$repo_path/config/swaybg/wallpaper.jpg"
 check "niri shows the wallpaper" grep -q 'swaybg -i ~/.config/swaybg/wallpaper.jpg' "$repo_path/config/niri/config.kdl"
 check "kitty uses the Ubuntu theme" grep -q 'background #300a24' "$repo_path/config/kitty/kitty.conf"
-check_fail "kitty has no leftover Tokyo Night colors" grep -q '1a1b26' "$repo_path/config/kitty/kitty.conf"
+check_fail "no Tokyo Night leftovers anywhere" grep -rqi -E \
+  '1a1b26|c0caf5|7dcfff|7aa2f7|bb9af7|f7768e|9ece6a|e0af68|a9b1d6|414868|24283b|565f89|33467c' \
+  "$repo_path/config" "$repo_path/bin" "$repo_path/etc" "$repo_path/logo.svg"
 
 # External display discovery.
 check "displays parses" bash -n "$repo_path/bin/displays"

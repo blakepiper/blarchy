@@ -158,7 +158,7 @@ keyboards, Super is the Windows-logo key.
 
 The installer:
 
-- enables Arch multilib (Steam, NVIDIA lib32 drivers);
+- enables Arch multilib for NVIDIA lib32 drivers;
 - installs build prerequisites and bootstraps `yay` for AUR packages;
 - investigates your hardware (CPU, GPU, laptop vs desktop, Bluetooth,
   VM guest, fingerprint reader, wifi) and adds exactly the drivers and
@@ -316,7 +316,7 @@ Niri applies config changes on save. Common notes:
 ## Optional extras
 
 ```bash
-yay -S steam spotify   # gaming and music, one command away (multilib is ready)
+yay -S spotify   # optional music player
 ```
 
 ## Repository map

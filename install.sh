@@ -103,7 +103,7 @@ install_yay() {
 
 sudo -v
 
-# Multilib provides 32-bit libraries (Steam, NVIDIA lib32 drivers).
+# Multilib provides the NVIDIA lib32 drivers.
 if ! pacman-conf --repo-list 2>/dev/null | grep -qx 'multilib'; then
   if grep -q '^#\[multilib\]$' /etc/pacman.conf; then
     echo "Enable Arch multilib"

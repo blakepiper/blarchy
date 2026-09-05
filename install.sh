@@ -11,11 +11,12 @@
 #   cd ~/blarchy
 #   ./install.sh
 #
-# Rerunning ./install.sh is supported. Package installation uses
+# Retry a failed install by rerunning ./install.sh. Package installation uses
 # --needed, system integration converges on this repository, and user
 # configuration files are never overwritten.
 
 set -euo pipefail
+trap 'echo "Installation failed. Resolve the error above, then retry ./install.sh." >&2' ERR
 
 repo_path=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 yay_build_dir=""
@@ -63,7 +64,7 @@ for command_name in git pacman sudo; do
   fi
 done
 
-if [[ ! -d $repo_path/.git ]]; then
+if ! git -C "$repo_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "Error: clone this repository with Git before running the installer." >&2
   exit 1
 fi
@@ -74,7 +75,7 @@ load_package_list() {
   local list_file="$1"
   local line
 
-  while IFS= read -r line; do
+  while IFS= read -r line || [[ -n $line ]]; do
     line=${line%%#*}
     line=${line//[[:space:]]/}
     [[ -n $line ]] || continue
@@ -113,15 +114,14 @@ if ! pacman-conf --repo-list 2>/dev/null | grep -qx 'multilib'; then
       '/^#\[multilib\]$/,/^#Include = \/etc\/pacman.d\/mirrorlist$/ s/^#//' \
       /etc/pacman.conf
   else
-    echo "Warning: multilib repository not found; Steam and lib32 drivers will be unavailable." >&2
+    echo "Error: enable the standard Arch multilib repository in /etc/pacman.conf, then retry." >&2
+    exit 1
   fi
 fi
 
 echo "Update Arch and install build prerequisites"
-# The AUR list holds prebuilt releases and repacks, so no language toolchain
-# is installed up front; makepkg pulls any build dependencies automatically.
-# Only add rustup/go when a source-built AUR package joins the list.
-sudo pacman -Syu --needed --noconfirm base-devel git pciutils usbutils
+# makepkg installs declared build dependencies, including Go for yay.
+sudo pacman -Syu --needed --noconfirm base-devel git curl pciutils usbutils
 
 install_yay
 
@@ -138,9 +138,11 @@ sudo pacman -S --needed --noconfirm "${repo_packages[@]}" "${BLARCHY_HW_PACKAGES
 
 if (( ${#aur_packages[@]} )); then
   echo "Build and install AUR packages: ${aur_packages[*]}"
-  yay -S --needed --noconfirm --removemake --cleanafter "${aur_packages[@]}"
+  yay -Syu --needed --noconfirm --removemake --cleanafter "${aur_packages[@]}"
 fi
-yay -Y --devel --save
+
+echo "Validate desktop configuration"
+niri validate --config "$repo_path/config/niri/config.kdl"
 
 echo "Install system integration"
 sudo env BLARCHY_REPO="$repo_path" \
@@ -159,4 +161,8 @@ Blarchy installation complete.
 Reboot when convenient, then log in through the greetd prompt into
 Niri. Your disk layout, bootloader, and other operating systems were
 not changed.
+
+The firewall denies incoming connections after reboot. Before rebooting,
+add any rules you need (for example: sudo ufw allow 22/tcp for SSH).
+Keep packages current with yay -Syu; no repository update is needed.
 DONE

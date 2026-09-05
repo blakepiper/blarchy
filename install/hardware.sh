@@ -24,7 +24,7 @@ blarchy_detect_cpu() {
   local vendor=""
 
   if [[ -r /proc/cpuinfo ]]; then
-    vendor=$(grep -m1 -o -E 'vendor_id\s*:\s*\S+' /proc/cpuinfo | awk '{print $3}')
+    vendor=$(awk '/^vendor_id/ {print $3; exit}' /proc/cpuinfo)
   fi
   BLARCHY_CPU_VENDOR=$vendor
   case $vendor in
@@ -43,39 +43,88 @@ blarchy_detect_cpu() {
 }
 
 blarchy_detect_gpu() {
-  local pci=""
+  local pci_root="${1:-/sys/bus/pci/devices}"
+  local device class vendor id subvendor subdevice
+  local nvidia_ids=()
 
-  if command -v lspci >/dev/null 2>&1; then
-    pci=$(lspci -nnk 2>/dev/null || true)
-  elif [[ -d /sys/bus/pci/devices ]]; then
-    pci=$(grep -h -o -E 'VGA|3D|Display' -r /sys/bus/pci/devices/*/class 2>/dev/null || true)
-  fi
+  for device in "$pci_root"/*; do
+    [[ -r $device/class && -r $device/vendor ]] || continue
+    class=$(<"$device/class")
+    [[ $class == 0x03* ]] || continue
+    vendor=$(<"$device/vendor")
+    case $vendor in
+      0x8086) BLARCHY_HAS_INTEL_GPU=1 ;;
+      0x1002) BLARCHY_HAS_AMD_GPU=1 ;;
+      0x10de)
+        BLARCHY_HAS_NVIDIA=1
+        id=$(<"$device/device")
+        subvendor=$(<"$device/subsystem_vendor")
+        subdevice=$(<"$device/subsystem_device")
+        nvidia_ids+=("${id#0x} ${subvendor#0x} ${subdevice#0x}")
+        ;;
+    esac
+  done
 
-  if grep -qi 'intel.*graphics\|intel.*vga\|intel.*display\|8086' <<<"$pci"; then
-    BLARCHY_HAS_INTEL_GPU=1
+  if (( BLARCHY_HAS_INTEL_GPU )); then
     BLARCHY_HW_PACKAGES+=(vulkan-intel intel-media-driver)
     blarchy_hw_note "Intel GPU (vulkan-intel, intel-media-driver)"
   fi
-  if grep -qi 'amd.*radeon\|amd.*graphics\|amd.*vga\|1002' <<<"$pci"; then
-    BLARCHY_HAS_AMD_GPU=1
+  if (( BLARCHY_HAS_AMD_GPU )); then
     BLARCHY_HW_PACKAGES+=(vulkan-radeon)
     blarchy_hw_note "AMD GPU (vulkan-radeon)"
   fi
-  if grep -qi 'nvidia\|10de' <<<"$pci"; then
-    BLARCHY_HAS_NVIDIA=1
-    BLARCHY_HW_PACKAGES+=(nvidia nvidia-utils lib32-nvidia-utils nvidia-settings)
-    blarchy_hw_note "NVIDIA GPU (nvidia, nvidia-utils, lib32 compat, nvidia-settings)"
+  if (( BLARCHY_HAS_NVIDIA )); then
+    blarchy_nvidia_packages "${nvidia_ids[@]}"
   fi
   if (( BLARCHY_HAS_INTEL_GPU == 0 && BLARCHY_HAS_AMD_GPU == 0 && BLARCHY_HAS_NVIDIA == 0 )); then
-    blarchy_hw_note "No discrete GPU identifier found; using base mesa stack"
+    blarchy_hw_note "No vendor-specific GPU packages needed; using base mesa stack"
   fi
-  if (( BLARCHY_HAS_NVIDIA == 1 )); then
-    cat <<'NOTE'
-  hardware: NOTE for NVIDIA: enable DRM modesetting by adding
-  hardware:   nvidia-drm.modeset=1
-  hardware: to your bootloader kernel parameters, then reboot.
-NOTE
+}
+
+blarchy_nvidia_packages() {
+  local version supported gpu id subsystem kernel_file kernel
+  local modules_root="${BLARCHY_MODULES_PATH:-/usr/lib/modules}"
+  local kernels=()
+  # Use the compatibility table for Arch's current driver, not a bundled
+  # GPU-generation list that goes stale when NVIDIA changes support.
+  version=$(LC_ALL=C pacman -Si nvidia-utils | awk '/^Version / {print $3}')
+  version=${version##*:}
+  version=${version%-*}
+  [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+    echo "Error: cannot resolve the current NVIDIA driver version." >&2
+    return 1
+  }
+  supported=$(curl --fail --silent --show-error --location --retry 3 --max-time 60 \
+    "https://raw.githubusercontent.com/NVIDIA/open-gpu-kernel-modules/$version/README.md")
+  for gpu in "$@"; do
+    id=${gpu%% *}
+    subsystem=${gpu#* }
+    if ! grep -qiE "\|[[:space:]]*$id([[:space:]]+$subsystem)?[[:space:]]*\|" <<<"$supported"; then
+      echo "Error: NVIDIA GPU $gpu is not supported by Arch's current open driver ($version)." >&2
+      echo "Legacy GPU setup is outside this installer's supported path. See https://wiki.archlinux.org/title/NVIDIA" >&2
+      return 1
+    fi
+  done
+
+  # pkgbase reflects installed kernels even after an upgrade, when uname
+  # still reports the old running kernel. DKMS covers all installed kernels.
+  for kernel_file in "$modules_root"/*/pkgbase; do
+    [[ -r $kernel_file ]] || continue
+    kernel=$(<"$kernel_file")
+    [[ " ${kernels[*]-} " == *" $kernel "* ]] && continue
+    if ! pacman -Si "$kernel-headers" >/dev/null; then
+      echo "Error: headers for kernel $kernel are unavailable in the enabled Arch repositories." >&2
+      return 1
+    fi
+    kernels+=("$kernel")
+    BLARCHY_HW_PACKAGES+=("$kernel-headers")
+  done
+  if (( ${#kernels[@]} == 0 )); then
+    echo "Error: no installed kernel pkgbase found under /usr/lib/modules." >&2
+    return 1
   fi
+  BLARCHY_HW_PACKAGES+=(nvidia-open-dkms nvidia-utils lib32-nvidia-utils nvidia-settings)
+  blarchy_hw_note "NVIDIA GPU supported by driver $version (DKMS for ${kernels[*]})"
 }
 
 blarchy_detect_form_factor() {
@@ -102,7 +151,7 @@ blarchy_detect_form_factor() {
 }
 
 blarchy_detect_bluetooth() {
-  if [[ -d /sys/class/bluetooth ]] ||
+  if compgen -G '/sys/class/bluetooth/hci*' >/dev/null ||
     { command -v lsusb >/dev/null 2>&1 && lsusb 2>/dev/null | grep -qi bluetooth; } ||
     { command -v lspci >/dev/null 2>&1 && lspci 2>/dev/null | grep -qi bluetooth; }; then
     BLARCHY_HAS_BLUETOOTH=1
@@ -147,7 +196,7 @@ blarchy_detect_fingerprint() {
 
 blarchy_detect_wifi() {
   if compgen -G '/sys/class/net/w*' >/dev/null; then
-    blarchy_hw_note "Wireless interface present (NetworkManager will manage it)"
+    blarchy_hw_note "Wireless interface present (existing archinstall networking is preserved)"
   fi
 }
 

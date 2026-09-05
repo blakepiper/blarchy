@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# An optional path lets the smoke test exercise fake batteries without root.
+for battery in "${1:-/sys/class/power_supply}"/*; do
+  [[ -d $battery ]] || continue
+  # Lower the start threshold first: some drivers reject end < start.
+  if [[ -w $battery/charge_control_start_threshold ]]; then
+    echo 75 >"$battery/charge_control_start_threshold"
+  fi
+  if [[ -w $battery/charge_control_end_threshold ]]; then
+    echo 80 >"$battery/charge_control_end_threshold"
+  fi
+done

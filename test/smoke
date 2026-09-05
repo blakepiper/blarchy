@@ -64,17 +64,15 @@ done
 
 # Compositor and bar configs exist and look structurally sound.
 check "niri config exists" test -f "$repo_path/config/niri/config.kdl"
-check "niri config balanced braces" python3 -c "
+check "niri desktop bindings" python3 -c "
 import sys
 text = open('$repo_path/config/niri/config.kdl').read()
-assert text.count('{') == text.count('}'), 'unbalanced braces'
 assert 'spawn \"kitty\"' in text, 'kitty spawn missing'
 assert 'spawn \"fuzzel\"' in text, 'fuzzel spawn missing'
 assert 'wl-copy' in text, 'screenshot clipboard missing'
 assert 'cliphist store' in text, 'cliphist watcher missing'
 "
 check_fail "no struts block (waybar reserves its own space)" grep -q 'struts' "$repo_path/config/niri/config.kdl"
-check_fail "niri config has no raw-string matchers" grep -q 'r#"' "$repo_path/config/niri/config.kdl"
 check_fail "kitty config is self-contained (no external includes)" grep -q '^include' "$repo_path/config/kitty/kitty.conf"
 check "screenshot binding copies to clipboard" grep -q 'wl-copy' "$repo_path/config/niri/config.kdl"
 check "libnotify in packages (notification senders)" grep -qx 'libnotify' "$repo_path/install/packages"
@@ -90,13 +88,26 @@ json.load(open('$repo_path/config/waybar/config.jsonc'))
 "
 check "greetd config exists" test -f "$repo_path/etc/greetd/config.toml"
 
-# AI widget compiles and emits valid Waybar JSON offline.
-check "ai-usage compiles" python3 -m py_compile "$repo_path/bin/ai-usage"
-for scanner in claude_usage_scanner codex_usage_scanner opencode_go_usage_scanner; do
-  check "$scanner compiles" python3 -m py_compile "$repo_path/bin/ai-usage-scanners/$scanner.py"
-done
-check "ai-usage --waybar emits JSON" bash -c \
-  "'$repo_path/bin/ai-usage' --waybar | python3 -c 'import json,sys; json.load(sys.stdin)'"
+# Compile in memory, without leaving __pycache__ in managed helper directories.
+check "AI helpers compile" python3 -c '
+import pathlib, sys
+root = pathlib.Path(sys.argv[1])
+for path in [root / "bin/ai-usage", *root.glob("bin/ai-usage-scanners/*.py")]:
+  compile(path.read_text(), str(path), "exec")
+' "$repo_path"
+if ! python3 "$repo_path/test/regressions.py"; then
+  failures=$((failures + 1))
+fi
+if command -v niri >/dev/null 2>&1; then
+  check "Niri validates its config" niri validate --config "$repo_path/config/niri/config.kdl"
+else
+  printf 'skip: Niri validation (available in Arch CI)\n'
+fi
+if command -v systemd-analyze >/dev/null 2>&1; then
+  check "systemd validates battery unit" systemd-analyze verify "$repo_path/etc/systemd/system/blarchy-battery-limit.service"
+else
+  printf 'skip: systemd validation (available in Arch CI)\n'
+fi
 
 # Night-mode toggle and caffeinate widget.
 check "night-mode parses" bash -n "$repo_path/bin/night-mode"
@@ -130,7 +141,7 @@ check_fail "mouse-follow is omitted, never set off" grep -q 'focus-follows-mouse
 
 # Battery charge clamp.
 check "battery-limit unit exists" test -f "$repo_path/etc/systemd/system/blarchy-battery-limit.service"
-check "battery-limit targets 80 percent" grep -q 'charge_control_end_threshold' "$repo_path/etc/systemd/system/blarchy-battery-limit.service"
+check "battery-limit script parses" bash -n "$repo_path/etc/lib/blarchy/battery-limit"
 check "system setup installs the battery unit" grep -q 'blarchy-battery-limit' "$repo_path/install/system.sh"
 
 # Removed desktops stay removed.
@@ -139,7 +150,7 @@ check_fail "no xfce config" test -e "$repo_path/config/xfce4"
 check_fail "no quickshell dir" test -e "$repo_path/shell"
 check "bin/ holds only managed helpers" python3 -c "
 from pathlib import Path
-names = sorted(p.name for p in Path('$repo_path/bin').iterdir())
+names = sorted(p.name for p in Path('$repo_path/bin').iterdir() if p.name != '__pycache__')
 assert names == ['ai-usage', 'ai-usage-scanners', 'displays', 'night-mode'], names
 "
 

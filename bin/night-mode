@@ -54,13 +54,13 @@ print_status() {
 
   case $mode in
     night)
-      icon='' class=night tooltip="Night mode: $night_temperature K"
+      icon='☾' class=night tooltip="Night mode: $night_temperature K"
       ;;
     night-plus)
-      icon='' class=night-plus tooltip="Night+ mode: $night_plus_temperature K"
+      icon='☾+' class=night-plus tooltip="Night+ mode: $night_plus_temperature K"
       ;;
     *)
-      mode=off icon='' class=off tooltip='Night mode: off'
+      mode=off icon='☀' class=off tooltip='Night mode: off'
       ;;
   esac
   printf '{"text":"%s","class":"%s","tooltip":"%s"}\n' "$icon" "$class" "$tooltip"

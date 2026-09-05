@@ -73,7 +73,6 @@ def run_json(command: list[str], timeout: int = 45) -> dict[str, Any] | None:
       env={**os.environ, "PATH": os.pathsep.join([
         os.environ.get("PATH", ""),
         str(Path.home() / ".local" / "bin"),
-        str(Path.home() / ".local" / "share" / "mise" / "shims"),
       ])},
     )
   except (OSError, subprocess.TimeoutExpired):
@@ -139,8 +138,8 @@ def claude_stats_fallback(provider: dict[str, Any]) -> None:
   tokens = today_entry.get("tokensByModel", {})
   provider["todayTokens"] = max(0, sum(integer(value) for value in tokens.values()))
   activity = data.get("dailyActivity", [])
-  latest_activity = activity[-1] if isinstance(activity, list) and activity else {}
-  provider["todayPrompts"] = max(0, integer(latest_activity.get("messageCount", 0)))
+  today_activity = next((entry for entry in activity if entry.get("date") == today), {})
+  provider["todayPrompts"] = max(0, integer(today_activity.get("messageCount", 0)))
 
 
 def claude_provider() -> dict[str, Any]:
@@ -189,16 +188,11 @@ def claude_provider() -> dict[str, Any]:
 
   weekly = payload.get("seven_day_oauth_apps") or payload.get("seven_day") or {}
   session = payload.get("five_hour") or {}
-  values = [number(weekly.get("utilization"), -1), number(session.get("utilization"), -1)]
-  percent_scale = any(value >= 1 for value in values)
-
   def claude_percent(value: Any) -> float:
     parsed = number(value, -1)
     if parsed < 0:
       return -1
-    if percent_scale or parsed > 1:
-      parsed /= 100
-    return max(0, min(1, parsed))
+    return max(0, min(1, parsed / 100))
 
   provider["limits"] = [
     {

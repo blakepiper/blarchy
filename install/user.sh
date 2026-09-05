@@ -14,12 +14,19 @@ fi
 seed_file() {
   local source_file="$1"
   local destination="$2"
+  local temporary
 
   if [[ -e $destination || -L $destination ]]; then
     return
   fi
   mkdir -p "$(dirname "$destination")"
-  cp -a "$source_file" "$destination"
+  temporary=$(mktemp "$(dirname "$destination")/.blarchy-seed.XXXXXX")
+  # Publish only complete files so an interrupted copy can be retried.
+  if ! cp -a "$source_file" "$temporary" || ! mv -n "$temporary" "$destination"; then
+    rm -f -- "$temporary"
+    return 1
+  fi
+  rm -f -- "$temporary"
 }
 
 seed_tree() {
@@ -45,7 +52,10 @@ if ! grep -Fq '# >>> blarchy >>>' "$bashrc"; then
   cat >>"$bashrc" <<'BASHRC'
 
 # >>> blarchy >>>
-export PATH="$HOME/.local/bin:$PATH"
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init bash)"
 fi
@@ -57,8 +67,8 @@ fi
 # login-shell PATH. These are managed files: always refresh them on rerun.
 mkdir -p "$HOME/.local/bin"
 cp -a "$repo/bin/ai-usage" "$HOME/.local/bin/ai-usage"
-rm -rf "$HOME/.local/bin/ai-usage-scanners"
-cp -a "$repo/bin/ai-usage-scanners" "$HOME/.local/bin/ai-usage-scanners"
+mkdir -p "$HOME/.local/bin/ai-usage-scanners"
+cp -a "$repo/bin/ai-usage-scanners/"*.py "$HOME/.local/bin/ai-usage-scanners/"
 cp -a "$repo/bin/night-mode" "$HOME/.local/bin/night-mode"
 cp -a "$repo/bin/displays" "$HOME/.local/bin/displays"
 

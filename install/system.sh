@@ -28,6 +28,7 @@ mkdir -p /etc/greetd
 install -m 0644 "$repo/etc/greetd/config.toml" /etc/greetd/config.toml
 install -m 0644 "$repo/etc/systemd/system/blarchy-battery-limit.service" \
   /etc/systemd/system/blarchy-battery-limit.service
+install -Dm 0755 "$repo/etc/lib/blarchy/battery-limit" /usr/local/lib/blarchy/battery-limit
 
 # Make sure a Niri Wayland session exists for tuigreet to offer.
 # The niri package normally ships this file; only fall back when missing.
@@ -73,9 +74,11 @@ elif (( alternate_network_enabled )); then
 else
   enable_if_available NetworkManager.service
 fi
-if command -v ufw >/dev/null 2>&1; then
-  ufw --force enable >/dev/null 2>&1 || true
-fi
+# Apply the firewall on reboot so an SSH-based installation stays connected.
+# UFW ships deny-incoming/allow-outgoing defaults. Do not apply live rules
+# during installation; setting its boot flag also makes retries harmless.
+sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf
+systemctl enable ufw.service
 
 # Hardware-conditional services.
 if (( enable_bluetooth == 1 )); then
@@ -86,7 +89,7 @@ if (( enable_ppd == 1 )); then
   # 80 percent charge clamp for battery lifespan. Starts now so the live
   # session gets it too, not just the next boot.
   enable_if_available blarchy-battery-limit.service
-  systemctl start blarchy-battery-limit.service 2>/dev/null || true
+  systemctl start blarchy-battery-limit.service
 fi
 
 # Display manager: keep whatever is already enabled, otherwise use greetd.

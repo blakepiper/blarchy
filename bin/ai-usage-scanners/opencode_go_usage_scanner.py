@@ -22,9 +22,9 @@ from typing import Any
 USAGE_URL = "https://opencode.ai/zen/go/v1/usage"
 
 WINDOWS = (
-  ("5-hour window", "rolling", 12.0),
-  ("Weekly window", "weekly", 30.0),
-  ("Monthly window", "monthly", 60.0),
+  ("5-hour window", "rolling"),
+  ("Weekly window", "weekly"),
+  ("Monthly window", "monthly"),
 )
 
 
@@ -36,11 +36,6 @@ def local_date(timestamp: float) -> str:
   return dt.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
 
 
-def recent_date_strings() -> list[str]:
-  today = dt.datetime.now().date()
-  return [(today - dt.timedelta(days=offset)).strftime("%Y-%m-%d") for offset in range(6, -1, -1)]
-
-
 def number(value: Any) -> float:
   try:
     return float(value or 0)
@@ -50,15 +45,6 @@ def number(value: Any) -> float:
 
 def integer(value: Any) -> int:
   return max(0, round(number(value)))
-
-
-def token_bucket() -> dict[str, int]:
-  return {
-    "inputTokens": 0,
-    "outputTokens": 0,
-    "cacheReadInputTokens": 0,
-    "cacheCreationInputTokens": 0,
-  }
 
 
 def message_tokens(data: dict[str, Any]) -> tuple[int, int, int, int]:
@@ -97,7 +83,7 @@ def fetch_remote_usage(api_key: str, usage_url: str) -> dict[str, Any] | None:
     headers={
       "Accept": "application/json",
       "Authorization": f"Bearer {api_key}",
-      "User-Agent": "RICE-model-usage/1.0",
+      "User-Agent": "blarchy-ai-usage/1.0",
     },
   )
   try:
@@ -183,20 +169,14 @@ def normalized_percent(value: Any) -> float:
   return max(0.0, min(1.0, percent / 100))
 
 
-def remote_limit(window: dict[str, Any] | None, label: str, limit: float) -> dict[str, Any]:
+def remote_limit(window: dict[str, Any] | None, label: str) -> dict[str, Any]:
   if not isinstance(window, dict):
-    return {"label": label, "limit": limit, "spent": -1, "percent": -1, "resetAt": ""}
+    return {"label": label, "percent": -1, "resetAt": ""}
 
   percent = normalized_percent(window.get("percent"))
   reset_at = window.get("resetsAt")
   return {
     "label": label,
-    # The usage endpoint intentionally returns the percentage, not the
-    # underlying dollar amount. Keep the documented cap for context, but do
-    # not turn a rounded percentage back into a fake dollar figure in the
-    # panel.
-    "limit": limit,
-    "spent": -1,
     "percent": percent,
     "resetAt": str(reset_at) if reset_at else "",
   }
@@ -209,50 +189,29 @@ def scan(database_path: Path, auth_path: Path, usage_url: str = USAGE_URL) -> di
   remote_usage = fetch_remote_usage(api_key, usage_url)
   remote_available = remote_usage is not None
   ready = authenticated or bool(messages)
-  dates = recent_date_strings()
-  today = dates[-1]
-  recent = {date: 0 for date in dates}
-  today_tokens_by_model: dict[str, int] = {}
-  model_usage: dict[str, dict[str, int]] = {}
-  active_dates: set[str] = set()
-  today_sessions: set[str] = set()
-  sessions: set[str] = set()
+  today = dt.datetime.now().strftime("%Y-%m-%d")
 
   today_prompts = 0
   today_total_tokens = 0
 
   for message in messages:
     day = local_date(message["timestamp"])
-    sessions.add(message["sessionId"])
-    active_dates.add(day)
-
-    bucket = model_usage.setdefault(message["model"], token_bucket())
-    bucket["inputTokens"] += message["inputTokens"]
-    bucket["outputTokens"] += message["outputTokens"]
-    bucket["cacheReadInputTokens"] += message["cacheReadInputTokens"]
-    bucket["cacheCreationInputTokens"] += message["cacheCreationInputTokens"]
-
     total_tokens = (
       message["inputTokens"]
       + message["outputTokens"]
       + message["cacheReadInputTokens"]
       + message["cacheCreationInputTokens"]
     )
-    if day in recent:
-      recent[day] += total_tokens
     if day == today:
       today_prompts += 1
-      today_sessions.add(message["sessionId"])
       today_total_tokens += total_tokens
-      today_tokens_by_model[message["model"]] = today_tokens_by_model.get(message["model"], 0) + total_tokens
 
   limits = [
     remote_limit(
       remote_usage.get(window_name) if remote_available else None,
       label,
-      limit,
     )
-    for label, window_name, limit in WINDOWS
+    for label, window_name in WINDOWS
   ]
 
   if remote_available:
@@ -279,30 +238,16 @@ def scan(database_path: Path, auth_path: Path, usage_url: str = USAGE_URL) -> di
     "usageStatusText": usage_status_text,
     "authHelpText": auth_help_text,
     "todayPrompts": today_prompts,
-    "todaySessions": len(today_sessions),
     "todayTotalTokens": today_total_tokens,
-    "todayTokensByModel": today_tokens_by_model,
-    "recentDays": [{"date": date, "messageCount": recent[date]} for date in dates],
-    "totalPrompts": len(messages),
-    "totalSessions": len(sessions),
-    "activeDays": len(active_dates),
-    "activeDates": sorted(active_dates),
-    "modelUsage": model_usage,
     "rateLimitPercent": limits[0]["percent"],
     "rateLimitLabel": limits[0]["label"],
     "rateLimitResetAt": limits[0]["resetAt"],
-    "rateLimitSpent": limits[0]["spent"],
-    "rateLimitLimit": limits[0]["limit"],
     "secondaryRateLimitPercent": limits[1]["percent"],
     "secondaryRateLimitLabel": limits[1]["label"],
     "secondaryRateLimitResetAt": limits[1]["resetAt"],
-    "secondaryRateLimitSpent": limits[1]["spent"],
-    "secondaryRateLimitLimit": limits[1]["limit"],
     "tertiaryRateLimitPercent": limits[2]["percent"],
     "tertiaryRateLimitLabel": limits[2]["label"],
     "tertiaryRateLimitResetAt": limits[2]["resetAt"],
-    "tertiaryRateLimitSpent": limits[2]["spent"],
-    "tertiaryRateLimitLimit": limits[2]["limit"],
   }
 
 

@@ -40,7 +40,10 @@ the intended desktop user, and running `./install.sh`.
 
 # Installer boundaries
 
-The installer must remain idempotent and safe for an existing Arch machine.
+The installer targets fresh Arch installations, not conversion of existing
+desktops. Failed installations must be retryable without duplicate packages,
+shell blocks, or services. Always resolve current packages from Arch/AUR;
+do not pin versions or add a repository self-updater.
 It must not partition, format, mount, write under `/boot`, configure a
 bootloader, create EFI entries, replace pacman repositories, or directly run
 `mkinitcpio`. Preserve an existing display manager when one is already
@@ -50,10 +53,9 @@ Root-scoped integration belongs in `install/system.sh`; hardware detection
 belongs in `install/hardware.sh`; user setup belongs in `install/user.sh`.
 Source-specific installer variables must not leak into runtime defaults.
 
-Both AUR packages are prebuilt (`-bin`) binaries, so the installer ships
-no language toolchain; makepkg resolves build dependencies on its own.
-Only add a toolchain to the prerequisites when a source-built AUR package
-joins the list.
+The AUR manifest contains binary releases and repacks. Bootstrap builds yay
+from source; makepkg resolves declared build dependencies (including Go).
+Do not maintain a separate list of language toolchains.
 
 # Desktop configuration
 

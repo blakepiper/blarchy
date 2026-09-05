@@ -9,7 +9,7 @@
 
 ---
 
-Blarchy turns an already bootable minimal Arch system into a fully
+Blarchy turns a fresh, bootable minimal Arch installation into a fully
 configured Niri desktop: compositor, bar, launcher, notifications,
 lock screen, terminal, applications, shell tools, keybindings, and
 hardware-specific drivers.
@@ -44,17 +44,23 @@ The installer:
   plus the AUR packages in [`install/packages-aur`](./install/packages-aur);
 - sets up `greetd` + `tuigreet` as the login screen (keeping an existing
   display manager if one is already enabled);
-- enables NetworkManager, printing, and the hardware-appropriate
+- preserves archinstall networking or enables NetworkManager, plus printing and the hardware-appropriate
   Bluetooth and power services;
 - seeds repository defaults into `~/.config` without overwriting your
   existing files.
 
-Rerunning `./install.sh` is supported and safe.
+If an installation fails, fix the reported problem and rerun `./install.sh`.
+Installed packages are reused, services are enabled idempotently, and shell
+setup is added only once. Existing config files are preserved during retries.
+Converting an existing desktop is outside the supported installation path.
 
 The installer never partitions, formats, mounts, configures a
-bootloader, writes EFI entries, or writes under `/boot`. On NVIDIA
-machines it prints a reminder to add `nvidia-drm.modeset=1` to your
-bootloader kernel parameters yourself.
+bootloader, writes EFI entries, or directly writes under `/boot`. Arch's
+package hooks still perform normal kernel and initramfs updates.
+
+The firewall takes effect after reboot with UFW's default incoming-deny,
+outgoing-allow policy. If you need remote access, add a rule before rebooting
+(for example, `sudo ufw allow 22/tcp` for standard SSH).
 
 ## Everyday updates
 
@@ -65,14 +71,13 @@ normally:
 yay -Syu
 ```
 
-To pick up newer repository configuration, update the checkout and
-rerun the installer:
+Package versions are not pinned: installation and retries fetch current Arch
+and AUR metadata. You do not need to update this repository to get new app
+versions. After installation, `yay -Syu` updates both sources.
 
-```bash
-cd ~/blarchy
-git pull --ff-only
-./install.sh
-```
+The repository supplies initial desktop defaults. Pulling changes and
+rerunning does not replace existing files in `~/.config`; compare and merge
+any desired configuration changes manually. There is no self-updater.
 
 ## Default desktop
 

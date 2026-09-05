@@ -22,7 +22,7 @@
     "exec": "~/.local/bin/ai-usage --waybar",
     "return-type": "json",
     "interval": 300,
-    "on-click": "kitty --title ai-usage ~/.local/bin/ai-usage details",
+    "on-click": "kitty --hold --title ai-usage ~/.local/bin/ai-usage details",
     "on-click-right": "~/.local/bin/ai-usage refresh",
     "tooltip": true
   },
@@ -37,8 +37,8 @@
   "idle_inhibitor": {
     "format": "{icon}",
     "format-icons": {
-      "activated": "",
-      "deactivated": ""
+      "activated": "☕",
+      "deactivated": "♨"
     }
   },
   "pulseaudio": {

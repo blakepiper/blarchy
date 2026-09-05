@@ -3,9 +3,8 @@ import os
 import select
 import shutil
 import subprocess
-import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -37,18 +36,11 @@ def number(value):
     return 0
 
 
-def model_name(raw):
-  value = str(raw or "codex")
-  return value if value else "codex"
-
-
 def runtime_env():
   home = str(Path.home())
   path_parts = [
     os.environ.get("PATH", ""),
     f"{home}/.local/bin",
-    f"{home}/.npm-global/bin",
-    f"{home}/.local/share/mise/shims",
   ]
   env = os.environ.copy()
   env["PATH"] = os.pathsep.join(part for part in path_parts if part)
@@ -64,51 +56,17 @@ def find_command(name):
 
 now = datetime.now()
 today = now.strftime("%Y-%m-%d")
-recent_dates = [(now - timedelta(days=offset)).strftime("%Y-%m-%d") for offset in range(6, -1, -1)]
-recent_set = set(recent_dates)
-recent = {day: {"date": day, "messageCount": 0} for day in recent_dates}
-today_tokens_by_model = {}
-model_usage = {}
-sessions_by_day = {day: set() for day in recent_dates}
-today_sessions = set()
-active_days = set()
-
 today_prompts = 0
 today_total_tokens = 0
-total_prompts = 0
-total_sessions = set()
 seen_pi_messages = set()
-usage_status = ""
-usage_help = ""
 
 
-def add_usage(day, session_key, model, input_tokens, output_tokens, cache_read, cache_write):
-  global today_prompts, today_total_tokens, total_prompts
+def add_usage(day, input_tokens, output_tokens, cache_read, cache_write):
+  global today_prompts, today_total_tokens
   total = input_tokens + output_tokens + cache_read + cache_write
-  total_prompts += 1
-  total_sessions.add(session_key)
-  active_days.add(day)
-
-  bucket = model_usage.setdefault(model, {
-    "inputTokens": 0,
-    "outputTokens": 0,
-    "cacheReadInputTokens": 0,
-    "cacheCreationInputTokens": 0,
-  })
-  bucket["inputTokens"] += input_tokens
-  bucket["outputTokens"] += output_tokens
-  bucket["cacheReadInputTokens"] += cache_read
-  bucket["cacheCreationInputTokens"] += cache_write
-
-  if day in recent:
-    recent[day]["messageCount"] += total
-    sessions_by_day[day].add(session_key)
-
   if day == today:
     today_prompts += 1
-    today_sessions.add(session_key)
     today_total_tokens += total
-    today_tokens_by_model[model] = today_tokens_by_model.get(model, 0) + total
 
 
 def scan_pi_sessions():
@@ -168,8 +126,7 @@ def scan_pi_sessions():
       continue
 
     day = local_day(entry.get("timestamp") or message.get("timestamp"))
-    session_key = path
-    add_usage(day, session_key, model_name(message.get("model")), input_tokens, output_tokens, cache_read, cache_write)
+    add_usage(day, input_tokens, output_tokens, cache_read, cache_write)
 
   try:
     proc.wait(timeout=1)
@@ -193,17 +150,12 @@ def scan_native_codex_sessions():
         pass
 
   for path in files:
-    current_model = "codex"
     try:
       with path.open(errors="replace") as handle:
         for raw in handle:
           try:
             entry = json.loads(raw)
           except Exception:
-            continue
-          if entry.get("type") == "turn_context":
-            payload = entry.get("payload") or {}
-            current_model = model_name(payload.get("model") or payload.get("model_slug") or current_model)
             continue
           payload = entry.get("payload") or entry
           if entry.get("type") == "response_item" and isinstance(payload, dict):
@@ -226,7 +178,7 @@ def scan_native_codex_sessions():
           if not (input_tokens or output_tokens or cache_read or cache_write):
             continue
           day = local_day(entry.get("timestamp") or path.stat().st_mtime)
-          add_usage(day, str(path), current_model, input_tokens, output_tokens, cache_read, cache_write)
+          add_usage(day, input_tokens, output_tokens, cache_read, cache_write)
     except Exception:
       continue
 
@@ -329,28 +281,12 @@ def fetch_codex_rpc():
   return result
 
 
-scan_pi_sessions()
-scan_native_codex_sessions()
-rpc = fetch_codex_rpc()
-
-out = {
-  "ready": True,
-  "hasLocalStats": True,
-  "todayPrompts": today_prompts,
-  "todaySessions": len(today_sessions),
-  "todayTotalTokens": today_total_tokens,
-  "todayTokensByModel": today_tokens_by_model,
-  "recentDays": [recent[day] for day in recent_dates],
-  "totalPrompts": total_prompts,
-  "totalSessions": len(total_sessions),
-  # Days with any recorded usage, for the all-time "N days" summary.
-  # The dates travel too: merging snapshots from several machines needs
-  # their union, which a count alone cannot give.
-  "activeDays": len(active_days),
-  "activeDates": sorted(active_days),
-  "modelUsage": model_usage,
-  "usageStatusText": usage_status,
-  "authHelpText": usage_help,
-}
-out.update(rpc)
-print(json.dumps(out, separators=(",", ":")))
+if __name__ == "__main__":
+  scan_pi_sessions()
+  scan_native_codex_sessions()
+  out = {
+    "todayPrompts": today_prompts,
+    "todayTotalTokens": today_total_tokens,
+  }
+  out.update(fetch_codex_rpc())
+  print(json.dumps(out, separators=(",", ":")))

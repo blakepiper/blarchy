@@ -1,0 +1,20 @@
+name: Validate current Arch
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - run: pacman -Syu --needed --noconfirm git python shellcheck niri curl
+      - uses: actions/checkout@v4
+      - run: ./test/smoke
+      - name: Resolve current repository packages
+        shell: bash
+        run: |
+          mapfile -t packages < <(sed 's/#.*//; s/[[:space:]]//g; /^$/d' install/packages)
+          pacman -Sp --print-format '%n %v' "${packages[@]}"

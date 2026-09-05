@@ -3,56 +3,56 @@
 // Full reference: https://github.com/YaLTeR/niri/wiki/Configuration:-Overview
 
 input {
-    keyboard {
-        xkb {
-            layout "us"
-        }
-        repeat-delay 250
-        repeat-rate 45
+  keyboard {
+    xkb {
+      layout "us"
     }
+    repeat-delay 250
+    repeat-rate 45
+  }
 
-    touchpad {
-        tap
-        dwt
-        natural-scroll
-        accel-speed 0.2
-    }
+  touchpad {
+    tap
+    dwt
+    natural-scroll
+    accel-speed 0.2
+  }
 
-    // The mouse never steals focus on its own: Niri only follows the mouse
-    // when asked, so leaving that node out keeps window management
-    // deterministic under the keyboard.
-    warp-mouse-to-focus
+  // The mouse never steals focus on its own: Niri only follows the mouse
+  // when asked, so leaving that node out keeps window management
+  // deterministic under the keyboard.
+  warp-mouse-to-focus
 }
 
 // Per-display tweaks. Run `displays` for connector names and modes; Niri
 // applies changes on save. Dashed-out examples (delete the /- to enable):
 /-output "eDP-1" {
-    scale 2.0
+  scale 2.0
 }
 /-output "HDMI-A-1" {
-    mode "2560x1440@143.912"
-    position x=0 y=0
+  mode "2560x1440@143.912"
+  position x=0 y=0
 }
 
 layout {
-    gaps 8
-    center-focused-column "never"
+  gaps 8
+  center-focused-column "never"
 
-    preset-column-widths {
-        proportion 0.33333
-        proportion 0.5
-        proportion 0.66667
-    }
+  preset-column-widths {
+    proportion 0.33333
+    proportion 0.5
+    proportion 0.66667
+  }
 
-    default-column-width { proportion 0.5; }
+  default-column-width { proportion 0.5; }
 
-    focus-ring {
-        width 2
-        active-color "#e95420"
-        inactive-color "#5e4356"
-    }
+  focus-ring {
+    width 2
+    active-color "#e95420"
+    inactive-color "#5e4356"
+  }
 
-    border { off; }
+  border { off; }
 }
 
 // Programs started with the compositor session.
@@ -72,129 +72,128 @@ screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 prefer-no-csd
 
 overview {
-    zoom 0.7
-    backdrop-color "#2c001e"
+  zoom 0.7
+  backdrop-color "#2c001e"
 }
 
 binds {
-    // Applications (Super = Mod).
-    Mod+Return { spawn "kitty"; }
-    Mod+Shift+Return { spawn "prettymux"; }
-    Mod+Space { spawn "fuzzel"; }
-    Mod+D { spawn "fuzzel"; }
-    Mod+C { spawn "codium"; }
-    Mod+F { spawn "nautilus"; }
-    Mod+B { spawn "firefox"; }
+  // Applications (Super = Mod).
+  Mod+Return { spawn "kitty"; }
+  Mod+Shift+Return { spawn "prettymux"; }
+  Mod+Space { spawn "fuzzel"; }
+  Mod+D { spawn "fuzzel"; }
+  Mod+C { spawn "codium"; }
+  Mod+F { spawn "nautilus"; }
+  Mod+B { spawn "firefox"; }
 
-    // Window operations.
-    Mod+Q repeat=false { close-window; }
-    Mod+Shift+F { fullscreen-window; }
-    Mod+P { toggle-window-floating; }
-    Mod+O repeat=false { toggle-overview; }
-    Mod+Tab { focus-workspace-previous; }
+  // Window operations.
+  Mod+Q repeat=false { close-window; }
+  Mod+Shift+F { fullscreen-window; }
+  Mod+P { toggle-window-floating; }
+  Mod+O repeat=false { toggle-overview; }
+  Mod+Tab { focus-workspace-previous; }
 
-    // Region screenshot: save to ~/Pictures/Screenshots AND copy to clipboard.
-    // (Niri's built-in screenshot action only saves a file, so this uses
-    // grim + slurp + wl-copy directly. Cancelling the selection aborts.)
-    Mod+Shift+S { spawn-sh "mkdir -p \"$HOME/Pictures/Screenshots\" && f=\"$HOME/Pictures/Screenshots/Screenshot from $(date '+%Y-%m-%d %H-%M-%S').png\" && grim -g \"$(slurp)\" \"$f\" && wl-copy --type image/png < \"$f\""; }
-    Print { screenshot-screen; }
-    Alt+Print { screenshot-window; }
+  // Region screenshot: save to ~/Pictures/Screenshots AND copy to clipboard.
+  // (Niri's built-in screenshot action only saves a file, so this uses
+  // grim + slurp + wl-copy directly. Cancelling the selection aborts.)
+  Mod+Shift+S { spawn-sh "mkdir -p \"$HOME/Pictures/Screenshots\" && f=\"$HOME/Pictures/Screenshots/Screenshot from $(date '+%Y-%m-%d %H-%M-%S').png\" && grim -g \"$(slurp)\" \"$f\" && wl-copy --type image/png < \"$f\""; }
+  Print { screenshot-screen; }
+  Alt+Print { screenshot-window; }
 
-    // Lock and power.
-    Mod+L { spawn "swaylock" "-f"; }
-    Mod+N { spawn-sh "~/.local/bin/night-mode next"; }
-    Mod+Shift+E { quit; }
-    Mod+Shift+P { power-off-monitors; }
+  // Lock and power.
+  Mod+L { spawn "swaylock" "-f"; }
+  Mod+N { spawn-sh "~/.local/bin/night-mode next"; }
+  Mod+Shift+E { quit; }
+  Mod+Shift+P { power-off-monitors; }
 
-    // Focus inside the workspace.
-    Mod+Left { focus-column-left; }
-    Mod+Right { focus-column-right; }
-    Mod+Up { focus-window-up; }
-    Mod+Down { focus-window-down; }
+  // Focus inside the workspace.
+  Mod+Left { focus-column-left; }
+  Mod+Right { focus-column-right; }
+  Mod+Up { focus-window-up; }
+  Mod+Down { focus-window-down; }
 
-    // Move windows/columns inside the workspace.
-    Mod+Shift+Left { move-column-left; }
-    Mod+Shift+Right { move-column-right; }
-    Mod+Shift+Up { move-window-up; }
-    Mod+Shift+Down { move-window-down; }
+  // Move windows/columns inside the workspace.
+  Mod+Shift+Left { move-column-left; }
+  Mod+Shift+Right { move-column-right; }
+  Mod+Shift+Up { move-window-up; }
+  Mod+Shift+Down { move-window-down; }
 
-    // Focus other monitors.
-    Mod+Ctrl+Left { focus-monitor-left; }
-    Mod+Ctrl+Right { focus-monitor-right; }
-    Mod+Ctrl+Up { focus-monitor-up; }
-    Mod+Ctrl+Down { focus-monitor-down; }
+  // Focus other monitors.
+  Mod+Ctrl+Left { focus-monitor-left; }
+  Mod+Ctrl+Right { focus-monitor-right; }
+  Mod+Ctrl+Up { focus-monitor-up; }
+  Mod+Ctrl+Down { focus-monitor-down; }
 
-    // Send windows/columns to other monitors.
-    Mod+Ctrl+Shift+Left { move-column-to-monitor-left; }
-    Mod+Ctrl+Shift+Right { move-column-to-monitor-right; }
-    Mod+Ctrl+Shift+Up { move-column-to-monitor-up; }
-    Mod+Ctrl+Shift+Down { move-column-to-monitor-down; }
+  // Send windows/columns to other monitors.
+  Mod+Ctrl+Shift+Left { move-column-to-monitor-left; }
+  Mod+Ctrl+Shift+Right { move-column-to-monitor-right; }
+  Mod+Ctrl+Shift+Up { move-column-to-monitor-up; }
+  Mod+Ctrl+Shift+Down { move-column-to-monitor-down; }
 
-    // Column sizing.
-    Mod+Minus { set-column-width "-10%"; }
-    Mod+Equal { set-column-width "+10%"; }
-    Mod+Shift+Minus { set-window-height "-10%"; }
-    Mod+Shift+Equal { set-window-height "+10%"; }
-    Mod+R { reset-window-height; }
-    Mod+Shift+R { switch-preset-column-width; }
-    Mod+Shift+C { center-column; }
-    Mod+Comma { consume-or-expel-window-left; }
-    Mod+Period { consume-or-expel-window-right; }
+  // Column sizing.
+  Mod+Minus { set-column-width "-10%"; }
+  Mod+Equal { set-column-width "+10%"; }
+  Mod+Shift+Minus { set-window-height "-10%"; }
+  Mod+Shift+Equal { set-window-height "+10%"; }
+  Mod+R { reset-window-height; }
+  Mod+Shift+R { switch-preset-column-width; }
+  Mod+Shift+C { center-column; }
+  Mod+Comma { consume-or-expel-window-left; }
+  Mod+Period { consume-or-expel-window-right; }
 
-    // Workspaces 1-9.
-    Mod+1 { focus-workspace 1; }
-    Mod+2 { focus-workspace 2; }
-    Mod+3 { focus-workspace 3; }
-    Mod+4 { focus-workspace 4; }
-    Mod+5 { focus-workspace 5; }
-    Mod+6 { focus-workspace 6; }
-    Mod+7 { focus-workspace 7; }
-    Mod+8 { focus-workspace 8; }
-    Mod+9 { focus-workspace 9; }
-    Mod+Shift+1 { move-column-to-workspace 1; }
-    Mod+Shift+2 { move-column-to-workspace 2; }
-    Mod+Shift+3 { move-column-to-workspace 3; }
-    Mod+Shift+4 { move-column-to-workspace 4; }
-    Mod+Shift+5 { move-column-to-workspace 5; }
-    Mod+Shift+6 { move-column-to-workspace 6; }
-    Mod+Shift+7 { move-column-to-workspace 7; }
-    Mod+Shift+8 { move-column-to-workspace 8; }
-    Mod+Shift+9 { move-column-to-workspace 9; }
+  // Workspaces 1-9.
+  Mod+1 { focus-workspace 1; }
+  Mod+2 { focus-workspace 2; }
+  Mod+3 { focus-workspace 3; }
+  Mod+4 { focus-workspace 4; }
+  Mod+5 { focus-workspace 5; }
+  Mod+6 { focus-workspace 6; }
+  Mod+7 { focus-workspace 7; }
+  Mod+8 { focus-workspace 8; }
+  Mod+9 { focus-workspace 9; }
+  Mod+Shift+1 { move-column-to-workspace 1; }
+  Mod+Shift+2 { move-column-to-workspace 2; }
+  Mod+Shift+3 { move-column-to-workspace 3; }
+  Mod+Shift+4 { move-column-to-workspace 4; }
+  Mod+Shift+5 { move-column-to-workspace 5; }
+  Mod+Shift+6 { move-column-to-workspace 6; }
+  Mod+Shift+7 { move-column-to-workspace 7; }
+  Mod+Shift+8 { move-column-to-workspace 8; }
+  Mod+Shift+9 { move-column-to-workspace 9; }
 
-    // Media and brightness keys.
-    XF86AudioRaiseVolume { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
-    XF86AudioLowerVolume { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
-    XF86AudioMute { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
-    XF86AudioMicMute { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
-    XF86AudioPlay { spawn "playerctl" "play-pause"; }
-    XF86AudioNext { spawn "playerctl" "next"; }
-    XF86AudioPrev { spawn "playerctl" "previous"; }
-    XF86MonBrightnessUp { spawn "brightnessctl" "set" "5%+"; }
-    XF86MonBrightnessDown { spawn "brightnessctl" "set" "5%-"; }
+  // Media and brightness keys.
+  XF86AudioRaiseVolume { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
+  XF86AudioLowerVolume { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
+  XF86AudioMute { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+  XF86AudioMicMute { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+  XF86AudioPlay { spawn "playerctl" "play-pause"; }
+  XF86AudioNext { spawn "playerctl" "next"; }
+  XF86AudioPrev { spawn "playerctl" "previous"; }
+  XF86MonBrightnessUp { spawn "brightnessctl" "set" "5%+"; }
+  XF86MonBrightnessDown { spawn "brightnessctl" "set" "5%-"; }
 }
 
 window-rule {
-    match title="Picture-in-Picture"
-    open-floating true
+  match title="Picture-in-Picture"
+  open-floating true
 }
 
 window-rule {
-    match app-id="pavucontrol"
-    open-floating true
+  match app-id="pavucontrol"
+  open-floating true
 }
 
 window-rule {
-    match app-id="gnome-calculator"
-    open-floating true
+  match app-id="gnome-calculator"
+  open-floating true
 }
 
 window-rule {
-    match app-id="system-config-printer"
-    open-floating true
+  match app-id="system-config-printer"
+  open-floating true
 }
 
 window-rule {
-    match app-id="firefox"
-    match title="Sharing Indicator"
-    open-floating true
+  match app-id="^firefox$" title="^Sharing Indicator$"
+  open-floating true
 }

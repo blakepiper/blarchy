@@ -17,6 +17,7 @@ gnome-keyring
 waybar
 fuzzel
 mako
+libnotify
 swaylock
 swayidle
 swaybg

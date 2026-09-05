@@ -69,6 +69,8 @@ assert 'spawn \"kitty\"' in text, 'kitty spawn missing'
 assert 'spawn \"fuzzel\"' in text, 'fuzzel spawn missing'
 "
 check "kitty config has no omarchy include" grep -q -v 'omarchy' "$repo_path/config/kitty/kitty.conf"
+check "screenshot binding copies to clipboard" grep -q 'wl-copy' "$repo_path/config/niri/config.kdl"
+check "libnotify in packages (notification senders)" grep -qx 'libnotify' "$repo_path/install/packages"
 check "waybar config is JSON" python3 -c "
 import json
 json.load(open('$repo_path/config/waybar/config.jsonc'))

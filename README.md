@@ -110,7 +110,7 @@ git pull --ff-only
 | <kbd>Super</kbd> + <kbd>O</kbd> | Overview |
 | <kbd>Super</kbd> + <kbd>P</kbd> | Toggle floating |
 | <kbd>Super</kbd> + <kbd>L</kbd> | Lock screen |
-| <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Region screenshot (`~/Pictures/Screenshots`) |
+| <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Region screenshot (saved to `~/Pictures/Screenshots` and copied to clipboard) |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> | Fullscreen |
 | <kbd>Super</kbd> + <kbd>Tab</kbd> | Previous workspace |
 | <kbd>Super</kbd> + <kbd>1..9</kbd> | Go to workspace |

@@ -91,8 +91,10 @@ binds {
     Mod+O repeat=false { toggle-overview; }
     Mod+Tab { focus-workspace-previous; }
 
-    // Region screenshot (saved per screenshot-path above).
-    Mod+Shift+S { screenshot; }
+    // Region screenshot: save to ~/Pictures/Screenshots AND copy to clipboard.
+    // (Niri's built-in screenshot action only saves a file, so this uses
+    // grim + slurp + wl-copy directly. Cancelling the selection aborts.)
+    Mod+Shift+S { spawn-sh "mkdir -p \"$HOME/Pictures/Screenshots\" && f=\"$HOME/Pictures/Screenshots/Screenshot from $(date '+%Y-%m-%d %H-%M-%S').png\" && grim -g \"$(slurp)\" \"$f\" && wl-copy --type image/png < \"$f\""; }
     Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
 

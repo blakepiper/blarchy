@@ -1,0 +1,3 @@
+# Waybar provides the Bluetooth indicator; retain Blueman's pairing agent.
+[org/blueman/general]
+plugin-list=['!StatusIcon']

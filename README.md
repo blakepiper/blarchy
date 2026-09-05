@@ -19,19 +19,142 @@ system and packages; this repository owns the desktop layered on top.
 
 ## Install
 
-Start with Arch installed via the `archinstall` helper on the Arch ISO
-(base system, no desktop environment). Boot into it, connect to wifi,
-and as your normal user:
+### 1. Install the Arch base system
+
+If you have not installed Arch yet, boot the
+[Arch installation ISO](https://archlinux.org/download/), get online, and run
+`archinstall`. The [archinstall guide](https://github.com/archlinux/archinstall)
+covers the base installation. For Blarchy, choose:
+
+- a minimal installation profile, with no desktop environment;
+- a normal user account with a password and **sudo / superuser access**;
+- NetworkManager in the network configuration settings, so you can connect
+  after rebooting;
+- your preferred language, keyboard layout, timezone, and disk setup.
+
+Remember the username and password you create. When installation finishes,
+reboot and remove the USB installer so the computer boots from its installed
+drive. The remaining steps run on that installed system, not inside the ISO
+or an `arch-chroot` session.
+
+### 2. Log in and check sudo access
+
+A text-only login prompt is expected: Blarchy will install the graphical
+desktop. At `login:`, type the normal username you created, press Enter,
+then enter its password. Linux does not display characters or asterisks
+while you type a login or sudo password.
+
+Check that you are using the right account and can run administrative commands:
 
 ```bash
-sudo pacman -S --needed git
-# set up git credentials if you have not yet:
-#   git config --global user.name "Your Name"
-#   git config --global user.email "you@example.com"
+whoami
+sudo -v
+```
+
+`whoami` should print your username, not `root`. `sudo -v` may ask for your
+user password; returning to the prompt without an error means it worked.
+If you logged in as root, type `exit` and log in as your normal user instead.
+If sudo is missing or says your user is not allowed to use it, resolve your
+[sudo setup](https://wiki.archlinux.org/title/Sudo#Configuration) before continuing.
+
+### 3. Connect to the internet
+
+For Ethernet, plug in the cable. If your installation already remembered
+your Wi-Fi connection, you may also be online already. Check with:
+
+```bash
+ping -c 3 archlinux.org
+```
+
+Replies confirm connectivity and name resolution. If it works, skip to
+step 4. If it fails and you need Wi-Fi, use the NetworkManager installed
+in step 1:
+
+```bash
+sudo systemctl enable --now NetworkManager
+sudo nmcli radio wifi on
+nmcli device wifi list
+sudo nmcli --ask device wifi connect "Your Wi-Fi Name"
+```
+
+Replace `Your Wi-Fi Name` with the network name shown in the list, keeping
+the quotes if it contains spaces. Enter the Wi-Fi password when prompted.
+`--ask` keeps the password out of your shell history. Run the ping check
+again once connected. More examples are in the
+[NetworkManager documentation](https://networkmanager.dev/docs/api/latest/nmcli-examples.html).
+
+<details>
+<summary>Already installed Arch using “copy ISO network configuration” / iwd?</summary>
+
+Use the networking you already installed; do not enable a second network
+manager for the same interface. If your copied connection is not working,
+start iwd and open its interactive prompt:
+
+```bash
+sudo systemctl start iwd
+sudo iwctl
+```
+
+At the `[iwd]#` prompt, enter these commands one at a time. Replace `wlan0`
+with the device name from `device list`, and replace the example network name:
+
+```text
+device list
+station wlan0 scan
+station wlan0 get-networks
+station wlan0 connect "Your Wi-Fi Name"
+exit
+```
+
+Enter your Wi-Fi password when asked, then retry `ping -c 3 archlinux.org`
+at the normal shell prompt. See the [iwctl manual](https://man.archlinux.org/man/iwctl.1)
+for more details. Connecting to Wi-Fi also needs working IP and DNS setup;
+archinstall's copied ISO network configuration supplies that setup.
+
+</details>
+
+If `nmcli` and `iwctl` are both missing and you have no connection, Blarchy
+cannot download packages yet. Use a working wired connection, or boot the
+Arch ISO to [repair the installed system's networking](https://wiki.archlinux.org/title/Installation_guide#Network_configuration).
+Installing a Wi-Fi tool on the live ISO alone does not install it on your drive.
+
+### 4. Download and run Blarchy
+
+Install Git, then download this repository into your home directory:
+
+```bash
+sudo pacman -Syu --needed git
 git clone https://github.com/blakepiper/blarchy.git ~/blarchy
 cd ~/blarchy
 ./install.sh
 ```
+
+Run these commands one at a time. Accept pacman's installation prompt when
+asked. You do not need a GitHub account or Git author name/email to clone
+this public repository.
+
+Run `./install.sh` as your normal user, **without `sudo` in front of it**.
+The installer asks for sudo access when needed. Keep the machine online
+and, for a laptop, connected to power while it downloads and installs packages.
+
+If you already cloned the repository during an earlier attempt, skip the
+`git clone` command: run `cd ~/blarchy` and `./install.sh` to retry.
+
+### 5. Reboot into the desktop
+
+Wait for `Blarchy installation complete.` and read the final notes, including
+the firewall reminder if you use SSH. Then run:
+
+```bash
+sudo reboot
+```
+
+Log in at the greetd prompt with the same username and password. Select Niri
+if prompted for a session. Once the desktop appears, press **Super + Enter**
+to open a terminal or **Super + Space** to launch an application. On most
+keyboards, Super is the Windows-logo key.
+
+### What the installer does
 
 The installer:
 

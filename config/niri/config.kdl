@@ -18,17 +18,20 @@ input {
         accel-speed 0.2
     }
 
-    // Keep keyboard window management deterministic: the focused window
-    // never follows the mouse on its own.
-    focus-follows-mouse off
+    // The mouse never steals focus on its own: Niri only follows the mouse
+    // when asked, so leaving that node out keeps window management
+    // deterministic under the keyboard.
     warp-mouse-to-focus
 }
 
-output {
-    // Uncomment and adapt for fixed scaling, e.g. HiDPI laptops:
-    // eDP-1 {
-    //     scale 2.0
-    // }
+// Per-display tweaks. Run `displays` for connector names and modes; Niri
+// applies changes on save. Dashed-out examples (delete the /- to enable):
+/-output "eDP-1" {
+    scale 2.0
+}
+/-output "HDMI-A-1" {
+    mode "2560x1440@143.912"
+    position x=0 y=0
 }
 
 layout {

@@ -151,6 +151,38 @@ blarchy_detect_wifi() {
   fi
 }
 
+blarchy_detect_displays() {
+  local displays_script="${BLARCHY_REPO:-}/bin/displays"
+  local drm_line connector status preferred kind connected_count
+
+  if [[ ! -x $displays_script ]]; then
+    blarchy_hw_note "Display detection skipped (bin/displays not found)"
+    return
+  fi
+
+  # Install-time report of every DRM output. Connector names here are the
+  # same names Niri uses, so they can go straight into an output block.
+  # Niri itself hotplugs displays at runtime; nothing here needs configuring.
+  connected_count=0
+  while IFS= read -r drm_line; do
+    [[ -n $drm_line ]] || continue
+    connector=${drm_line%%:*}
+    status=$(awk -F'[()]' '{print $1}' <<<"$drm_line" | awk '{print $2}')
+    preferred=$(awk -F'[()]' '{print $2}' <<<"$drm_line")
+    case $connector in
+      eDP-*|LVDS-*|DSI-*) kind="laptop panel" ;;
+      *) kind="external display" ;;
+    esac
+    if [[ $status == connected ]]; then
+      connected_count=$((connected_count + 1))
+      blarchy_hw_note "$kind $connector connected (preferred mode $preferred)"
+    fi
+  done < <(bash "$displays_script" --drm 2>/dev/null || true)
+  if (( connected_count == 0 )); then
+    blarchy_hw_note "No connected displays detected through DRM"
+  fi
+}
+
 blarchy_detect_hardware() {
   echo "Detect hardware"
   blarchy_detect_cpu
@@ -160,4 +192,5 @@ blarchy_detect_hardware() {
   blarchy_detect_virt
   blarchy_detect_fingerprint
   blarchy_detect_wifi
+  blarchy_detect_displays
 }

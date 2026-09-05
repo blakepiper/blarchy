@@ -152,6 +152,38 @@ Two toggles sit in the center of the bar, next to the clock:
 
 Both reflect their state in the bar immediately.
 
+## External monitors
+
+Niri hotplugs displays automatically: plugging in a monitor just works,
+with no installer step or reboot. The installer's hardware check reports
+every connected output it sees, using the same connector names Niri uses.
+
+Run `displays` any time to list connector names, preferred modes, and a
+ready-to-paste `output` block:
+
+```sh
+displays
+```
+
+Then pin arrangement details in `~/.config/niri/config.kdl` — for
+example, forcing a high-refresh mode on a 1440p panel to the right of
+the laptop screen:
+
+```kdl
+output "HDMI-A-1" {
+    mode "2560x1440@143.912"
+    position x=0 y=0
+}
+```
+
+Niri applies config changes on save. Common notes:
+
+- 1440p panels are happiest at the default scale `1.0`; 4K panels
+  usually want `scale 2.0`.
+- `position` uses logical pixels after scaling, so neighbors of a
+  scaled panel must account for its logical (not physical) width.
+- Unsure of a name or mode? `displays` lists exactly what Niri sees.
+
 ## Optional extras
 
 ```bash
@@ -161,7 +193,7 @@ yay -S steam spotify   # gaming and music, one command away (multilib is ready)
 ## Repository map
 
 ```text
-bin/          ai-usage widget and its scanners
+bin/          desktop helpers (ai-usage, night-mode, displays)
 config/       user configuration defaults (niri, kitty, waybar, fuzzel, ...)
 docs/         hardware detection notes
 etc/          system files installed by the installer (greetd)

@@ -60,5 +60,6 @@ cp -a "$repo/bin/ai-usage" "$HOME/.local/bin/ai-usage"
 rm -rf "$HOME/.local/bin/ai-usage-scanners"
 cp -a "$repo/bin/ai-usage-scanners" "$HOME/.local/bin/ai-usage-scanners"
 cp -a "$repo/bin/night-mode" "$HOME/.local/bin/night-mode"
+cp -a "$repo/bin/displays" "$HOME/.local/bin/displays"
 
 echo "User setup complete"

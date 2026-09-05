@@ -126,6 +126,7 @@ sudo pacman -Syu --needed --noconfirm base-devel git pciutils usbutils
 install_yay
 
 # shellcheck source=install/hardware.sh
+export BLARCHY_REPO="$repo_path"
 source "$repo_path/install/hardware.sh"
 blarchy_detect_hardware
 

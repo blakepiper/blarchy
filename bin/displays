@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# displays: list connected displays and their modes, and show how to pin
+# them in the Niri config.
+#
+# Inside a running Niri session this reports live output data through
+# `niri msg outputs`. From a TTY (or when Niri is not running) it falls back
+# to DRM sysfs, which uses the same connector names Niri does.
+#
+# Usage: displays [--drm|--help]
+
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: displays [--drm|--help]
+
+List connected displays and their modes, with a ready-to-paste Niri
+output-block template. Defaults to live `niri msg outputs` data and falls
+back to DRM sysfs when Niri is not running.
+USAGE
+}
+
+print_template() {
+  cat <<'TEMPLATE'
+
+# Pin an output in ~/.config/niri/config.kdl (Niri applies it on save):
+# output "HDMI-A-1" {
+#     mode "2560x1440@143.912"
+#     scale 1.0
+#     position x=0 y=0
+# }
+TEMPLATE
+}
+
+drm_report() {
+  local status_file dir node connector status preferred kind
+  local found=0
+
+  for status_file in /sys/class/drm/card*-*/status; do
+    [[ -e $status_file ]] || continue
+    found=1
+    dir=${status_file%/status}
+    node=${dir##*/}
+    connector=${node#*-}
+    status=$(< "$status_file")
+    if [[ $status == connected ]]; then
+      preferred=$(head -n 1 "${status_file%/status}/modes" 2>/dev/null || true)
+      [[ -n $preferred ]] || preferred="unknown mode"
+    else
+      preferred="--"
+    fi
+    case $connector in
+      eDP-*|LVDS-*|DSI-*) kind=internal ;;
+      *) kind=external ;;
+    esac
+    printf '%s: %s (%s) [%s]\n' "$connector" "$status" "$preferred" "$kind"
+  done
+
+  if (( found == 0 )); then
+    echo "Error: no DRM outputs found under /sys/class/drm." >&2
+    return 1
+  fi
+}
+
+if (( $# > 0 )); then
+  case $1 in
+    --help|-h) usage ;;
+    --drm) drm_report ;;
+    *)
+      usage >&2
+      exit 1
+      ;;
+  esac
+  exit 0
+fi
+
+if command -v niri >/dev/null 2>&1 && live=$(niri msg outputs 2>/dev/null); then
+  printf '%s\n' "$live"
+  print_template
+elif drm_report; then
+  print_template
+else
+  exit 1
+fi

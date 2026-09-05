@@ -45,7 +45,7 @@ seed_tree "$repo/config" "$HOME/.config"
 # Screenshots land here (matches the Niri screenshot-path setting).
 mkdir -p "$HOME/Pictures/Screenshots"
 
-# Minimal shell wiring: starship prompt plus local bin on PATH.
+# Interactive Bash: autosuggestions, Starship prompt, and local bin on PATH.
 bashrc="$HOME/.bashrc"
 touch "$bashrc"
 if ! grep -Fq '# >>> blarchy >>>' "$bashrc"; then
@@ -56,8 +56,17 @@ case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
   *) export PATH="$HOME/.local/bin:$PATH" ;;
 esac
-if command -v starship >/dev/null 2>&1; then
-  eval "$(starship init bash)"
+if [[ $- == *i* ]]; then
+  # Load before Starship so it uses ble.sh's prompt hooks; attach last.
+  if [[ -z ${BLE_VERSION-} && -r /usr/share/blesh/ble.sh ]]; then
+    source /usr/share/blesh/ble.sh --attach=none
+  fi
+  if command -v starship >/dev/null 2>&1; then
+    eval "$(starship init bash)"
+  fi
+  if [[ -n ${BLE_VERSION-} ]]; then
+    ble-attach
+  fi
 fi
 # <<< blarchy <<<
 BASHRC

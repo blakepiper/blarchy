@@ -53,9 +53,11 @@ Root-scoped integration belongs in `install/system.sh`; hardware detection
 belongs in `install/hardware.sh`; user setup belongs in `install/user.sh`.
 Source-specific installer variables must not leak into runtime defaults.
 
-The AUR manifest contains binary releases and repacks. Bootstrap builds yay
+The AUR manifest contains binary releases, repacks, and `blesh-git` (Bash
+scripts built with the existing base-devel tools). Bootstrap builds yay
 from source; makepkg resolves declared build dependencies (including Go).
-Do not maintain a separate list of language toolchains.
+Do not maintain a separate list of language toolchains. The installer enables
+yay's development-package checks so `yay -Syu` also updates `blesh-git`.
 
 # Desktop configuration
 

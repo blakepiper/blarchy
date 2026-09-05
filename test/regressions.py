@@ -36,15 +36,53 @@ class RegressionTests(unittest.TestCase):
     subprocess.run(command, env=env, check=True, capture_output=True)
     kitty = self.root / ".config/kitty/kitty.conf"
     kitty.write_text("user customization\n")
+    blerc = self.root / ".config/blesh/init.sh"
+    self.assertEqual(blerc.read_text(), (REPO / "config/blesh/init.sh").read_text())
+    blerc.write_text("# custom suggestion settings\n")
     subprocess.run(command, env=env, check=True, capture_output=True)
     self.assertEqual(kitty.read_text(), "user customization\n")
+    self.assertEqual(blerc.read_text(), "# custom suggestion settings\n")
     bashrc = (self.root / ".bashrc").read_text()
     self.assertEqual(bashrc.count("# >>> blarchy >>>"), 1)
+    self.assertEqual(bashrc.count("source /usr/share/blesh/ble.sh --attach=none"), 1)
     self.assertEqual(len(list(self.root.rglob(".blarchy-seed.*"))), 0)
     scanners = self.root / ".local/bin/ai-usage-scanners"
     self.assertEqual(len(list(scanners.glob("*.py"))), 3)
     self.assertFalse((scanners / "__pycache__").exists())
     self.assertTrue(os.access(self.root / ".local/bin/clipboard-history", os.X_OK))
+
+  def test_bash_suggestions_startup(self):
+    env = {**os.environ, "HOME": str(self.root), "BLARCHY_REPO": str(REPO)}
+    subprocess.run(["bash", str(REPO / "install/user.sh")], env=env,
+                   check=True, capture_output=True)
+    # Stub the package, not the startup block: verify interactive-only loading
+    # and the load -> prompt -> attach sequence without requiring Arch.
+    stub = self.root / "ble.sh"
+    stub.write_text('''[[ $1 == "--attach=none" ]] || exit 11
+BLE_VERSION=test
+startup_order=load
+ble-attach() { startup_order+=:attach; }
+''')
+    bashrc = self.root / ".bashrc"
+    bashrc.write_text(bashrc.read_text().replace("/usr/share/blesh/ble.sh", str(stub)))
+    setup = '''starship() { printf '%s\\n' 'startup_order+=:prompt'; }
+source "$HOME/.bashrc"
+'''
+    for interactive, expected in ((False, "unset"), (True, "load:prompt:attach")):
+      result = subprocess.run(
+        ["bash", "--noprofile", "--norc", "-ic" if interactive else "-c",
+         setup + 'printf "%s" "${startup_order-unset}"'],
+        env=env, text=True, capture_output=True,
+      )
+      self.assertEqual(result.returncode, 0, result.stderr)
+      self.assertEqual(result.stdout, expected)
+    stub.unlink()
+    result = subprocess.run(
+      ["bash", "--noprofile", "--norc", "-ic", setup + 'printf "%s" "$startup_order"'],
+      env=env, text=True, capture_output=True,
+    )
+    self.assertEqual(result.returncode, 0, result.stderr)
+    self.assertEqual(result.stdout, ":prompt")
 
   def pci(self, name, vendor, device_class):
     device = self.root / name

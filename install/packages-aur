@@ -4,6 +4,7 @@
 # One package per line. Trailing "# comment" is allowed.
 
 prettymux-bin # prebuilt prettymux terminal multiplexer (yay -Syu updates it)
+blesh-git # Bash autosuggestions and syntax highlighting
 vscodium-bin # VS Code without Microsoft telemetry (`codium` command)
 claude-code # Anthropic's Claude Code agent CLI (`claude` command)
 openai-codex-bin # OpenAI Codex CLI (`codex` command)

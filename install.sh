@@ -109,6 +109,9 @@ sudo pacman -Syu --needed --noconfirm base-devel git curl pciutils usbutils
 
 install_yay
 
+# Include upstream changes to blesh-git in normal yay -Syu updates.
+yay -Y --devel --save
+
 # shellcheck source=install/hardware.sh
 export BLARCHY_REPO="$repo_path"
 source "$repo_path/install/hardware.sh"

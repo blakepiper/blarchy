@@ -196,6 +196,8 @@ yay -Syu
 Package versions are not pinned: installation and retries fetch current Arch
 and AUR metadata. You do not need to update this repository to get new app
 versions. After installation, `yay -Syu` updates both sources.
+The installer enables yay's development-package checks so `blesh-git`
+also updates when its upstream source changes.
 
 The repository supplies initial desktop defaults. Pulling changes and
 rerunning does not replace existing files in `~/.config`; compare and merge
@@ -222,6 +224,17 @@ any desired configuration changes manually. There is no self-updater.
 | AI usage widget | `ai-usage` in the bar (Claude Code, Codex, OpenCode Go) |
 | AI coding agents | Claude Code (`claude`), Codex (`codex`), pi (`pi`), OpenCode (`opencode`) |
 | Packages | pacman and yay |
+
+## Terminal suggestions
+
+Kitty opens Bash with [ble.sh](https://github.com/akinomyoga/ble.sh) enabled.
+As you type, it shows a faint suggestion from your command history or shell
+completion. At the end of the line, press **Right Arrow** to accept it,
+then **Enter** to run the command. Keep typing to ignore the suggestion.
+Suggestions run locally, without an AI service or account.
+
+Settings live in `~/.config/blesh/init.sh`. Starship still provides the
+prompt, and `yay -Syu` updates ble.sh through the `blesh-git` AUR package.
 
 ## Firefox defaults
 

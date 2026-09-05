@@ -29,3 +29,21 @@ Detection results print during the install under the `hardware:` prefix.
   `fprintd-enroll` after installing.
 - Anything undetected falls back to the base `mesa` stack, which is
   always installed.
+
+## Battery charge limit
+
+On laptops the installer enables `blarchy-battery-limit.service`, which
+sets `charge_control_end_threshold=80` (and `charge_control_start_threshold=75`
+where supported) on every battery at boot. This uses the kernel
+charge-control API, so it works on most modern ThinkPads, Dells, ASUS,
+Framework, and LG laptops with no vendor tools. Batteries without the API
+are silently skipped.
+
+Check the live thresholds with:
+
+```sh
+cat /sys/class/power_supply/BAT*/charge_control_*threshold*
+```
+
+Very old ThinkPads predate the kernel API; those need `tpacpi-bat`
+from the AUR instead.

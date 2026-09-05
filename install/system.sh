@@ -26,6 +26,8 @@ fi
 # Login screen: greetd + tuigreet launching the Niri session.
 mkdir -p /etc/greetd
 install -m 0644 "$repo/etc/greetd/config.toml" /etc/greetd/config.toml
+install -m 0644 "$repo/etc/systemd/system/blarchy-battery-limit.service" \
+  /etc/systemd/system/blarchy-battery-limit.service
 
 # Make sure a Niri Wayland session exists for tuigreet to offer.
 # The niri package normally ships this file; only fall back when missing.
@@ -81,6 +83,10 @@ if (( enable_bluetooth == 1 )); then
 fi
 if (( enable_ppd == 1 )); then
   enable_if_available power-profiles-daemon.service
+  # 80 percent charge clamp for battery lifespan. Starts now so the live
+  # session gets it too, not just the next boot.
+  enable_if_available blarchy-battery-limit.service
+  systemctl start blarchy-battery-limit.service 2>/dev/null || true
 fi
 
 # Display manager: keep whatever is already enabled, otherwise use greetd.

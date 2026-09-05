@@ -87,10 +87,11 @@ git pull --ff-only
 | Wallpaper | swaybg (bundled Ubuntu wallpaper at `~/.config/swaybg/wallpaper.jpg`) |
 | Terminal | kitty (Ubuntu aubergine theme) |
 | Multiplexer | prettymux (`Super` + `Shift` + `Enter`) and tmux |
-| Browser | Firefox |
+| Browser | Firefox (uBlock Origin pre-installed) |
 | File manager | Nautilus |
 | Editor | VSCodium (`codium`) and Neovim |
 | Audio | PipeWire and WirePlumber |
+| Battery | Charge clamped to 80% on laptops (battery lifespan) |
 | AI usage widget | `ai-usage` in the bar (Claude Code, Codex, OpenCode Go) |
 | AI coding agents | Claude Code (`claude`), Codex (`codex`), pi (`pi`), OpenCode (`opencode`) |
 | Packages | pacman and yay |

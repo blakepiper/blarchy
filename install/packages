@@ -50,6 +50,7 @@ system-config-printer
 
 # Everyday applications
 firefox
+firefox-ublock-origin
 nautilus
 gvfs
 gvfs-mtp

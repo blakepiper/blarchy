@@ -214,7 +214,7 @@ any desired configuration changes manually. There is no self-updater.
 | Wallpaper | swaybg (bundled Ubuntu wallpaper at `~/.config/swaybg/wallpaper.jpg`) |
 | Terminal | kitty (Ubuntu aubergine theme) |
 | Multiplexer | prettymux (`Super` + `Shift` + `Enter`) |
-| Browser | Firefox (uBlock Origin pre-installed) |
+| Browser | Firefox (uBlock Origin and Dark Reader pre-installed; sponsored content, recommended stories, and built-in AI disabled) |
 | File manager | Nautilus |
 | Editor | VSCodium (`codium`) and Neovim |
 | Audio | PipeWire and WirePlumber |
@@ -222,6 +222,21 @@ any desired configuration changes manually. There is no self-updater.
 | AI usage widget | `ai-usage` in the bar (Claude Code, Codex, OpenCode Go) |
 | AI coding agents | Claude Code (`claude`), Codex (`codex`), pi (`pi`), OpenCode (`opencode`) |
 | Packages | pacman and yay |
+
+## Firefox defaults
+
+uBlock Origin and Dark Reader install from Arch packages and update with
+`yay -Syu`. Dark Reader can be toggled per site from its extension menu.
+
+The installer places [Firefox policies](./etc/firefox/policies/policies.json)
+in `/etc/firefox/policies/policies.json`. These disable sponsored shortcuts,
+sponsored address-bar suggestions, and recommended stories. Firefox's
+[AI controls](https://firefox-admin-docs.mozilla.org/reference/policies/aicontrols/)
+block all covered AI features, including the chatbot, smart tab grouping,
+link summaries, translations, and generated PDF alt text.
+
+These settings are enforced while the policy file is installed. Restart
+Firefox after changing it; `about:policies` shows active policies and errors.
 
 ## Main shortcuts
 

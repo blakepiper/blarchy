@@ -29,6 +29,7 @@ install -m 0644 "$repo/etc/greetd/config.toml" /etc/greetd/config.toml
 install -m 0644 "$repo/etc/systemd/system/blarchy-battery-limit.service" \
   /etc/systemd/system/blarchy-battery-limit.service
 install -Dm 0755 "$repo/etc/lib/blarchy/battery-limit" /usr/local/lib/blarchy/battery-limit
+install -Dm 0644 "$repo/etc/firefox/policies/policies.json" /etc/firefox/policies/policies.json
 
 # Make sure a Niri Wayland session exists for tuigreet to offer.
 # The niri package normally ships this file; only fall back when missing.

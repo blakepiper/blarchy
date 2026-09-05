@@ -45,6 +45,7 @@ brightnessctl
 # Everyday applications
 firefox
 firefox-ublock-origin
+firefox-dark-reader
 nautilus
 gvfs
 gvfs-mtp

@@ -64,6 +64,7 @@ noto-fonts
 noto-fonts-emoji
 
 # Shell and command-line tools
+nodejs # runtime behind Claude Code plus an npm fallback
 starship
 fzf
 ripgrep

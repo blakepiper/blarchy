@@ -58,6 +58,9 @@ check "waybar in packages" grep -qx 'waybar' "$repo_path/install/packages"
 check "fuzzel in packages" grep -qx 'fuzzel' "$repo_path/install/packages"
 check "prettymux in AUR list" grep -q 'prettymux' "$repo_path/install/packages-aur"
 check "vscodium in AUR list" grep -q 'vscodium-bin' "$repo_path/install/packages-aur"
+for agent in claude-code openai-codex-bin oh-my-pi-bin opencode-bin; do
+  check "$agent in AUR list" grep -qx "$agent\( #.*\)\?" "$repo_path/install/packages-aur"
+done
 
 # Compositor and bar configs exist and look structurally sound.
 check "niri config exists" test -f "$repo_path/config/niri/config.kdl"

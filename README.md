@@ -92,6 +92,7 @@ git pull --ff-only
 | Editor | VSCodium (`codium`) and Neovim |
 | Audio | PipeWire and WirePlumber |
 | AI usage widget | `ai-usage` in the bar (Claude Code, Codex, OpenCode Go) |
+| AI coding agents | Claude Code (`claude`), Codex (`codex`), pi (`pi`), OpenCode (`opencode`) |
 | Packages | pacman and yay |
 
 ## Main shortcuts

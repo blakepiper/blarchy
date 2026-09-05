@@ -5,3 +5,7 @@
 
 prettymux-bin # prebuilt prettymux terminal multiplexer (yay -Syu updates it)
 vscodium-bin # VS Code without Microsoft telemetry (`codium` command)
+claude-code # Anthropic's Claude Code agent CLI (`claude` command)
+openai-codex-bin # OpenAI Codex CLI (`codex` command)
+oh-my-pi-bin # pi coding agent with IDE integration (`pi` command)
+opencode-bin # OpenCode agent CLI (`opencode` command)

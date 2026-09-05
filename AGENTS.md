@@ -44,10 +44,10 @@ Root-scoped integration belongs in `install/system.sh`; hardware detection
 belongs in `install/hardware.sh`; user setup belongs in `install/user.sh`.
 Source-specific installer variables must not leak into runtime defaults.
 
-The installer standardizes AUR builds on the Arch `rustup` provider. Install it
-in the prerequisite pacman transaction and initialize a stable default only
-when the user has no default toolchain. Do not temporarily install and remove
-the conflicting `rust` provider.
+Both AUR packages are prebuilt (`-bin`) binaries, so the installer ships
+no language toolchain; makepkg resolves build dependencies on its own.
+Only add a toolchain to the prerequisites when a source-built AUR package
+joins the list.
 
 # Desktop configuration
 

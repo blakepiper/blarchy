@@ -19,11 +19,11 @@
     "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
   },
   "custom/ai-usage": {
-    "exec": "ai-usage --waybar",
+    "exec": "~/.local/bin/ai-usage --waybar",
     "return-type": "json",
     "interval": 300,
-    "on-click": "kitty --title ai-usage ai-usage details",
-    "on-click-right": "ai-usage refresh",
+    "on-click": "kitty --title ai-usage ~/.local/bin/ai-usage details",
+    "on-click-right": "~/.local/bin/ai-usage refresh",
     "tooltip": true
   },
   "pulseaudio": {

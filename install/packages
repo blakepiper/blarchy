@@ -42,20 +42,20 @@ playerctl
 power-profiles-daemon
 brightnessctl
 
-# Printing and discovery
+# Printing
 cups
 cups-pdf
 system-config-printer
-avahi
-nss-mdns
 
 # Everyday applications
 firefox
 nautilus
+gvfs
+gvfs-mtp
 neovim
 mpv
 imv
-evince
+papers
 gnome-calculator
 
 # Fonts
@@ -85,12 +85,13 @@ inetutils
 less
 python
 
-# Screenshots, clipboard, removable media
+# Screenshots, clipboard, removable media, images
 grim
 slurp
 wl-clipboard
 cliphist
 udiskie
+imagemagick
 
 # Firewall
 ufw

@@ -70,10 +70,20 @@ text = open('$repo_path/config/niri/config.kdl').read()
 assert text.count('{') == text.count('}'), 'unbalanced braces'
 assert 'spawn \"kitty\"' in text, 'kitty spawn missing'
 assert 'spawn \"fuzzel\"' in text, 'fuzzel spawn missing'
+assert 'wl-copy' in text, 'screenshot clipboard missing'
+assert 'cliphist store' in text, 'cliphist watcher missing'
 "
-check "kitty config has no omarchy include" grep -q -v 'omarchy' "$repo_path/config/kitty/kitty.conf"
+check_fail "niri config has no struts block (unsupported key)" grep -q 'struts' "$repo_path/config/niri/config.kdl"
+check_fail "niri config has no raw-string matchers" grep -q 'r#"' "$repo_path/config/niri/config.kdl"
+check_fail "kitty config has no omarchy include" grep -q 'omarchy' "$repo_path/config/kitty/kitty.conf"
 check "screenshot binding copies to clipboard" grep -q 'wl-copy' "$repo_path/config/niri/config.kdl"
 check "libnotify in packages (notification senders)" grep -qx 'libnotify' "$repo_path/install/packages"
+check "papers (not evince) in packages" grep -qx 'papers' "$repo_path/install/packages"
+check_fail "no evince in packages" grep -qx 'evince' "$repo_path/install/packages"
+check_fail "no avahi without nsswitch integration" grep -qx 'avahi' "$repo_path/install/packages"
+check_fail "no tensaku references" grep -rqi 'tensaku' "$repo_path/config" "$repo_path/install" "$repo_path/bin"
+check "waybar ai-usage uses absolute path" grep -q '~/.local/bin/ai-usage' "$repo_path/config/waybar/config.jsonc"
+check "user setup copies (not symlinks) ai-usage" grep -q 'cp -a "\$repo/bin/ai-usage"' "$repo_path/install/user.sh"
 check "waybar config is JSON" python3 -c "
 import json
 json.load(open('$repo_path/config/waybar/config.jsonc'))

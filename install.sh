@@ -118,8 +118,8 @@ if ! pacman-conf --repo-list 2>/dev/null | grep -qx 'multilib'; then
 fi
 
 echo "Update Arch and install build prerequisites"
-# Both AUR packages are prebuilt (-bin) binaries, so no language toolchain
-# is needed up front; makepkg pulls any build dependencies automatically.
+# The AUR list holds prebuilt releases and repacks, so no language toolchain
+# is installed up front; makepkg pulls any build dependencies automatically.
 # Only add rustup/go when a source-built AUR package joins the list.
 sudo pacman -Syu --needed --noconfirm base-devel git pciutils usbutils
 

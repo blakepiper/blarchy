@@ -191,7 +191,7 @@ def scan(projects_path: Path) -> dict[str, Any]:
 
 
 def cache_paths(projects_path: Path) -> tuple[Path, Path]:
-    cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "omarchy" / "model-usage"
+    cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "blarchy" / "ai-usage"
     cache_root.mkdir(parents=True, exist_ok=True)
     digest = hashlib.sha1(str(projects_path).encode("utf-8")).hexdigest()[:16]
     return cache_root / f"claude-projects-{digest}.json", cache_root / f"claude-projects-{digest}.lock"

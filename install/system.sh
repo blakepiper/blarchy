@@ -52,9 +52,25 @@ enable_if_available() {
 }
 
 # Core services every machine gets.
-for unit in NetworkManager.service cups.service avahi-daemon.service systemd-oomd.service; do
+for unit in cups.service systemd-oomd.service; do
   enable_if_available "$unit"
 done
+
+# Network: keep an existing non-NetworkManager stack when one is enabled.
+alternate_network_enabled=0
+for unit in systemd-networkd.service iwd.service dhcpcd.service; do
+  if systemctl is-enabled "$unit" >/dev/null 2>&1; then
+    alternate_network_enabled=1
+    break
+  fi
+done
+if systemctl is-enabled NetworkManager.service >/dev/null 2>&1; then
+  :
+elif (( alternate_network_enabled )); then
+  echo "Preserve the existing network stack instead of enabling NetworkManager."
+else
+  enable_if_available NetworkManager.service
+fi
 if command -v ufw >/dev/null 2>&1; then
   ufw --force enable >/dev/null 2>&1 || true
 fi

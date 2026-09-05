@@ -50,11 +50,6 @@ layout {
     }
 
     border { off; }
-
-    struts {
-        // Reserve room for waybar at the top.
-        top 32
-    }
 }
 
 // Programs started with the compositor session.
@@ -64,6 +59,8 @@ spawn-at-startup "swaybg" "-c" "#1a1b26"
 spawn-at-startup "/usr/lib/polkit-kde-authentication-agent-1"
 spawn-at-startup "gnome-keyring-daemon" "--start" "--components=secrets"
 spawn-at-startup "udiskie" "--tray"
+spawn-at-startup "sh" "-c" "wl-paste --type text --watch cliphist store"
+spawn-at-startup "sh" "-c" "wl-paste --type image --watch cliphist store"
 spawn-at-startup "swayidle" "-w" "timeout" "600" "swaylock -f" "timeout" "900" "niri msg action power-off-monitors" "before-sleep" "swaylock -f"
 
 screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
@@ -176,12 +173,22 @@ window-rule {
 }
 
 window-rule {
-    match app-id=r#"^(pavucontrol|gnome-calculator|system-config-printer)$"#
+    match app-id="pavucontrol"
     open-floating true
 }
 
 window-rule {
-    match app-id=r#"^firefox$"#
+    match app-id="gnome-calculator"
+    open-floating true
+}
+
+window-rule {
+    match app-id="system-config-printer"
+    open-floating true
+}
+
+window-rule {
+    match app-id="firefox"
     match title="Sharing Indicator"
     open-floating true
 }

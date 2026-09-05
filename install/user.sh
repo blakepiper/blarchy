@@ -53,10 +53,11 @@ fi
 BASHRC
 fi
 
-# Waybar's AI widget and other helpers expect ~/.local/bin.
+# Waybar and terminals call the AI widget by absolute path, independent of
+# login-shell PATH. These are managed files: always refresh them on rerun.
 mkdir -p "$HOME/.local/bin"
-if [[ -x $repo/bin/ai-usage && ! -e $HOME/.local/bin/ai-usage ]]; then
-  ln -s "$repo/bin/ai-usage" "$HOME/.local/bin/ai-usage"
-fi
+cp -a "$repo/bin/ai-usage" "$HOME/.local/bin/ai-usage"
+rm -rf "$HOME/.local/bin/ai-usage-scanners"
+cp -a "$repo/bin/ai-usage-scanners" "$HOME/.local/bin/ai-usage-scanners"
 
 echo "User setup complete"

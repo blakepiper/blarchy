@@ -71,5 +71,6 @@ mkdir -p "$HOME/.local/bin/ai-usage-scanners"
 cp -a "$repo/bin/ai-usage-scanners/"*.py "$HOME/.local/bin/ai-usage-scanners/"
 cp -a "$repo/bin/night-mode" "$HOME/.local/bin/night-mode"
 cp -a "$repo/bin/displays" "$HOME/.local/bin/displays"
+cp -a "$repo/bin/clipboard-history" "$HOME/.local/bin/clipboard-history"
 
 echo "User setup complete"

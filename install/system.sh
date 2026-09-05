@@ -54,10 +54,7 @@ enable_if_available() {
   fi
 }
 
-# Core services every machine gets.
-for unit in cups.service systemd-oomd.service; do
-  enable_if_available "$unit"
-done
+enable_if_available systemd-oomd.service
 
 # Network: keep an existing non-NetworkManager stack when one is enabled.
 alternate_network_enabled=0

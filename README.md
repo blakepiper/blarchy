@@ -158,7 +158,6 @@ keyboards, Super is the Windows-logo key.
 
 The installer:
 
-- enables Arch multilib for NVIDIA lib32 drivers;
 - installs build prerequisites and bootstraps `yay` for AUR packages;
 - investigates your hardware (CPU, GPU, laptop vs desktop, Bluetooth,
   VM guest, fingerprint reader, wifi) and adds exactly the drivers and
@@ -167,7 +166,7 @@ The installer:
   plus the AUR packages in [`install/packages-aur`](./install/packages-aur);
 - sets up `greetd` + `tuigreet` as the login screen (keeping an existing
   display manager if one is already enabled);
-- preserves archinstall networking or enables NetworkManager, plus printing and the hardware-appropriate
+- preserves archinstall networking or enables NetworkManager, plus the hardware-appropriate
   Bluetooth and power services;
 - seeds repository defaults into `~/.config` without overwriting your
   existing files.
@@ -214,7 +213,7 @@ any desired configuration changes manually. There is no self-updater.
 | Lock / idle | swaylock + swayidle (locks after 10 min) |
 | Wallpaper | swaybg (bundled Ubuntu wallpaper at `~/.config/swaybg/wallpaper.jpg`) |
 | Terminal | kitty (Ubuntu aubergine theme) |
-| Multiplexer | prettymux (`Super` + `Shift` + `Enter`) and tmux |
+| Multiplexer | prettymux (`Super` + `Shift` + `Enter`) |
 | Browser | Firefox (uBlock Origin pre-installed) |
 | File manager | Nautilus |
 | Editor | VSCodium (`codium`) and Neovim |
@@ -242,6 +241,7 @@ any desired configuration changes manually. There is no self-updater.
 | <kbd>Super</kbd> + <kbd>L</kbd> | Lock screen |
 | <kbd>Super</kbd> + <kbd>N</kbd> | Cycle night mode off → night → night-plus |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Region screenshot (saved to `~/Pictures/Screenshots` and copied to clipboard) |
+| <kbd>Super</kbd> + <kbd>V</kbd> | Clipboard history (choose an entry, then paste normally) |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> | Fullscreen |
 | <kbd>Super</kbd> + <kbd>Tab</kbd> | Previous workspace |
 | <kbd>Super</kbd> + <kbd>1..9</kbd> | Go to workspace |
@@ -255,6 +255,14 @@ any desired configuration changes manually. There is no self-updater.
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>E</kbd> | Quit Niri |
 
 Media, volume, and brightness keys work out of the box.
+
+For screenshots, select a region in Niri's screenshot interface and press
+Enter to save and copy it, or Escape to cancel.
+
+Clipboard history stores copied text and images. Press **Super + V**, search
+or select an entry, and press Enter to copy it back to the clipboard. Paste
+with the target application's usual shortcut. Escape leaves the clipboard
+unchanged. To clear saved history, run `cliphist wipe`.
 
 ## AI usage widget
 
@@ -322,7 +330,7 @@ yay -S spotify   # optional music player
 ## Repository map
 
 ```text
-bin/          desktop helpers (ai-usage, night-mode, displays)
+bin/          desktop helpers (ai-usage, night-mode, displays, clipboard-history)
 config/       user configuration defaults (niri, kitty, waybar, fuzzel, ...)
 docs/         hardware detection notes
 etc/          system files installed by the installer (greetd)

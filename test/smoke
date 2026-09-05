@@ -69,12 +69,12 @@ import sys
 text = open('$repo_path/config/niri/config.kdl').read()
 assert 'spawn \"kitty\"' in text, 'kitty spawn missing'
 assert 'spawn \"fuzzel\"' in text, 'fuzzel spawn missing'
-assert 'wl-copy' in text, 'screenshot clipboard missing'
+assert 'Mod+Shift+S { screenshot; }' in text, 'native screenshot binding missing'
 assert 'cliphist store' in text, 'cliphist watcher missing'
 "
 check_fail "no struts block (waybar reserves its own space)" grep -q 'struts' "$repo_path/config/niri/config.kdl"
 check_fail "kitty config is self-contained (no external includes)" grep -q '^include' "$repo_path/config/kitty/kitty.conf"
-check "screenshot binding copies to clipboard" grep -q 'wl-copy' "$repo_path/config/niri/config.kdl"
+check "clipboard picker parses" bash -n "$repo_path/bin/clipboard-history"
 check "libnotify in packages (notification senders)" grep -qx 'libnotify' "$repo_path/install/packages"
 check "papers (not evince) in packages" grep -qx 'papers' "$repo_path/install/packages"
 check_fail "no evince in packages" grep -qx 'evince' "$repo_path/install/packages"
@@ -151,7 +151,7 @@ check_fail "no quickshell dir" test -e "$repo_path/shell"
 check "bin/ holds only managed helpers" python3 -c "
 from pathlib import Path
 names = sorted(p.name for p in Path('$repo_path/bin').iterdir() if p.name != '__pycache__')
-assert names == ['ai-usage', 'ai-usage-scanners', 'displays', 'night-mode'], names
+assert names == ['ai-usage', 'ai-usage-scanners', 'clipboard-history', 'displays', 'night-mode'], names
 "
 
 if (( failures > 0 )); then

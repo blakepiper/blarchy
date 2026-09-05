@@ -25,7 +25,6 @@ gammastep
 
 # Terminal
 kitty
-tmux
 
 # Login, network, bluetooth, audio, power
 greetd
@@ -42,11 +41,6 @@ pavucontrol
 playerctl
 power-profiles-daemon
 brightnessctl
-
-# Printing
-cups
-cups-pdf
-system-config-printer
 
 # Everyday applications
 firefox
@@ -88,9 +82,7 @@ inetutils
 less
 python
 
-# Screenshots, clipboard, removable media, images
-grim
-slurp
+# Clipboard, removable media, images
 wl-clipboard
 cliphist
 udiskie

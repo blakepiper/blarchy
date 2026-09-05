@@ -44,6 +44,7 @@ class RegressionTests(unittest.TestCase):
     scanners = self.root / ".local/bin/ai-usage-scanners"
     self.assertEqual(len(list(scanners.glob("*.py"))), 3)
     self.assertFalse((scanners / "__pycache__").exists())
+    self.assertTrue(os.access(self.root / ".local/bin/clipboard-history", os.X_OK))
 
   def pci(self, name, vendor, device_class):
     device = self.root / name
@@ -82,6 +83,8 @@ blarchy_nvidia_packages '2684 10de 1234'
 [[ " ${BLARCHY_HW_PACKAGES[*]} " == *" linux-headers "* ]]
 [[ " ${BLARCHY_HW_PACKAGES[*]} " == *" linux-lts-headers "* ]]
 [[ " ${BLARCHY_HW_PACKAGES[*]} " == *" nvidia-open-dkms "* ]]
+[[ " ${BLARCHY_HW_PACKAGES[*]} " == *" nvidia-utils "* ]]
+[[ " ${BLARCHY_HW_PACKAGES[*]} " != *" lib32-"* ]]
 '''
     result = self.bash(script, BLARCHY_MODULES_PATH=str(self.root))
     self.assertEqual(result.returncode, 0, result.stderr)
@@ -106,6 +109,38 @@ blarchy_nvidia_packages '2684 10de 1234'
       self.assertEqual(result.returncode, 0, result.stderr)
     self.assertEqual(end.read_text(), "80\n")
     self.assertEqual(start.read_text(), "75\n")
+
+  def test_clipboard_picker_preserves_data_and_cancellation(self):
+    payload = self.root / "payload"
+    clipboard = self.root / "clipboard"
+    script = r'''
+cliphist() {
+  case $1 in
+    list) printf '1\tpreview\n' ;;
+    decode)
+      IFS= read -r selection
+      [[ $selection == $'1\tpreview' ]]
+      [[ $PICKER_ACTION != "missing" ]] || return 1
+      cat "$PAYLOAD"
+      ;;
+  esac
+}
+fuzzel() {
+  cat >/dev/null
+  [[ $PICKER_ACTION != "cancel" ]] || return 1
+  [[ $PICKER_ACTION != "empty" ]] || return 0
+  printf '1\tpreview\n'
+}
+wl-copy() { cat >"$CLIPBOARD"; }
+source bin/clipboard-history
+'''
+    for content in (b"text\nwith trailing newline\n", b"\x89PNG\r\n\x1a\n\x00\xff"):
+      payload.write_bytes(content)
+      for action in ("select", "cancel", "empty", "missing"):
+        clipboard.write_bytes(b"original clipboard")
+        result = self.bash(script, PAYLOAD=str(payload), CLIPBOARD=str(clipboard), PICKER_ACTION=action)
+        self.assertEqual(result.returncode == 0, action != "missing", result.stderr)
+        self.assertEqual(clipboard.read_bytes(), content if action == "select" else b"original clipboard")
 
   def test_old_claude_activity_is_not_today(self):
     provider = AI["base_provider"]("claude", "Claude")

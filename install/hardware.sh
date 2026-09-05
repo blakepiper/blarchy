@@ -123,7 +123,7 @@ blarchy_nvidia_packages() {
     echo "Error: no installed kernel pkgbase found under /usr/lib/modules." >&2
     return 1
   fi
-  BLARCHY_HW_PACKAGES+=(nvidia-open-dkms nvidia-utils lib32-nvidia-utils nvidia-settings)
+  BLARCHY_HW_PACKAGES+=(nvidia-open-dkms nvidia-utils)
   blarchy_hw_note "NVIDIA GPU supported by driver $version (DKMS for ${kernels[*]})"
 }
 

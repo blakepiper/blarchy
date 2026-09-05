@@ -103,22 +103,6 @@ install_yay() {
 
 sudo -v
 
-# Multilib provides the NVIDIA lib32 drivers.
-if ! pacman-conf --repo-list 2>/dev/null | grep -qx 'multilib'; then
-  if grep -q '^#\[multilib\]$' /etc/pacman.conf; then
-    echo "Enable Arch multilib"
-    if [[ ! -e /etc/pacman.conf.blarchy-before-multilib ]]; then
-      sudo cp -p /etc/pacman.conf /etc/pacman.conf.blarchy-before-multilib
-    fi
-    sudo sed -i \
-      '/^#\[multilib\]$/,/^#Include = \/etc\/pacman.d\/mirrorlist$/ s/^#//' \
-      /etc/pacman.conf
-  else
-    echo "Error: enable the standard Arch multilib repository in /etc/pacman.conf, then retry." >&2
-    exit 1
-  fi
-fi
-
 echo "Update Arch and install build prerequisites"
 # makepkg installs declared build dependencies, including Go for yay.
 sudo pacman -Syu --needed --noconfirm base-devel git curl pciutils usbutils

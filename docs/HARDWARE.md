@@ -11,7 +11,7 @@ machine gets exactly its own stack.
 | AMD CPU | `/proc/cpuinfo` vendor | `amd-ucode` |
 | Intel GPU | PCI display-class vendor ID in sysfs | `vulkan-intel`, `intel-media-driver` |
 | AMD GPU | PCI display-class vendor ID in sysfs | `vulkan-radeon` |
-| NVIDIA GPU | PCI display-class IDs plus NVIDIA's compatibility table | `nvidia-open-dkms`, installed kernel headers, `nvidia-utils`, `lib32-nvidia-utils`, `nvidia-settings` |
+| NVIDIA GPU | PCI display-class IDs plus NVIDIA's compatibility table | `nvidia-open-dkms`, installed kernel headers, `nvidia-utils` |
 | Laptop chassis or battery | DMI `chassis_type`, `/sys/class/power_supply/BAT*` | enables `power-profiles-daemon` |
 | Bluetooth adapter | sysfs, `lsusb`, `lspci` | enables `bluetooth.service` |
 | QEMU/KVM, VMware, VirtualBox | `systemd-detect-virt` | matching guest tools |

@@ -93,12 +93,11 @@ binds {
   Mod+O repeat=false { toggle-overview; }
   Mod+Tab { focus-workspace-previous; }
 
-  // Region screenshot: save to ~/Pictures/Screenshots AND copy to clipboard.
-  // (Niri's built-in screenshot action only saves a file, so this uses
-  // grim + slurp + wl-copy directly. Cancelling the selection aborts.)
-  Mod+Shift+S { spawn-sh "mkdir -p \"$HOME/Pictures/Screenshots\" && f=\"$HOME/Pictures/Screenshots/Screenshot from $(date '+%Y-%m-%d %H-%M-%S').png\" && grim -g \"$(slurp)\" \"$f\" && wl-copy --type image/png < \"$f\""; }
+  // Select a region, then Enter to save and copy it; Escape cancels.
+  Mod+Shift+S { screenshot; }
   Print { screenshot-screen; }
   Alt+Print { screenshot-window; }
+  Mod+V { spawn-sh "~/.local/bin/clipboard-history"; }
 
   // Lock and power.
   Mod+L { spawn "swaylock" "-f"; }
@@ -185,11 +184,6 @@ window-rule {
 
 window-rule {
   match app-id="gnome-calculator"
-  open-floating true
-}
-
-window-rule {
-  match app-id="system-config-printer"
   open-floating true
 }
 

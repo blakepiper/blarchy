@@ -38,8 +38,7 @@ input {
   position x=0 y=0
 }
 
-// Keep four numbered workspaces available even when empty.
-workspace "1"
+// Keep workspaces 2-4 available even when empty; Niri's initial workspace is 1.
 workspace "2"
 workspace "3"
 workspace "4"
@@ -151,7 +150,7 @@ binds {
   Mod+Period { consume-or-expel-window-right; }
 
   // Workspaces 1-9.
-  Mod+1 { focus-workspace "1"; }
+  Mod+1 { focus-workspace 1; }
   Mod+2 { focus-workspace "2"; }
   Mod+3 { focus-workspace "3"; }
   Mod+4 { focus-workspace "4"; }
@@ -160,7 +159,7 @@ binds {
   Mod+7 { focus-workspace 7; }
   Mod+8 { focus-workspace 8; }
   Mod+9 { focus-workspace 9; }
-  Mod+Shift+1 { move-column-to-workspace "1"; }
+  Mod+Shift+1 { move-column-to-workspace 1; }
   Mod+Shift+2 { move-column-to-workspace "2"; }
   Mod+Shift+3 { move-column-to-workspace "3"; }
   Mod+Shift+4 { move-column-to-workspace "4"; }

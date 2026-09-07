@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# dev: lay the current project out across a 2x2 prettymux workspace -
+# terminal-code (top-left, README active with the repo root in the
+# sidebar), a blank shell (top-right), `top` (bottom-left), and `hyfetch`
+# (bottom-right).
+#
+# prettymux-open --exec only ever delivers text as a bracketed paste, and
+# ble.sh refuses to auto-run pasted text on its own - see the paste_begin
+# override in config/blesh/init.sh that this depends on. Only works from
+# inside a prettymux pane.
+#
+# Usage: dev (run from inside the project directory)
+
+set -euo pipefail
+
+if [[ -z ${PRETTYMUX_SOCKET-} && -z ${PRETTYMUX-} ]]; then
+  echo "dev: doesn't look like you're inside prettymux (no \$PRETTYMUX_SOCKET set)." >&2
+  exit 1
+fi
+if ! command -v prettymux-open >/dev/null 2>&1; then
+  echo "dev: prettymux-open not found on PATH." >&2
+  exit 1
+fi
+if ! command -v jq >/dev/null 2>&1; then
+  echo "dev: jq is required but not found on PATH." >&2
+  exit 1
+fi
+
+dev_marker="/run/user/$(id -u)/dev-script-active"
+: > "$dev_marker"
+trap 'rm -f "$dev_marker"' EXIT
+
+project_dir=$(pwd -P)
+project_name=$(basename "$project_dir")
+
+pm() { prettymux-open "$@"; }
+
+# Create a fresh workspace for this project and force a classic, 2x2-capable layout.
+ws_index=$(pm --new-workspace "$project_name" | jq -r '.index')
+if [[ -z $ws_index || $ws_index == null ]]; then
+  echo "dev: failed to create prettymux workspace." >&2
+  exit 1
+fi
+pm --set-layout classic -w "$ws_index" >/dev/null
+
+focus() { pm --select-tab -w "$ws_index" -p "$1" -t 0 >/dev/null; }
+
+# Pane 0 (top-left, focused by default) splits right into pane 1 (top-right).
+pm --action hsplit >/dev/null
+sleep 0.3
+# Pane 0 splits down into pane 2 (bottom-left).
+focus 0
+pm --action vsplit >/dev/null
+sleep 0.3
+# Pane 1 splits down into pane 3 (bottom-right).
+focus 1
+pm --action vsplit >/dev/null
+sleep 0.3
+
+exec_in() { pm --exec "$2" -w "$ws_index" -p "$1" >/dev/null; }
+
+# README viewer, with an intelligent fallback when the project has none.
+readme=""
+for candidate in README.md README.markdown README.rst README.txt README; do
+  if [[ -f "$project_dir/$candidate" ]]; then
+    readme="$project_dir/$candidate"
+    break
+  fi
+done
+if [[ -z $readme ]]; then
+  readme=$(find "$project_dir" -maxdepth 1 -type f -iname 'readme*' 2>/dev/null | head -n 1)
+fi
+
+# tode needs both the folder and the file to open with a real workspace (so
+# the sidebar has the repo root to show) and the README as the active tab.
+readme_cmd="cd $(printf '%q' "$project_dir"); "
+if [[ -n $readme ]]; then
+  readme_cmd+="if command -v tode >/dev/null 2>&1; then tode $(printf '%q' "$project_dir") $(printf '%q' "$readme"); elif command -v bat >/dev/null 2>&1; then bat --paging=always --style=plain $(printf '%q' "$readme"); else less $(printf '%q' "$readme"); fi"
+else
+  readme_cmd+="if command -v tode >/dev/null 2>&1; then tode $(printf '%q' "$project_dir"); else printf 'No README found in %s\\n\\n' $(printf '%q' "$project_dir"); ls -la; fi"
+fi
+
+exec_in 0 "$readme_cmd"
+exec_in 1 "cd $(printf '%q' "$project_dir")"
+exec_in 2 "cd $(printf '%q' "$project_dir"); top"
+exec_in 3 "hyfetch"
+
+# Give the pastes a moment to land before the marker disappears (EXIT trap).
+sleep 0.5
+
+echo "dev: workspace '$project_name' ready (index $ws_index)."

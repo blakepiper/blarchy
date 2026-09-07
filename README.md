@@ -273,6 +273,21 @@ Suggestions run locally, without an AI service or account.
 Settings live in `~/.config/blesh/init.sh`. Starship still provides the
 prompt, and `yay -Syu` updates ble.sh through the `blesh-git` AUR package.
 
+## Project workspace (`dev`)
+
+Inside prettymux, `cd` into a project and run `dev` to lay it out across a
+2x2 grid in a fresh workspace: terminal-code (`tode`) opens top-left with
+the README active and the repo root in the sidebar, a blank shell sits
+top-right, `top` runs bottom-left, and `hyfetch` runs bottom-right. A
+project with no README opens `tode` on the folder alone instead of
+crashing.
+
+`dev` pastes each pane's command through `prettymux-open --exec`. ble.sh
+never auto-runs pasted text on its own, so `config/blesh/init.sh` swaps in
+a `paste_begin` widget that does, scoped to a short-lived marker file `dev`
+sets while it runs — every other terminal keeps ble.sh's normal
+paste-safety behavior. This only works from inside prettymux.
+
 ## Firefox defaults
 
 uBlock Origin and Dark Reader install from Arch packages and update with
@@ -395,7 +410,7 @@ yay -S spotify   # optional music player
 ## Repository map
 
 ```text
-bin/          desktop helpers (topbar panels, AI usage, night mode, displays, clipboard, network)
+bin/          desktop helpers (topbar panels, AI usage, night mode, displays, clipboard, network, dev workspace)
 config/       user configuration defaults (niri, kitty, waybar, fuzzel, ...)
 docs/         hardware detection notes
 etc/          system defaults (greetd, Firefox policies, dark mode, battery limit)

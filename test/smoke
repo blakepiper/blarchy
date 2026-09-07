@@ -139,6 +139,11 @@ check "helpers referenced by login-proof path" bash -c \
   "grep -q '~/.local/bin/night-mode' '$repo_path/config/waybar/config.jsonc' '$repo_path/config/niri/config.kdl'"
 check "user setup installs night-mode" grep -q 'bin/night-mode' "$repo_path/install/user.sh"
 
+# Prettymux project workspace helper.
+check "dev parses" bash -n "$repo_path/bin/dev"
+check "user setup installs dev" grep -q 'bin/dev' "$repo_path/install/user.sh"
+check "blesh init overrides paste_begin for dev" grep -q 'dev-auto-paste' "$repo_path/config/blesh/init.sh"
+
 # Wallpaper and terminal theme.
 check "wallpaper bundled" test -f "$repo_path/config/swaybg/wallpaper.jpg"
 check "niri shows the wallpaper" grep -q 'swaybg -i ~/.config/swaybg/wallpaper.jpg' "$repo_path/config/niri/config.kdl"
@@ -182,7 +187,7 @@ check_fail "no quickshell dir" test -e "$repo_path/shell"
 check "bin/ holds only managed helpers" python3 -c "
 from pathlib import Path
 names = sorted(p.name for p in Path('$repo_path/bin').iterdir() if p.name != '__pycache__')
-assert names == ['ai-usage', 'ai-usage-scanners', 'clipboard-history', 'displays', 'network-settings', 'night-mode', 'topbar-panel'], names
+assert names == ['ai-usage', 'ai-usage-scanners', 'clipboard-history', 'dev', 'displays', 'network-settings', 'night-mode', 'topbar-panel'], names
 "
 check "network settings helper parses" bash -n "$repo_path/bin/network-settings"
 if command -v dconf >/dev/null 2>&1; then

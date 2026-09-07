@@ -291,7 +291,7 @@ source bin/clipboard-history
       {"percent": 0.8, "label": "Session"},
     ]}]}
     result = json.loads(AI["waybar_output"](data))
-    self.assertEqual(result["text"], "AI 20%")
+    self.assertEqual(result["text"], "AI 80%")
     self.assertEqual(result["class"], "warning")
     config = json.loads((REPO / "config/waybar/config.jsonc").read_text())
     self.assertEqual(config["custom/ai-usage"]["on-click"], "~/.local/bin/topbar-panel ai")

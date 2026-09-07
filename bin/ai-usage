@@ -388,17 +388,17 @@ def waybar_output(data: dict[str, Any]) -> str:
   if usage < 0:
     payload = {"text": "AI", "tooltip": details_text(data), "class": "unknown"}
   else:
-    remaining = round((1 - usage) * 100)
-    if remaining <= 15:
+    used = round(usage * 100)
+    if used >= 85:
       bar_class = "critical"
-    elif remaining <= 30:
+    elif used >= 70:
       bar_class = "warning"
     else:
       bar_class = "ok"
     payload = {
-      "text": f"AI {remaining}%",
+      "text": f"AI {used}%",
       "tooltip": details_text(data),
-      "percentage": round(usage * 100),
+      "percentage": used,
       "class": bar_class,
     }
   return json.dumps(payload)

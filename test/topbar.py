@@ -172,7 +172,7 @@ class PanelTests(unittest.TestCase):
     pending.return_dbus_error.assert_called_once()
     self.assertIsNone(wifi.pending)
 
-  def test_ai_refresh_updates_bar_and_remaining_progress(self):
+  def test_ai_refresh_updates_bar_and_usage_progress(self):
     panel = FakePanel()
     ai = {"fetch_data": lambda **kwargs: {"providers": [{"name": "Fixture", "limits": [{"percent": 0.2}]}]},
           "normalized_percent": lambda value: value, "reset_text": lambda value: "",
@@ -182,7 +182,12 @@ class PanelTests(unittest.TestCase):
          patch("subprocess.run") as run:
       method(panel, True)
     progress = next(w for w in panel.widgets if isinstance(w, Gtk.ProgressBar))
-    self.assertAlmostEqual(progress.get_fraction(), 0.8)
+    self.assertAlmostEqual(progress.get_fraction(), 0.2)
+    self.assertTrue(any(
+      isinstance(child, Gtk.Label) and child.get_text() == "20% used"
+      for widget in panel.widgets if isinstance(widget, Gtk.Box)
+      for child in widget.get_children()
+    ))
     run.assert_called_once_with(["pkill", "-RTMIN+9", "-x", "waybar"], check=False)
 
 

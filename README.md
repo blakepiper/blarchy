@@ -346,7 +346,7 @@ unchanged. To clear saved history, run `cliphist wipe`.
 
 ## AI usage widget
 
-The bar's `AI %` module shows the remaining quota of your most-consumed
+The bar's `AI %` module shows the used quota of your most-consumed
 AI subscription window across Claude Code, Codex, and OpenCode Go, with
 per-provider details and today's local token/prompt counts in the
 tooltip. It refreshes every five minutes and caches under

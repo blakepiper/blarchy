@@ -198,11 +198,11 @@ class Panel(Gtk.ApplicationWindow):
         if provider.get("tier"):
           self.add(label(provider["tier"], "dim"))
         for limit in provider.get("limits", []):
-          used = ai["normalized_percent"](limit.get("percent"))
-          if used < 0:
+          usage = ai["normalized_percent"](limit.get("percent"))
+          if usage < 0:
             continue
-          self.add(row(label(limit.get("label", "Usage")), label(f"{round((1-used)*100)}% left")))
-          self.add(Gtk.ProgressBar(fraction=1 - used))
+          self.add(row(label(limit.get("label", "Usage")), label(f"{round(usage*100)}% used")))
+          self.add(Gtk.ProgressBar(fraction=usage))
           reset = ai["reset_text"](str(limit.get("resetAt") or ""))
           if reset:
             self.add(label(reset, "dim"))

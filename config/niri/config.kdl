@@ -85,6 +85,10 @@ overview {
   backdrop-color "#2c001e"
 }
 
+hotkey-overlay {
+  skip-at-startup
+}
+
 binds {
   // Applications (Super = Mod).
   Mod+Return { spawn "kitty"; }

@@ -38,7 +38,8 @@ input {
   position x=0 y=0
 }
 
-// Keep workspaces 2-4 available even when empty; Niri's initial workspace is 1.
+// Keep workspaces 1-4 available even when empty.
+workspace "1"
 workspace "2"
 workspace "3"
 workspace "4"

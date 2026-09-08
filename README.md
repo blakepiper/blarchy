@@ -231,7 +231,7 @@ any desired configuration changes manually. There is no self-updater.
 | Editor | terminal-code (`tode`) and Neovim |
 | Audio | PipeWire and WirePlumber |
 | Battery | 80% charge limit on laptops with kernel charge-control support |
-| AI usage widget | `ai-usage` in the bar (Claude Code, Codex, OpenCode Go) |
+| AI usage widget | `ai-usage` in the bar (Codex, OpenCode Go) |
 | AI coding agents | Claude Code (`claude`), Codex (`codex`), pi (`pi`), OpenCode (`opencode`) |
 | Packages | pacman and yay |
 
@@ -347,7 +347,7 @@ unchanged. To clear saved history, run `cliphist wipe`.
 ## AI usage widget
 
 The bar's `AI %` module shows the used quota of your most-consumed
-AI subscription window across Claude Code, Codex, and OpenCode Go, with
+AI subscription window across Codex and OpenCode Go, with
 per-provider details and today's local token/prompt counts in the
 tooltip. It refreshes every five minutes and caches under
 `~/.cache/blarchy/ai-usage/`.

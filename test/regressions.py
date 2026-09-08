@@ -296,11 +296,29 @@ source bin/clipboard-history
     config = json.loads((REPO / "config/waybar/config.jsonc").read_text())
     self.assertEqual(config["custom/ai-usage"]["on-click"], "~/.local/bin/topbar-panel ai")
     self.assertEqual(config["pulseaudio"]["on-click"], "~/.local/bin/topbar-panel audio")
-    self.assertTrue(all(config["idle_inhibitor"]["format-icons"].values()))
+    self.assertEqual(config["custom/awake"]["on-click"], "~/.local/bin/keep-awake toggle")
     for mode in ("off", "night", "night-plus"):
       (self.root / "blarchy-night-mode").write_text(mode)
       result = self.bash('bin/night-mode status', XDG_RUNTIME_DIR=str(self.root))
       self.assertTrue(json.loads(result.stdout)["text"])
+
+  def test_awake_guards_automatic_actions(self):
+    mock_bin = self.root / "bin"
+    mock_bin.mkdir()
+    systemctl = mock_bin / "systemctl"
+    systemctl.write_text('#!/bin/bash\nexit "${AWAKE_TEST_STATE}"\n')
+    systemctl.chmod(0o755)
+    env = {"PATH": f"{mock_bin}:{os.environ['PATH']}"}
+    for state, expected_class, expected_output in (
+      ("0", "activated", ""), ("3", "deactivated", "idle-action-ran"),
+    ):
+      result = self.bash('bin/keep-awake status', AWAKE_TEST_STATE=state, **env)
+      self.assertEqual(result.returncode, 0, result.stderr)
+      self.assertEqual(json.loads(result.stdout)["class"], expected_class)
+      result = self.bash('bin/keep-awake idle-action printf idle-action-ran',
+                         AWAKE_TEST_STATE=state, **env)
+      self.assertEqual(result.returncode, 0, result.stderr)
+      self.assertEqual(result.stdout, expected_output)
 
   def test_opencode_today_and_live_limits(self):
     scanner = runpy.run_path(str(REPO / "bin/ai-usage-scanners/opencode_go_usage_scanner.py"))

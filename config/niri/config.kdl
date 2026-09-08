@@ -74,7 +74,7 @@ spawn-at-startup "gnome-keyring-daemon" "--start" "--components=secrets"
 spawn-at-startup "udiskie" "--tray"
 spawn-at-startup "sh" "-c" "wl-paste --type text --watch cliphist store"
 spawn-at-startup "sh" "-c" "wl-paste --type image --watch cliphist store"
-spawn-at-startup "swayidle" "-w" "timeout" "600" "swaylock -f" "timeout" "900" "niri msg action power-off-monitors" "before-sleep" "swaylock -f"
+spawn-at-startup "swayidle" "-w" "timeout" "600" "~/.local/bin/keep-awake idle-action swaylock -f" "timeout" "900" "~/.local/bin/keep-awake idle-action niri msg action power-off-monitors" "before-sleep" "~/.local/bin/keep-awake idle-action swaylock -f"
 // Restore the night-mode temperature when it was left on (exits at once when off).
 spawn-at-startup "sh" "-c" "~/.local/bin/night-mode run"
 

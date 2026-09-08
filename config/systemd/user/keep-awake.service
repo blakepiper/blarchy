@@ -1,0 +1,9 @@
+[Unit]
+Description=Prevent automatic sleep while the top-bar Awake toggle is on
+PartOf=graphical-session.target
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/systemd-inhibit --what=idle:sleep:handle-lid-switch --who=Awake --why=Top-bar-Awake-is-enabled --mode=block /usr/bin/sleep infinity
+Restart=on-failure
+RestartSec=1

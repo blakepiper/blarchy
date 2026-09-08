@@ -1,0 +1,40 @@
+#!/bin/bash
+set -euo pipefail
+
+active() {
+  systemctl --user is-active --quiet keep-awake.service
+}
+
+case "${1:-status}" in
+  status)
+    if active; then
+      printf '%s\n' '{"text":"  Awake","class":"activated","tooltip":"Keep awake: on\nAutomatic locking, screen blanking, sleep and lid suspend are blocked.\nClick to turn off."}'
+    else
+      printf '%s\n' '{"text":"  Awake","class":"deactivated","tooltip":"Keep awake: off\nClick to prevent automatic locking, screen blanking and sleep."}'
+    fi
+    ;;
+  on)
+    systemctl --user start keep-awake.service
+    niri msg action power-on-monitors
+    ;;
+  off)
+    systemctl --user stop keep-awake.service
+    ;;
+  toggle)
+    exec 9>"${XDG_RUNTIME_DIR:?}/keep-awake-toggle.lock"
+    flock 9
+    if active; then
+      "$0" off
+    else
+      "$0" on
+    fi
+    ;;
+  idle-action)
+    shift
+    # Guard every automatic action even if compositor inhibition is lost.
+    if ! active; then
+      exec "$@"
+    fi
+    ;;
+  *) exit 2 ;;
+esac

@@ -6,7 +6,7 @@
   "margin-left": 0,
   "margin-right": 0,
   "spacing": 0,
-  "modules-left": ["niri/workspaces", "custom/night-mode", "idle_inhibitor"],
+  "modules-left": ["niri/workspaces", "custom/night-mode", "custom/awake"],
   "modules-center": ["clock"],
   "modules-right": ["cpu", "memory", "custom/ai-usage", "pulseaudio", "network", "bluetooth", "battery", "tray"],
   "niri/workspaces": {
@@ -42,14 +42,12 @@
     "on-click": "~/.local/bin/night-mode next",
     "tooltip": true
   },
-  "idle_inhibitor": {
-    "format": "{icon}  Awake",
-    "format-icons": {
-      "activated": "",
-      "deactivated": ""
-    },
-    "tooltip-format-activated": "Keep awake: on\nClick to allow automatic locking and screen blanking",
-    "tooltip-format-deactivated": "Keep awake: off\nClick to prevent automatic locking and screen blanking"
+  "custom/awake": {
+    "exec": "~/.local/bin/keep-awake status",
+    "return-type": "json",
+    "interval": 1,
+    "on-click": "~/.local/bin/keep-awake toggle",
+    "tooltip": true
   },
   "pulseaudio": {
     "format": "{icon}  {volume}%",

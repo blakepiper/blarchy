@@ -77,7 +77,7 @@ button:hover {
 #memory,
 #custom-ai-usage,
 #custom-night-mode,
-#idle_inhibitor,
+#custom-awake,
 #pulseaudio,
 #network,
 #bluetooth,
@@ -108,13 +108,13 @@ button:hover {
 }
 
 #custom-night-mode,
-#idle_inhibitor {
+#custom-awake {
   color: #ab98a4;
 }
 
 #custom-night-mode.night,
 #custom-night-mode.night-plus,
-#idle_inhibitor.activated {
+#custom-awake.activated {
   color: #ffc09a;
   background: #503326;
 }
@@ -125,7 +125,7 @@ button:hover {
 
 #workspaces button:hover,
 #custom-night-mode:hover,
-#idle_inhibitor:hover,
+#custom-awake:hover,
 #custom-ai-usage:hover,
 #pulseaudio:hover,
 #network:hover,

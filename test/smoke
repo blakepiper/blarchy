@@ -132,7 +132,8 @@ check "uBlock Origin for Firefox in packages" grep -qx 'firefox-ublock-origin' "
 check "Dark Reader for Firefox in packages" grep -qx 'firefox-dark-reader' "$repo_path/install/packages"
 check "Firefox policies are valid JSON" python3 -m json.tool "$repo_path/etc/firefox/policies/policies.json"
 check "waybar has night-mode module" grep -q 'custom/night-mode' "$repo_path/config/waybar/config.jsonc"
-check "waybar has caffeinate module" grep -q 'idle_inhibitor' "$repo_path/config/waybar/config.jsonc"
+check "waybar has Awake module" grep -q 'custom/awake' "$repo_path/config/waybar/config.jsonc"
+check "keep-awake parses" bash -n "$repo_path/bin/keep-awake"
 check "waybar has CPU and memory modules" grep -q '"modules-right": \["cpu", "memory"' "$repo_path/config/waybar/config.jsonc"
 check "niri restores night-mode at login" grep -q 'night-mode.*run' "$repo_path/config/niri/config.kdl"
 check "helpers referenced by login-proof path" bash -c \
@@ -187,7 +188,7 @@ check_fail "no quickshell dir" test -e "$repo_path/shell"
 check "bin/ holds only managed helpers" python3 -c "
 from pathlib import Path
 names = sorted(p.name for p in Path('$repo_path/bin').iterdir() if p.name != '__pycache__')
-assert names == ['ai-usage', 'ai-usage-scanners', 'clipboard-history', 'dev', 'displays', 'network-settings', 'night-mode', 'topbar-panel'], names
+assert names == ['ai-usage', 'ai-usage-scanners', 'clipboard-history', 'dev', 'displays', 'keep-awake', 'network-settings', 'night-mode', 'topbar-panel'], names
 "
 check "network settings helper parses" bash -n "$repo_path/bin/network-settings"
 if command -v dconf >/dev/null 2>&1; then

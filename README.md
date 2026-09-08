@@ -358,14 +358,16 @@ tooltip. It refreshes every five minutes and caches under
 
 ## Night mode and caffeinate
 
-Two toggles sit in the center of the bar, next to the clock:
+Two toggles sit on the left of the bar, next to the workspaces:
 
 - **Night mode** (sun/moon icon) warms the screen through `gammastep`.
   Click it — or press <kbd>Super</kbd> + <kbd>N</kbd> — to cycle
   off → night (3500 K) → night-plus (2200 K). The mode lasts for the
   login session; a fresh boot starts with it off.
-- **Caffeinate** (coffee icon) inhibits idle sleep while active, so the
-  screen neither locks nor powers off. Click again to release it.
+- **Awake** (coffee icon) blocks automatic locking, screen blanking,
+  sleep and lid-triggered suspend through a systemd user service and
+  guarded idle actions. Click again to restore normal idle behavior.
+  It survives bar restarts and resets when the desktop session ends.
 
 Both reflect their state in the bar immediately.
 

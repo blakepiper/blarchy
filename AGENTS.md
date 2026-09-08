@@ -31,7 +31,8 @@ the intended desktop user, and running `./install.sh`.
   `bin/ai-usage-scanners/`, surfaced as Waybar's `custom/ai-usage` module.
 - The night-mode toggle is `bin/night-mode` (session state file plus a
   long-lived gammastep process), surfaced as Waybar's `custom/night-mode`
-  module. Caffeinate uses Waybar's native `idle_inhibitor` module.
+  module. Awake uses `bin/keep-awake`, the `keep-awake.service` user unit,
+  and Waybar's `custom/awake` module to block sleep and guard idle actions.
 - Helpers in `bin/` are managed files: `install/user.sh` copies them to
   `~/.local/bin`, and desktop configs must reference them by that absolute
   path because login-session PATH does not include `~/.local/bin`.

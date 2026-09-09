@@ -81,20 +81,20 @@ class RegressionTests(unittest.TestCase):
 
   def test_keyring_pam_retry(self):
     original = "# Keep these authentication rules\nauth include system-local-login\n"
-    for service in ("greetd", "passwd"):
+    for service in ("sddm", "passwd"):
       (self.root / service).write_text(original)
     script = 'source install/pam.sh; blarchy_configure_keyring_pam "$1"'
     for _ in range(2):
       result = self.bash(script, self.root)
       self.assertEqual(result.returncode, 0, result.stderr)
-    greetd = (self.root / "greetd").read_text()
-    self.assertTrue(greetd.startswith(original))
-    self.assertEqual(greetd.count("auth optional pam_gnome_keyring.so"), 1)
-    self.assertEqual(greetd.count("session optional pam_gnome_keyring.so auto_start"), 1)
+    sddm = (self.root / "sddm").read_text()
+    self.assertTrue(sddm.startswith(original))
+    self.assertEqual(sddm.count("auth optional pam_gnome_keyring.so"), 1)
+    self.assertEqual(sddm.count("session optional pam_gnome_keyring.so auto_start"), 1)
     self.assertEqual((self.root / "passwd").read_text().count("password optional pam_gnome_keyring.so"), 1)
-    (self.root / "greetd").unlink()
+    (self.root / "sddm").unlink()
     self.assertNotEqual(self.bash(script, self.root).returncode, 0)
-    self.assertFalse((self.root / "greetd").exists())
+    self.assertFalse((self.root / "sddm").exists())
 
   def test_hardware_only_packages(self):
     script = '''source install/hardware.sh

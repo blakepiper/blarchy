@@ -52,7 +52,9 @@ fi
 for manifest in packages packages-aur; do
   check "install/$manifest is non-empty" test -s "$repo_path/install/$manifest"
 done
-check_fail "no hyprland packages" grep -qi -E 'hypr|xfce|alacritty|sddm|quickshell' "$repo_path/install/packages"
+check_fail "no hyprland packages" grep -qi -E 'hypr|xfce|alacritty|quickshell' "$repo_path/install/packages"
+check "sddm in packages" grep -qx 'sddm' "$repo_path/install/packages"
+check_fail "no greetd packages" grep -qxE 'greetd(-.*)?' "$repo_path/install/packages"
 check "kitty in packages" grep -qx 'kitty' "$repo_path/install/packages"
 check "niri in packages" grep -qx 'niri' "$repo_path/install/packages"
 check "waybar in packages" grep -qx 'waybar' "$repo_path/install/packages"
@@ -96,7 +98,7 @@ check "waybar config is JSON" python3 -c "
 import json
 json.load(open('$repo_path/config/waybar/config.jsonc'))
 "
-check "greetd config exists" test -f "$repo_path/etc/greetd/config.toml"
+check "sddm config exists" test -f "$repo_path/etc/sddm.conf.d/10-general.conf"
 
 # Compile in memory, without leaving __pycache__ in managed helper directories.
 check "AI helpers compile" python3 -c '

@@ -34,8 +34,7 @@ kitty
 ghostty-terminfo # prettymux uses xterm-ghostty; required by clear and other terminal tools
 
 # Login, network, bluetooth, audio, power
-greetd
-greetd-tuigreet
+sddm
 networkmanager
 libnm
 wireless-regdb

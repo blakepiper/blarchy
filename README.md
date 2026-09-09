@@ -335,6 +335,8 @@ Firefox after changing it; `about:policies` shows active policies and errors.
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>E</kbd> | Quit Niri |
 
 Media, volume, and brightness keys work out of the box.
+The topbar shows screen brightness beside the sound control; drag the slider
+or click its track to set brightness from 1–100%.
 
 For screenshots, select a region in Niri's screenshot interface and press
 Enter to save and copy it, or Escape to cancel.

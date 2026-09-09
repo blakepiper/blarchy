@@ -198,3 +198,40 @@ tooltip label {
 #workspaces button.empty:not(.active):not(.focused):not(#niri-workspace-1):not(#niri-workspace-2):not(#niri-workspace-3):not(#niri-workspace-4) label {
   font-size: 0;
 }
+
+/* Brightness: a visible handle and compact track for direct dragging. */
+#backlight {
+  color: #bcaab5;
+  margin: 2px 0 2px 4px;
+  padding: 0 4px;
+}
+
+#backlight-slider {
+  margin: 2px 8px 2px 2px;
+  padding: 0 4px;
+}
+
+#backlight-slider trough {
+  min-width: 72px;
+  min-height: 4px;
+  border-radius: 4px;
+  background: #493640;
+}
+
+#backlight-slider highlight {
+  min-height: 4px;
+  border-radius: 4px;
+  background: #f09462;
+}
+
+#backlight-slider slider {
+  min-width: 10px;
+  min-height: 10px;
+  border-radius: 50%;
+  background: #ffc09a;
+  box-shadow: none;
+}
+
+#backlight-slider slider:hover {
+  background: #ffffff;
+}

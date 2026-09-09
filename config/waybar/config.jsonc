@@ -8,7 +8,7 @@
   "spacing": 0,
   "modules-left": ["niri/workspaces", "custom/night-mode", "custom/awake"],
   "modules-center": ["clock"],
-  "modules-right": ["cpu", "memory", "custom/ai-usage", "pulseaudio", "network", "bluetooth", "battery", "tray"],
+  "modules-right": ["cpu", "memory", "custom/ai-usage", "backlight", "backlight/slider", "pulseaudio", "network", "bluetooth", "battery", "tray"],
   "niri/workspaces": {
     "format": "{value}"
   },
@@ -48,6 +48,15 @@
     "interval": 1,
     "on-click": "~/.local/bin/keep-awake toggle",
     "tooltip": true
+  },
+  "backlight": {
+    "format": "  {percent}%",
+    "tooltip-format": "Brightness: {percent}% · Drag the slider to adjust"
+  },
+  "backlight/slider": {
+    "min": 1,
+    "max": 100,
+    "orientation": "horizontal"
   },
   "pulseaudio": {
     "format": "{icon}  {volume}%",

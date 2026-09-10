@@ -8,7 +8,7 @@
   "spacing": 0,
   "modules-left": ["niri/workspaces", "custom/night-mode", "custom/awake"],
   "modules-center": ["clock"],
-  "modules-right": ["cpu", "memory", "custom/ai-usage", "backlight", "backlight/slider", "pulseaudio", "network", "bluetooth", "battery", "tray"],
+  "modules-right": ["cpu", "memory", "custom/ai-usage", "backlight", "backlight/slider", "pulseaudio", "network", "bluetooth", "custom/battery", "tray"],
   "niri/workspaces": {
     "format": "{value}"
   },
@@ -100,17 +100,14 @@
     "tooltip-format-off": "Bluetooth is off\nClick for Bluetooth settings",
     "tooltip-format-disabled": "Bluetooth is disabled\nClick for Bluetooth settings"
   },
-  "battery": {
-    "format": "{icon}  {capacity}%",
-    "format-charging": "  {capacity}%",
-    "format-plugged": "  {capacity}%",
-    "format-alt": "{icon}  {time}",
-    "format-icons": ["", "", "", "", ""],
-    "states": {
-      "warning": 30,
-      "critical": 15
-    },
-    "tooltip-format": "{capacity}% · {timeTo}\n{power:.1f} W"
+  "custom/battery": {
+    "exec": "~/.local/bin/battery-status --waybar",
+    "return-type": "json",
+    "interval": 30,
+    "signal": 10,
+    "on-click": "~/.local/bin/topbar-panel battery",
+    "on-click-right": "~/.local/bin/power-profile cycle",
+    "tooltip": true
   },
   "tray": {
     "spacing": 10,

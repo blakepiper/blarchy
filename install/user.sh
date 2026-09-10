@@ -85,5 +85,7 @@ cp -a "$repo/bin/displays" "$HOME/.local/bin/displays"
 cp -a "$repo/bin/clipboard-history" "$HOME/.local/bin/clipboard-history"
 cp -a "$repo/bin/network-settings" "$HOME/.local/bin/network-settings"
 cp -a "$repo/bin/topbar-panel" "$HOME/.local/bin/topbar-panel"
+cp -a "$repo/bin/battery-status" "$HOME/.local/bin/battery-status"
+cp -a "$repo/bin/power-profile" "$HOME/.local/bin/power-profile"
 
 echo "User setup complete"

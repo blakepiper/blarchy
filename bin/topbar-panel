@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Small layer-shell controls shared by Waybar's AI, audio and Wi-Fi buttons."""
+"""Small layer-shell controls shared by Waybar's AI, audio, Wi-Fi and battery buttons."""
 
 import concurrent.futures
 import json
@@ -107,7 +107,7 @@ class Panel(Gtk.ApplicationWindow):
     outer.set_border_width(20)
     outer.set_size_request(410, -1)
     self.card.add(outer)
-    titles = {"audio": "Sound", "wifi": "Wi-Fi", "ai": "AI usage"}
+    titles = {"audio": "Sound", "wifi": "Wi-Fi", "ai": "AI usage", "battery": "Battery"}
     close = button("×", self.destroy)
     close.set_tooltip_text("Close (Esc)")
     outer.pack_start(row(label(titles[kind], "title"), close), False, False, 0)
@@ -128,6 +128,8 @@ class Panel(Gtk.ApplicationWindow):
       self.load_ai()
     elif kind == "audio":
       self.load_audio()
+    elif kind == "battery":
+      self.load_battery()
     else:
       try:
         active_nm = subprocess.run(["systemctl", "is-active", "--quiet", "NetworkManager.service"]).returncode == 0
@@ -279,6 +281,63 @@ class Panel(Gtk.ApplicationWindow):
       for stream in json.loads(command("pactl", "-f", "json", "list", "sink-inputs")):
         command("pactl", "move-sink-input", str(stream["index"]), name)
     self.work(change, lambda _: self.load_audio())
+
+  def load_battery(self):
+    self.message("Loading battery…")
+    def fetch():
+      mod = runpy.run_path(str(HELPERS / "battery-status"))
+      return mod, mod["fetch_data"]()
+    def show(result):
+      mod, data = result
+      self.clear()
+      status = str(data.get("status", "Unknown"))
+      capacity = int(data.get("capacity", 0))
+      self.add(label(f"{capacity}% · {status}", "title"))
+      smooth = mod["format_duration"](data.get("smooth_hours"))
+      instant = mod["format_duration"](data.get("instant_hours"))
+      direction = str(data.get("direction", ""))
+      if direction and smooth != "—":
+        self.add(label(f"{smooth} {direction} (10-min avg {float(data.get('avg_power', 0)):.1f}W,"
+                       f" now {float(data.get('power_now', 0)):.1f}W)", "dim"))
+        if instant != "—" and instant != smooth:
+          self.add(label(f"Instant math would say {instant} — averaged so it stops jumping.", "dim"))
+      else:
+        self.add(label(f"Draw {float(data.get('power_now', 0)):.1f}W"
+                       f" (10-min avg {float(data.get('avg_power', 0)):.1f}W)", "dim"))
+      health = int(data.get("health", 0) or 0)
+      if health:
+        line = (f"Health {health}%"
+                f" ({float(data.get('energy_full', 0)):.1f}/{float(data.get('energy_design', 0)):.1f} Wh)")
+        if data.get("cycles"):
+          line += f" · {data['cycles']} cycles"
+        self.add(label(line, "dim"))
+      start, end = str(data.get("start_threshold", "")), str(data.get("end_threshold", ""))
+      if start and end:
+        self.add(label(f"Charge limits {start}–{end}% (ThinkPad thresholds)", "dim"))
+      self.add(label("Power profile", "dim"))
+      active = str(data.get("active", ""))
+      names = {"performance": "Performance", "balanced": "Balanced", "power-saver": "Power saver"}
+      tips = {"performance": "Fastest · most power",
+              "balanced": "Balanced speed and battery",
+              "power-saver": "Longest battery · slower"}
+      for profile in ("performance", "balanced", "power-saver"):
+        item = button(("✓  " if profile == active else "") + names[profile],
+                      lambda profile=profile: self.set_profile(profile))
+        item.set_tooltip_text(tips[profile])
+        if profile == active:
+          item.set_sensitive(False)
+        self.add(item)
+      if data.get("degraded"):
+        self.add(label(f"Performance is limited ({data['degraded']}) while on your lap.", "dim"))
+      self.add(button("Refresh", self.load_battery))
+      self.message("Click a profile to switch. Right-click the bar icon to cycle.")
+    self.work(fetch, show)
+
+  def set_profile(self, profile):
+    self.message(f"Switching to {profile}…")
+    def change():
+      command(str(HELPERS / "power-profile"), "set", profile)
+    self.work(change, lambda _: self.load_battery())
 
 
 class Wifi:
@@ -631,7 +690,7 @@ class App(Gtk.Application):
 
   def do_command_line(self, command_line):
     args = command_line.get_arguments()[1:]
-    if len(args) != 1 or args[0] not in ("ai", "audio", "wifi"):
+    if len(args) != 1 or args[0] not in ("ai", "audio", "wifi", "battery"):
       return 2
     kind = args[0]
     if self.panel and self.panel.alive:

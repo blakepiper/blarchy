@@ -82,6 +82,7 @@ button:hover {
 #network,
 #bluetooth,
 #battery,
+#custom-battery,
 #tray {
   margin: 2px 1px;
   padding: 0 9px;
@@ -130,7 +131,8 @@ button:hover {
 #pulseaudio:hover,
 #network:hover,
 #bluetooth:hover,
-#battery:hover {
+#battery:hover,
+#custom-battery:hover {
   background: #503b49;
   color: #ffffff;
 }
@@ -144,19 +146,23 @@ button:hover {
 
 #custom-ai-usage.warning,
 #battery.warning:not(.charging):not(.plugged),
+#custom-battery.warning,
 #network.disconnected,
 #network.linked {
   color: #f3c078;
 }
 
 #custom-ai-usage.critical,
-#battery.critical:not(.charging):not(.plugged) {
+#battery.critical:not(.charging):not(.plugged),
+#custom-battery.critical {
   color: #ffb4bc;
   background: #572c39;
 }
 
 #battery.charging,
-#battery.plugged {
+#battery.plugged,
+#custom-battery.charging,
+#custom-battery.plugged {
   color: #b5d6a0;
 }
 

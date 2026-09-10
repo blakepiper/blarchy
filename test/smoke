@@ -101,10 +101,10 @@ json.load(open('$repo_path/config/waybar/config.jsonc'))
 check "sddm config exists" test -f "$repo_path/etc/sddm.conf.d/10-general.conf"
 
 # Compile in memory, without leaving __pycache__ in managed helper directories.
-check "AI helpers compile" python3 -c '
+check "helpers compile" python3 -c '
 import pathlib, sys
 root = pathlib.Path(sys.argv[1])
-for path in [root / "bin/ai-usage", root / "bin/topbar-panel", *root.glob("bin/ai-usage-scanners/*.py")]:
+for path in [root / "bin/ai-usage", root / "bin/topbar-panel", root / "bin/battery-status", *root.glob("bin/ai-usage-scanners/*.py")]:
   compile(path.read_text(), str(path), "exec")
 ' "$repo_path"
 if ! python3 "$repo_path/test/regressions.py"; then
@@ -141,6 +141,14 @@ check "niri restores night-mode at login" grep -q 'night-mode.*run' "$repo_path/
 check "helpers referenced by login-proof path" bash -c \
   "grep -q '~/.local/bin/night-mode' '$repo_path/config/waybar/config.jsonc' '$repo_path/config/niri/config.kdl'"
 check "user setup installs night-mode" grep -q 'bin/night-mode' "$repo_path/install/user.sh"
+
+# Battery widget with smoothed estimate and power-profile switching.
+check "battery-status compiles" python3 -c "compile(open('$repo_path/bin/battery-status').read(), 'battery-status', 'exec')"
+check "power-profile parses" bash -n "$repo_path/bin/power-profile"
+check "waybar has battery module" grep -q 'custom/battery' "$repo_path/config/waybar/config.jsonc"
+check "battery opens the panel on click" grep -q 'topbar-panel battery' "$repo_path/config/waybar/config.jsonc"
+check "battery cycles profiles on right-click" grep -q 'power-profile cycle' "$repo_path/config/waybar/config.jsonc"
+check "user setup installs battery helpers" bash -c "grep -q 'bin/battery-status' '$repo_path/install/user.sh' && grep -q 'bin/power-profile' '$repo_path/install/user.sh'"
 
 # Prettymux project workspace helper.
 check "dev parses" bash -n "$repo_path/bin/dev"
@@ -190,7 +198,7 @@ check_fail "no quickshell dir" test -e "$repo_path/shell"
 check "bin/ holds only managed helpers" python3 -c "
 from pathlib import Path
 names = sorted(p.name for p in Path('$repo_path/bin').iterdir() if p.name != '__pycache__')
-assert names == ['ai-usage', 'ai-usage-scanners', 'clipboard-history', 'dev', 'displays', 'keep-awake', 'network-settings', 'night-mode', 'topbar-panel'], names
+assert names == ['ai-usage', 'ai-usage-scanners', 'battery-status', 'clipboard-history', 'dev', 'displays', 'keep-awake', 'network-settings', 'night-mode', 'power-profile', 'topbar-panel'], names
 "
 check "network settings helper parses" bash -n "$repo_path/bin/network-settings"
 if command -v dconf >/dev/null 2>&1; then

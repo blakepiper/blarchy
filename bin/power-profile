@@ -1,0 +1,57 @@
+#!/bin/bash
+# power-profile: switch power-profiles-daemon from the top bar.
+#
+# Usage: power-profile [get|set <profile>|cycle|list]
+#
+# `set` and `cycle` accept performance, balanced and power-saver, then ping
+# Waybar (signal 10, the custom/battery module) so the bar updates at once
+# instead of waiting for the next 30s poll.
+
+set -euo pipefail
+
+waybar_signal=10
+valid="performance balanced power-saver"
+
+usage() {
+  echo "Usage: power-profile [get|set <profile>|cycle|list]" >&2
+  echo "Profiles: $valid" >&2
+  exit 2
+}
+
+refresh_bar() {
+  pkill -RTMIN+"$waybar_signal" waybar 2>/dev/null || true
+}
+
+current() {
+  powerprofilesctl get 2>/dev/null
+}
+
+case "${1:-get}" in
+  get)
+    current
+    ;;
+  list)
+    printf '%s\n' $valid
+    ;;
+  set)
+    profile="${2:-}"
+    case " $valid " in
+      *" $profile "*) ;;
+      *) echo "Unknown profile: $profile (use: $valid)" >&2; exit 1 ;;
+    esac
+    powerprofilesctl set "$profile"
+    refresh_bar
+    ;;
+  cycle)
+    case "$(current)" in
+      performance) next=balanced ;;
+      balanced) next=power-saver ;;
+      power-saver) next=performance ;;
+      *) next=balanced ;;
+    esac
+    powerprofilesctl set "$next"
+    printf '%s\n' "$next"
+    refresh_bar
+    ;;
+  *) usage ;;
+esac

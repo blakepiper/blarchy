@@ -16,6 +16,7 @@ from unittest.mock import patch
 REPO = Path(__file__).resolve().parents[1]
 AI = runpy.run_path(str(REPO / "bin/ai-usage"))
 CLAUDE = runpy.run_path(str(REPO / "bin/ai-usage-scanners/claude_usage_scanner.py"))
+BATTERY = runpy.run_path(str(REPO / "bin/battery-status"))
 
 
 class RegressionTests(unittest.TestCase):
@@ -57,6 +58,8 @@ class RegressionTests(unittest.TestCase):
     self.assertTrue(os.access(self.root / ".local/bin/clipboard-history", os.X_OK))
     self.assertTrue(os.access(self.root / ".local/bin/network-settings", os.X_OK))
     self.assertTrue(os.access(self.root / ".local/bin/topbar-panel", os.X_OK))
+    self.assertTrue(os.access(self.root / ".local/bin/battery-status", os.X_OK))
+    self.assertTrue(os.access(self.root / ".local/bin/power-profile", os.X_OK))
 
   def test_desktop_defaults(self):
     defaults = configparser.ConfigParser()
@@ -297,10 +300,23 @@ source bin/clipboard-history
     self.assertEqual(config["custom/ai-usage"]["on-click"], "~/.local/bin/topbar-panel ai")
     self.assertEqual(config["pulseaudio"]["on-click"], "~/.local/bin/topbar-panel audio")
     self.assertEqual(config["custom/awake"]["on-click"], "~/.local/bin/keep-awake toggle")
+    self.assertEqual(config["custom/battery"]["on-click"], "~/.local/bin/topbar-panel battery")
+    self.assertEqual(config["custom/battery"]["on-click-right"], "~/.local/bin/power-profile cycle")
     for mode in ("off", "night", "night-plus"):
       (self.root / "blarchy-night-mode").write_text(mode)
       result = self.bash('bin/night-mode status', XDG_RUNTIME_DIR=str(self.root))
       self.assertTrue(json.loads(result.stdout)["text"])
+
+  def test_battery_bar_shows_smoothed_time(self):
+    data = {"capacity": 55, "status": "Discharging", "smooth_hours": 1.5,
+            "instant_hours": 2.0, "direction": "remaining", "avg_power": 15.0,
+            "power_now": 11.5, "energy_full": 42.4, "energy_design": 51.0,
+            "cycles": "414", "start_threshold": "75", "end_threshold": "80",
+            "active": "balanced", "degraded": "", "health": 83, "ac_online": False}
+    result = json.loads(BATTERY["waybar_output"](data))
+    self.assertIn("55%", result["text"])
+    self.assertIn(BATTERY["format_duration"](1.5), result["text"])
+    self.assertEqual(result["percentage"], 55)
 
   def test_awake_guards_automatic_actions(self):
     mock_bin = self.root / "bin"

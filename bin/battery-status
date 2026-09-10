@@ -1,0 +1,349 @@
+#!/usr/bin/env python3
+"""Battery status for the Waybar top bar.
+
+Replaces Waybar's built-in battery module, which divides the remaining
+energy by the instantaneous discharge rate. That rate jumps with every CPU
+burst (5W idle one second, 12W compiling the next), so the tooltip swings
+e.g. 4h -> 3h -> 4h within a minute.
+
+This script instead keeps a rolling 10-minute average of the measured
+power draw in ~/.cache/blarchy/battery/samples.json and reports
+time-remaining from that average, while still showing the instantaneous
+rate for reference.
+
+Usage:
+  battery-status --waybar   print one JSON object for Waybar's custom module
+  battery-status details    print human-readable details (panel / terminal)
+  battery-status            same as details
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import subprocess
+import tempfile
+import time
+from pathlib import Path
+from typing import Any
+
+BAT = Path("/sys/class/power_supply/BAT0")
+CACHE_PATH = (
+    Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+    / "blarchy"
+    / "battery"
+    / "samples.json"
+)
+WINDOW_SECONDS = 600  # 10-minute smoothing window
+KEEP_SECONDS = 900  # keep 15 minutes of samples on disk
+MIN_WATTS = 0.5  # below this the estimate is meaningless
+
+ICONS = ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"]  #     
+ICON_CHARGING = "\uf0e7"  # 
+ICON_PLUGGED = "\uf0e6"  # 
+
+PROFILES = ("performance", "balanced", "power-saver")
+PROFILE_SHORT = {"performance": "Perf", "balanced": "Bal", "power-saver": "Saver"}
+
+
+def read_sysfs(name: str, default: str = "") -> str:
+    try:
+        return (BAT / name).read_text(encoding="utf-8").strip()
+    except OSError:
+        return default
+
+
+def number_file(name: str, default: float = 0.0) -> float:
+    try:
+        return float(read_sysfs(name))
+    except ValueError:
+        return default
+
+
+def ac_online() -> bool:
+    for supply in Path("/sys/class/power_supply").glob("*/online"):
+        try:
+            if supply.read_text(encoding="utf-8").strip() == "1":
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def battery_info() -> dict[str, Any]:
+    status = read_sysfs("status", "Unknown") or "Unknown"
+    capacity = int(number_file("capacity", 0))
+    energy_now = number_file("energy_now", 0) / 1_000_000  # µWh -> Wh
+    energy_full = number_file("energy_full", 0) / 1_000_000
+    energy_design = number_file("energy_full_design", 0) / 1_000_000
+    power_now = number_file("power_now", 0) / 1_000_000  # µW -> W
+    # Some kernels report 0 power_now while charging; fall back to
+    # voltage*current if available.
+    if power_now <= 0:
+        voltage = number_file("voltage_now", 0) / 1_000_000
+        current = number_file("current_now", 0) / 1_000_000
+        if voltage > 0 and current != 0:
+            power_now = abs(voltage * current)
+    power_now = abs(power_now)
+    return {
+        "status": status,
+        "capacity": max(0, min(100, capacity)),
+        "energy_now": energy_now,
+        "energy_full": energy_full,
+        "energy_design": energy_design,
+        "power_now": power_now,
+        "cycles": read_sysfs("cycle_count", "").strip() or read_sysfs("cyclecount", ""),
+        "start_threshold": read_sysfs("charge_start_threshold")
+        or read_sysfs("charge_control_start_threshold"),
+        "end_threshold": read_sysfs("charge_stop_threshold")
+        or read_sysfs("charge_control_end_threshold"),
+        "ac_online": ac_online(),
+    }
+
+
+def profile_info() -> dict[str, Any]:
+    active = ""
+    try:
+        result = subprocess.run(
+            ["powerprofilesctl", "get"],
+            capture_output=True, text=True, timeout=5,
+            env={**os.environ, "LC_ALL": "C"},
+        )
+        if result.returncode == 0:
+            active = result.stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    degraded = ""
+    try:
+        result = subprocess.run(
+            ["busctl", "--system", "get-property",
+             "net.hadess.PowerProfiles", "/net/hadess/PowerProfiles",
+             "net.hadess.PowerProfiles", "PerformanceDegraded"],
+            capture_output=True, text=True, timeout=5,
+            env={**os.environ, "LC_ALL": "C"},
+        )
+        # Output looks like: s "lap-detected"  (empty string when fine)
+        if result.returncode == 0 and '"' in result.stdout:
+            degraded = result.stdout.split('"')[1].strip()
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    if active not in PROFILES:
+        active = ""
+    return {"active": active, "degraded": degraded, "available": list(PROFILES)}
+
+
+def load_samples() -> list[dict[str, Any]]:
+    try:
+        data = json.loads(CACHE_PATH.read_text(encoding="utf-8"))
+        if isinstance(data, list):
+            now = time.time()
+            return [
+                s for s in data
+                if isinstance(s, dict)
+                and isinstance(s.get("t"), (int, float))
+                and isinstance(s.get("w"), (int, float))
+                and 0 <= now - float(s["t"]) <= KEEP_SECONDS
+                and 0 <= float(s["w"]) < 200
+            ]
+    except (OSError, json.JSONDecodeError):
+        pass
+    return []
+
+
+def save_samples(samples: list[dict[str, Any]]) -> None:
+    CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        "w", dir=CACHE_PATH.parent, delete=False, encoding="utf-8"
+    ) as tmp:
+        json.dump(samples[-60:], tmp, separators=(",", ":"))
+        tmp.write("\n")
+        tmp_path = Path(tmp.name)
+    tmp_path.replace(CACHE_PATH)
+
+
+def average_power(samples: list[dict[str, Any]], status: str, current: float) -> tuple[float, int]:
+    """Mean of same-status samples inside the window, falling back to now."""
+    now = time.time()
+    # Only average samples from the same direction: charging watts and
+    # discharging watts are different physical quantities.
+    recent = [
+        float(s["w"]) for s in samples
+        if now - float(s["t"]) <= WINDOW_SECONDS
+        and str(s.get("status", status)) == status
+    ]
+    if len(recent) < 2:
+        return round(current, 2), len(recent)
+    return round(sum(recent) / len(recent), 2), len(recent)
+
+
+def format_duration(hours: float | None) -> str:
+    if hours is None or hours < 0 or hours > 48:
+        return "—"
+    total_minutes = round(hours * 60)
+    if total_minutes < 1:
+        return "<1m"
+    h, m = divmod(total_minutes, 60)
+    if h:
+        return f"{h}h {m:02d}m"
+    return f"{m}m"
+
+
+def fetch_data() -> dict[str, Any]:
+    bat = battery_info()
+    prof = profile_info()
+    now = time.time()
+    status = bat["status"]
+    power = float(bat["power_now"])
+
+    samples = load_samples()
+    # Record this poll before averaging so the window always includes now.
+    # Full / idle plugs draw ~0W; keep them out of the discharge average.
+    if power > 0 or status in ("Discharging", "Charging"):
+        entry = {"t": now, "w": power, "status": status}
+        # Rapid re-polls (manual runs, panel + bar at once) would otherwise
+        # overweight one moment: replace a sample younger than 10s.
+        if samples and now - float(samples[-1].get("t", 0)) < 10:
+            samples[-1] = entry
+        else:
+            samples.append(entry)
+        # Prune here too so a long-sleep resume doesn't poison the average.
+        samples = [s for s in samples if now - float(s["t"]) <= KEEP_SECONDS]
+        try:
+            save_samples(samples)
+        except OSError:
+            pass
+
+    avg, count = average_power(samples, status, power)
+
+    instant_hours: float | None = None
+    smooth_hours: float | None = None
+    direction = ""
+    if status == "Discharging" and bat["energy_now"] > 0:
+        direction = "remaining"
+        if power >= MIN_WATTS:
+            instant_hours = bat["energy_now"] / power
+        if avg >= MIN_WATTS:
+            smooth_hours = bat["energy_now"] / avg
+    elif status == "Charging" and bat["energy_full"] > bat["energy_now"]:
+        direction = "to full"
+        need = bat["energy_full"] - bat["energy_now"]
+        if power >= MIN_WATTS:
+            instant_hours = need / power
+        if avg >= MIN_WATTS:
+            smooth_hours = need / avg
+
+    health = (
+        round(bat["energy_full"] / bat["energy_design"] * 100)
+        if bat["energy_full"] > 0 and bat["energy_design"] > 0
+        else 0
+    )
+    return {
+        **bat, **prof,
+        "avg_power": avg,
+        "samples": count,
+        "instant_hours": instant_hours,
+        "smooth_hours": smooth_hours,
+        "direction": direction,
+        "health": health,
+        "updated": now,
+    }
+
+
+def icon_for(data: dict[str, Any]) -> str:
+    status = data.get("status", "")
+    if status == "Charging":
+        return ICON_CHARGING
+    if status == "Full" or (
+        status in ("Not charging", "Unknown") and data.get("ac_online")
+    ):
+        return ICON_PLUGGED
+    capacity = int(data.get("capacity", 0))
+    return ICONS[min(4, max(0, capacity // 20))]
+
+
+def bar_class(data: dict[str, Any]) -> str:
+    status = data.get("status", "")
+    capacity = int(data.get("capacity", 0))
+    if status == "Discharging":
+        if capacity <= 15:
+            return "critical"
+        if capacity <= 30:
+            return "warning"
+        return "discharging"
+    if status == "Charging":
+        return "charging"
+    if status == "Full" or (data.get("ac_online") and status != "Discharging"):
+        return "plugged"
+    if capacity <= 15:
+        return "critical"
+    return "discharging"
+
+
+def details_text(data: dict[str, Any]) -> str:
+    status = str(data.get("status", "Unknown"))
+    profile = str(data.get("active") or "unknown")
+    lines = [f"{data.get('capacity', 0)}% · {status} · {profile}"]
+    smooth = format_duration(data.get("smooth_hours"))
+    instant = format_duration(data.get("instant_hours"))
+    direction = data.get("direction", "")
+    if direction and smooth != "—":
+        lines.append(
+            f"{smooth} {direction} (10-min avg {data.get('avg_power', 0):.1f}W, "
+            f"now {data.get('power_now', 0):.1f}W)"
+        )
+        if instant != "—" and instant != smooth:
+            lines[-1] += f" · instant would say {instant}"
+    else:
+        lines.append(
+            f"Draw {data.get('power_now', 0):.1f}W "
+            f"(10-min avg {data.get('avg_power', 0):.1f}W)"
+        )
+    if data.get("health"):
+        health_line = (
+            f"Health {data['health']}% "
+            f"({data.get('energy_full', 0):.1f}/{data.get('energy_design', 0):.1f} Wh)"
+        )
+        if data.get("cycles"):
+            health_line += f" · {data['cycles']} cycles"
+        lines.append(health_line)
+    start, end = data.get("start_threshold", ""), data.get("end_threshold", "")
+    if start and end:
+        lines.append(f"Charge limits {start}–{end}%")
+    if data.get("degraded"):
+        lines.append(f"Performance limited ({data['degraded']})")
+    return "\n".join(lines)
+
+
+def waybar_output(data: dict[str, Any]) -> str:
+    smooth = format_duration(data.get("smooth_hours"))
+    direction = str(data.get("direction", ""))
+    base = f"{icon_for(data)}  {data.get('capacity', 0)}%"
+    text = f"{base}  {smooth}" if direction and smooth != "—" else base
+    payload = {
+        "text": text,
+        "tooltip": details_text(data)
+        + "\nClick for power profiles · Right-click to cycle",
+        "percentage": int(data.get("capacity", 0)),
+        "class": bar_class(data),
+    }
+    return json.dumps(payload)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Battery status for Waybar")
+    parser.add_argument("action", nargs="?", default="details",
+                        choices=("details", "waybar"))
+    parser.add_argument("--waybar", action="store_true",
+                        help="emit one JSON object for Waybar's custom module")
+    args = parser.parse_args()
+    data = fetch_data()
+    if args.waybar or args.action == "waybar":
+        print(waybar_output(data))
+    else:
+        print(details_text(data))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

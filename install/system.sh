@@ -23,9 +23,9 @@ if (( EUID != 0 )); then
   exit 1
 fi
 
-# Login screen: SDDM launching the Niri session.
-mkdir -p /etc/sddm.conf.d
-install -m 0644 "$repo/etc/sddm.conf.d/10-general.conf" /etc/sddm.conf.d/10-general.conf
+# Login screen: greetd + tuigreet launching the Niri session.
+mkdir -p /etc/greetd
+install -m 0644 "$repo/etc/greetd/config.toml" /etc/greetd/config.toml
 install -m 0644 "$repo/etc/systemd/system/blarchy-battery-limit.service" \
   /etc/systemd/system/blarchy-battery-limit.service
 install -Dm 0755 "$repo/etc/lib/blarchy/battery-limit" /usr/local/lib/blarchy/battery-limit
@@ -47,7 +47,7 @@ dconf update
 source "$repo/install/pam.sh"
 blarchy_configure_keyring_pam /etc/pam.d
 
-# Make sure a Niri Wayland session exists for SDDM to offer.
+# Make sure a Niri Wayland session exists for tuigreet to offer.
 # The niri package normally ships this file; only fall back when missing.
 if [[ ! -f /usr/share/wayland-sessions/niri.desktop ]]; then
   mkdir -p /usr/share/wayland-sessions
@@ -106,15 +106,15 @@ if (( enable_ppd == 1 )); then
   systemctl start blarchy-battery-limit.service
 fi
 
-# Display manager: keep whatever is already enabled, otherwise use SDDM.
+# Display manager: keep whatever is already enabled, otherwise use greetd.
 display_manager=""
 if [[ -e /etc/systemd/system/display-manager.service || -L /etc/systemd/system/display-manager.service ]]; then
   display_manager=$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null || true)
 fi
-if [[ -n $display_manager && $display_manager != *sddm.service ]]; then
+if [[ -n $display_manager && $display_manager != *greetd.service ]]; then
   echo "Preserve existing display manager: $(basename "$display_manager")"
 else
-  enable_if_available sddm.service
+  enable_if_available greetd.service
 fi
 
 fc-cache -f >/dev/null

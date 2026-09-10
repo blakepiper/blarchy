@@ -4,7 +4,7 @@
 blarchy_configure_keyring_pam() {
   local pam_dir="$1"
   local entry service type options
-  for entry in 'sddm auth' 'sddm session auto_start' 'passwd password'; do
+  for entry in 'greetd auth' 'greetd session auto_start' 'passwd password'; do
     read -r service type options <<<"$entry"
     if [[ ! -f $pam_dir/$service ]]; then
       echo "Error: missing PAM configuration: $pam_dir/$service" >&2

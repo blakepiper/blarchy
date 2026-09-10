@@ -307,6 +307,7 @@ Firefox after changing it; `about:policies` shows active policies and errors.
 | <kbd>Super</kbd> + <kbd>O</kbd> | Overview |
 | <kbd>Super</kbd> + <kbd>P</kbd> | Toggle floating |
 | <kbd>Super</kbd> + <kbd>L</kbd> | Lock screen |
+| <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd> | Power menu (lock, suspend, reboot, log out, monitors off, power off) |
 | <kbd>Super</kbd> + <kbd>N</kbd> | Cycle night mode off → night → night-plus |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Region screenshot (saved to `~/Pictures/Screenshots` and copied to clipboard) |
 | <kbd>Super</kbd> + <kbd>V</kbd> | Clipboard history (choose an entry, then paste normally) |

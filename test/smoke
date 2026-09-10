@@ -87,6 +87,9 @@ assert 'cliphist store' in text, 'cliphist watcher missing'
 check_fail "no struts block (waybar reserves its own space)" grep -q 'struts' "$repo_path/config/niri/config.kdl"
 check_fail "kitty config is self-contained (no external includes)" grep -q '^include' "$repo_path/config/kitty/kitty.conf"
 check "clipboard picker parses" bash -n "$repo_path/bin/clipboard-history"
+check "power menu parses" bash -n "$repo_path/bin/control-menu"
+check "niri binds the power menu" grep -q 'control-menu' "$repo_path/config/niri/config.kdl"
+check "user setup installs control-menu" grep -q 'bin/control-menu' "$repo_path/install/user.sh"
 check "libnotify in packages (notification senders)" grep -qx 'libnotify' "$repo_path/install/packages"
 check "papers (not evince) in packages" grep -qx 'papers' "$repo_path/install/packages"
 check_fail "no evince in packages" grep -qx 'evince' "$repo_path/install/packages"
@@ -198,7 +201,7 @@ check_fail "no quickshell dir" test -e "$repo_path/shell"
 check "bin/ holds only managed helpers" python3 -c "
 from pathlib import Path
 names = sorted(p.name for p in Path('$repo_path/bin').iterdir() if p.name != '__pycache__')
-assert names == ['ai-usage', 'ai-usage-scanners', 'battery-status', 'clipboard-history', 'dev', 'displays', 'keep-awake', 'network-settings', 'night-mode', 'power-profile', 'topbar-panel'], names
+assert names == ['ai-usage', 'ai-usage-scanners', 'battery-status', 'clipboard-history', 'control-menu', 'dev', 'displays', 'keep-awake', 'network-settings', 'night-mode', 'power-profile', 'topbar-panel'], names
 "
 check "network settings helper parses" bash -n "$repo_path/bin/network-settings"
 if command -v dconf >/dev/null 2>&1; then

@@ -113,6 +113,7 @@ binds {
   Mod+V { spawn-sh "~/.local/bin/clipboard-history"; }
 
   // Lock and power.
+  Mod+Shift+Space { spawn-sh "~/.local/bin/control-menu"; }
   Mod+L { spawn "swaylock" "-f"; }
   Mod+N { spawn-sh "~/.local/bin/night-mode next"; }
   Mod+Shift+E { quit; }

@@ -1,0 +1,74 @@
+#!/bin/bash
+# control-menu: minimal power menu for Niri + fuzzel.
+#
+# Usage: control-menu
+# Bound to Mod+Shift+Space in config/niri/config.kdl.
+#
+# Power-only scope: Lock, Suspend, Reboot, Log Out, Monitors Off, Power Off.
+# Destructive actions (reboot/poweroff/logout) ask for confirmation via a
+# second fuzzel prompt. No hibernate: it needs matching disk swap, which a
+# fresh install does not guarantee.
+
+set -euo pipefail
+
+menu_prompt='Power: '
+confirm_prompt='Confirm: '
+
+confirm() {
+  local action="$1"
+  local answer
+  answer=$(printf 'No\nYes' | fuzzel --dmenu --prompt "$confirm_prompt$action? ") || return 1
+  [[ $answer == Yes ]]
+}
+
+do_lock() {
+  exec swaylock -f
+}
+
+do_suspend() {
+  # Lock first, then suspend. swayidle also locks on before-sleep,
+  # so this is double-safe if that hook fires too.
+  swaylock -f &
+  sleep 0.5
+  exec systemctl suspend
+}
+
+do_reboot() {
+  confirm "Reboot" || exit 0
+  exec systemctl reboot
+}
+
+do_poweroff() {
+  confirm "Power off" || exit 0
+  exec systemctl poweroff
+}
+
+do_logout() {
+  confirm "Log out of Niri" || exit 0
+  exec niri msg action quit
+}
+
+do_monitors_off() {
+  exec niri msg action power-off-monitors
+}
+
+selection=$(printf '%s\n' \
+  '  Lock' \
+  '  Suspend' \
+  '  Reboot' \
+  '󰗽  Log Out' \
+  '󰍹  Monitors Off' \
+  '  Power Off' \
+  | fuzzel --dmenu --prompt "$menu_prompt") || exit 0
+
+[[ -n $selection ]] || exit 0
+
+case "$selection" in
+  *Lock*) do_lock ;;
+  *Suspend*) do_suspend ;;
+  *Reboot*) do_reboot ;;
+  *Power*) do_poweroff ;;
+  *Log*) do_logout ;;
+  *Monitors*) do_monitors_off ;;
+  *) exit 0 ;;
+esac

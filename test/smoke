@@ -66,8 +66,7 @@ check "yay checks development updates by default" grep -q '^yay -Y --devel --sav
 check "kitty opens the configured Bash shell" grep -qx 'shell /bin/bash' "$repo_path/config/kitty/kitty.conf"
 check "blesh config parses" bash -n "$repo_path/config/blesh/init.sh"
 check_fail "vscodium absent from AUR list" grep -qi -E 'vscodium|codium' "$repo_path/install/packages-aur"
-check "terminal-code has an upstream installer" grep -q 'https://tode.sh/install' "$repo_path/install.sh"
-check "terminal-code has a separate update path" grep -q 'tode --upgrade' "$repo_path/install.sh"
+check_fail "no terminal-code references" grep -rqi -E 'tode|terminal-code' "$repo_path/install.sh" "$repo_path/README.md" "$repo_path/bin/dev" "$repo_path/config/niri/config.kdl"
 for agent in claude-code openai-codex-bin oh-my-pi-bin opencode-bin; do
   check "$agent in AUR list" grep -qx "$agent\( #.*\)\?" "$repo_path/install/packages-aur"
 done
@@ -79,7 +78,7 @@ import sys
 text = open('$repo_path/config/niri/config.kdl').read()
 assert 'spawn \"kitty\"' in text, 'kitty spawn missing'
 assert 'spawn \"fuzzel\"' in text, 'fuzzel spawn missing'
-assert 'spawn-sh \"~/.local/bin/tode\"' in text, 'terminal-code spawn missing'
+assert 'tode' not in text, 'terminal-code reference still present'
 assert 'Mod+Shift+F { maximize-column; }' in text, 'maximize binding missing'
 assert 'Mod+Shift+F { fullscreen-window; }' not in text, 'fullscreen binding still present'
 assert 'Mod+Shift+S { screenshot; }' in text, 'native screenshot binding missing'

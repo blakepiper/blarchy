@@ -1,9 +1,8 @@
 #!/bin/bash
 
 # dev: lay the current project out across a 2x2 prettymux workspace -
-# terminal-code (top-left, README active with the repo root in the
-# sidebar), a blank shell (top-right), `top` (bottom-left), and `hyfetch`
-# (bottom-right).
+# README viewer (top-left), a blank shell (top-right), `top` (bottom-left),
+# and `hyfetch` (bottom-right).
 #
 # prettymux-open --exec only ever delivers text as a bracketed paste, and
 # ble.sh refuses to auto-run pasted text on its own - see the paste_begin
@@ -72,13 +71,12 @@ if [[ -z $readme ]]; then
   readme=$(find "$project_dir" -maxdepth 1 -type f -iname 'readme*' 2>/dev/null | head -n 1)
 fi
 
-# tode needs both the folder and the file to open with a real workspace (so
-# the sidebar has the repo root to show) and the README as the active tab.
+# Show the README in the top-left pane with bat when available, else less.
 readme_cmd="cd $(printf '%q' "$project_dir"); "
 if [[ -n $readme ]]; then
-  readme_cmd+="if command -v tode >/dev/null 2>&1; then tode $(printf '%q' "$project_dir") $(printf '%q' "$readme"); elif command -v bat >/dev/null 2>&1; then bat --paging=always --style=plain $(printf '%q' "$readme"); else less $(printf '%q' "$readme"); fi"
+  readme_cmd+="if command -v bat >/dev/null 2>&1; then bat --paging=always --style=plain $(printf '%q' "$readme"); else less $(printf '%q' "$readme"); fi"
 else
-  readme_cmd+="if command -v tode >/dev/null 2>&1; then tode $(printf '%q' "$project_dir"); else printf 'No README found in %s\\n\\n' $(printf '%q' "$project_dir"); ls -la; fi"
+  readme_cmd+="printf 'No README found in %s\\n\\n' $(printf '%q' "$project_dir"); ls -la"
 fi
 
 exec_in 0 "$readme_cmd"

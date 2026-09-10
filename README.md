@@ -164,8 +164,6 @@ The installer:
   tools it finds — see [docs/HARDWARE.md](./docs/HARDWARE.md);
 - installs the pacman packages in [`install/packages`](./install/packages)
   plus the AUR packages in [`install/packages-aur`](./install/packages-aur);
-- installs terminal-code from its upstream release because it is not in the
-  AUR;
 - sets up `greetd` + `tuigreet` as the login screen (keeping an existing
   display manager if one is already enabled);
 - preserves archinstall networking or enables NetworkManager, plus the hardware-appropriate
@@ -195,17 +193,9 @@ normally:
 yay -Syu
 ```
 
-Terminal-code is installed outside pacman and the AUR. Update it separately
-with:
-
-```bash
-tode --upgrade
-```
-
 Package versions are not pinned: installation and retries fetch current Arch
 and AUR metadata. You do not need to update this repository to get new app
-versions. After installation, `yay -Syu` updates both Arch package sources;
-use `tode --upgrade` for terminal-code.
+versions. After installation, `yay -Syu` updates both Arch package sources.
 The installer enables yay's development-package checks so `blesh-git`
 also updates when its upstream source changes.
 
@@ -228,7 +218,7 @@ any desired configuration changes manually. There is no self-updater.
 | Multiplexer | prettymux (`Super` + `Shift` + `Enter`) |
 | Browser | Firefox (uBlock Origin and Dark Reader pre-installed; sponsored content, recommended stories, and built-in AI disabled) |
 | File manager | Nautilus |
-| Editor | terminal-code (`tode`) and Neovim |
+| Editor | Neovim |
 | Audio | PipeWire and WirePlumber |
 | Battery | 80% charge limit on laptops with kernel charge-control support |
 | AI usage widget | `ai-usage` in the bar (Codex, OpenCode Go) |
@@ -276,10 +266,9 @@ prompt, and `yay -Syu` updates ble.sh through the `blesh-git` AUR package.
 ## Project workspace (`dev`)
 
 Inside prettymux, `cd` into a project and run `dev` to lay it out across a
-2x2 grid in a fresh workspace: terminal-code (`tode`) opens top-left with
-the README active and the repo root in the sidebar, a blank shell sits
-top-right, `top` runs bottom-left, and `hyfetch` runs bottom-right. A
-project with no README opens `tode` on the folder alone instead of
+2x2 grid in a fresh workspace: the README opens top-left with
+a blank shell top-right, `top` runs bottom-left, and `hyfetch` runs
+bottom-right. A project with no README lists the folder contents instead of
 crashing.
 
 `dev` pastes each pane's command through `prettymux-open --exec`. ble.sh
@@ -312,7 +301,6 @@ Firefox after changing it; `about:policies` shows active policies and errors.
 | <kbd>Super</kbd> + <kbd>Enter</kbd> | kitty |
 | <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd> | prettymux |
 | <kbd>Super</kbd> + <kbd>Space</kbd> or <kbd>Super</kbd> + <kbd>D</kbd> | fuzzel launcher |
-| <kbd>Super</kbd> + <kbd>C</kbd> | terminal-code |
 | <kbd>Super</kbd> + <kbd>F</kbd> | Nautilus |
 | <kbd>Super</kbd> + <kbd>B</kbd> | Firefox |
 | <kbd>Super</kbd> + <kbd>Q</kbd> | Close window |

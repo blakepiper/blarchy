@@ -397,7 +397,7 @@ yay -S spotify   # optional music player
 
 ```text
 bin/          desktop helpers (topbar panels, AI usage, night mode, displays, clipboard, network, dev workspace)
-config/       user configuration defaults (niri, kitty, waybar, fuzzel, ...)
+config/       user configuration defaults (nvim, niri, kitty, tmux, waybar, ...)
 docs/         hardware detection notes
 etc/          system defaults (greetd, Firefox policies, dark mode, battery limit)
 install/      package manifests, hardware detection, system/user setup

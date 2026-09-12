@@ -73,6 +73,8 @@ done
 
 # Compositor and bar configs exist and look structurally sound.
 check "niri config exists" test -f "$repo_path/config/niri/config.kdl"
+check "nvim config exists" test -f "$repo_path/config/nvim/init.lua"
+check "nvim plugin lockfile exists" test -f "$repo_path/config/nvim/lazy-lock.json"
 check "niri desktop bindings" python3 -c "
 import sys
 text = open('$repo_path/config/niri/config.kdl').read()

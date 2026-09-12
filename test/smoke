@@ -160,6 +160,7 @@ check "dev uses tmux" grep -q 'tmux new-session' "$repo_path/bin/dev"
 check "dev opens nvim" grep -q 'nvim .' "$repo_path/bin/dev"
 check "dev runs hyfetch" grep -q 'hyfetch' "$repo_path/bin/dev"
 check "tmux is installed" grep -qx 'tmux' "$repo_path/install/packages"
+check "tmux enables mouse" grep -qx 'set -g mouse on' "$repo_path/config/tmux/tmux.conf"
 
 # Wallpaper and terminal theme.
 check "wallpaper bundled" test -f "$repo_path/config/swaybg/wallpaper.jpg"

@@ -330,10 +330,10 @@ unchanged. To clear saved history, run `cliphist wipe`.
 
 ## AI usage widget
 
-The bar's `AI %` module shows the used quota of your most-consumed
-AI subscription window across Codex and OpenCode Go, with
-per-provider details and today's local token/prompt counts in the
-tooltip. It refreshes every five minutes and caches under
+The bar's `AI %` module shows the used quota of your most-consumed Codex
+subscription window. Its tooltip includes live details for Codex and
+OpenCode Go, per-provider details, and today's local token/prompt counts. It
+refreshes every five minutes and caches under
 `~/.cache/blarchy/ai-usage/`.
 
 - Left-click opens the full breakdown in kitty.

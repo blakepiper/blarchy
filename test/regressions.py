@@ -290,11 +290,17 @@ source bin/clipboard-history
     self.assertEqual(CLAUDE["scan"](self.root), {"todayPrompts": 1, "todayTotalTokens": 15})
 
   def test_waybar_offline(self):
-    data = {"updatedAt": 1, "providers": [{"name": "Fixture", "limits": [
-      {"percent": 0.8, "label": "Session"},
-    ]}]}
+    data = {"updatedAt": 1, "providers": [
+      {"id": "codex", "name": "Codex", "limits": [
+        {"percent": 0.8, "label": "Session"},
+      ]},
+      {"id": "opencode-go", "name": "OpenCode Go", "limits": [
+        {"percent": 0.98, "label": "Monthly"},
+      ]},
+    ]}
     result = json.loads(AI["waybar_output"](data))
     self.assertEqual(result["text"], "AI 80%")
+    self.assertEqual(result["percentage"], 80)
     self.assertEqual(result["class"], "warning")
     config = json.loads((REPO / "config/waybar/config.jsonc").read_text())
     self.assertEqual(config["custom/ai-usage"]["on-click"], "~/.local/bin/topbar-panel ai")

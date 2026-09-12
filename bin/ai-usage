@@ -372,18 +372,22 @@ def details_text(data: dict[str, Any]) -> str:
   return "\n".join(lines).rstrip()
 
 
-def max_used_percent(data: dict[str, Any]) -> float:
+def codex_used_percent(data: dict[str, Any]) -> float:
+  """Return the most-used live quota window for the Codex provider."""
   usage = -1.0
   for provider in data.get("providers", []):
+    if provider.get("id") != "codex":
+      continue
     for window in provider.get("limits", []):
       percent = normalized_percent(window.get("percent"))
       if percent >= 0:
         usage = max(usage, percent)
+    break
   return usage
 
 
 def waybar_output(data: dict[str, Any]) -> str:
-  usage = max_used_percent(data)
+  usage = codex_used_percent(data)
   if usage < 0:
     payload = {"text": "AI", "tooltip": details_text(data), "class": "unknown"}
   else:

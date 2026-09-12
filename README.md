@@ -265,17 +265,10 @@ prompt, and `yay -Syu` updates ble.sh through the `blesh-git` AUR package.
 
 ## Project workspace (`dev`)
 
-Inside prettymux, `cd` into a project and run `dev` to lay it out across a
-2x2 grid in a fresh workspace: the README opens top-left with
-a blank shell top-right, `top` runs bottom-left, and `hyfetch` runs
-bottom-right. A project with no README lists the folder contents instead of
-crashing.
-
-`dev` pastes each pane's command through `prettymux-open --exec`. ble.sh
-never auto-runs pasted text on its own, so `config/blesh/init.sh` swaps in
-a `paste_begin` widget that does, scoped to a short-lived marker file `dev`
-sets while it runs — every other terminal keeps ble.sh's normal
-paste-safety behavior. This only works from inside prettymux.
+From any shell, `cd` into a project and run `dev` to open a named tmux session
+with `nvim .` in the left pane, a blank shell in the upper-right, and
+`hyfetch` in the lower-right. Running `dev` again for the same project
+re-attaches to its existing session.
 
 ## Firefox defaults
 

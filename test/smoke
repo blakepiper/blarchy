@@ -153,10 +153,13 @@ check "battery opens the panel on click" grep -q 'topbar-panel battery' "$repo_p
 check "battery cycles profiles on right-click" grep -q 'power-profile cycle' "$repo_path/config/waybar/config.jsonc"
 check "user setup installs battery helpers" bash -c "grep -q 'bin/battery-status' '$repo_path/install/user.sh' && grep -q 'bin/power-profile' '$repo_path/install/user.sh'"
 
-# Prettymux project workspace helper.
+# tmux project workspace helper.
 check "dev parses" bash -n "$repo_path/bin/dev"
 check "user setup installs dev" grep -q 'bin/dev' "$repo_path/install/user.sh"
-check "blesh init overrides paste_begin for dev" grep -q 'dev-auto-paste' "$repo_path/config/blesh/init.sh"
+check "dev uses tmux" grep -q 'tmux new-session' "$repo_path/bin/dev"
+check "dev opens nvim" grep -q 'nvim .' "$repo_path/bin/dev"
+check "dev runs hyfetch" grep -q 'hyfetch' "$repo_path/bin/dev"
+check "tmux is installed" grep -qx 'tmux' "$repo_path/install/packages"
 
 # Wallpaper and terminal theme.
 check "wallpaper bundled" test -f "$repo_path/config/swaybg/wallpaper.jpg"

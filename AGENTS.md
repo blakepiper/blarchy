@@ -25,8 +25,9 @@ the intended desktop user, and running `./install.sh`.
 - The desktop stack is Niri + Waybar + fuzzel + mako + swaylock/swayidle
   + swaybg + kitty. Do not reintroduce a second compositor, desktop
   environment, display manager, or bar without explicit user approval.
-- The terminal emulator is kitty. The terminal multiplexer is prettymux
-  (AUR `prettymux-bin`, so it updates with `yay -Syu`).
+- The terminal emulator is kitty. The general terminal multiplexer is
+  prettymux (AUR `prettymux-bin`, so it updates with `yay -Syu`); the `dev`
+  project workspace uses tmux.
 - The AI usage widget is `bin/ai-usage` with scanners in
   `bin/ai-usage-scanners/`, surfaced as Waybar's `custom/ai-usage` module.
 - The night-mode toggle is `bin/night-mode` (session state file plus a

@@ -39,7 +39,7 @@ fi
 
 # Start nvim in the left pane, then split the right side vertically.
 tmux new-session -d -s "$session_name" -c "$project_dir" "nvim ."
-tmux split-window -h -t "$session_name:0.0" -c "$project_dir"
+tmux split-window -h -l 35% -t "$session_name:0.0" -c "$project_dir"
 
 user_shell=${SHELL:-/bin/bash}
 quoted_shell=$(printf '%q' "$user_shell")

@@ -159,6 +159,7 @@ check "user setup installs dev" grep -q 'bin/dev' "$repo_path/install/user.sh"
 check "dev uses tmux" grep -q 'tmux new-session' "$repo_path/bin/dev"
 check "dev opens nvim" grep -q 'nvim .' "$repo_path/bin/dev"
 check "dev runs hyfetch" grep -q 'hyfetch' "$repo_path/bin/dev"
+check "dev gives nvim most of the width" grep -q 'split-window -h -l 35%' "$repo_path/bin/dev"
 check "tmux is installed" grep -qx 'tmux' "$repo_path/install/packages"
 check "tmux enables mouse" grep -qx 'set -g mouse on' "$repo_path/config/tmux/tmux.conf"
 

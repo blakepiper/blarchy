@@ -26,6 +26,8 @@ project_hash=$(printf '%s' "$project_dir" | sha256sum | cut -c1-8)
 session_name="dev-${project_name//[^[:alnum:]_.-]/-}-$project_hash"
 
 attach() {
+  # Also repair sessions created by an older version of dev.
+  tmux resize-pane -t "$session_name:0.0" -x 65%
   if [[ -n ${TMUX-} ]]; then
     exec tmux switch-client -t "$session_name"
   fi
@@ -37,9 +39,21 @@ if tmux has-session -t "$session_name" 2>/dev/null; then
   attach
 fi
 
+# Match the detached window to the current client so attaching does not
+# redistribute the horizontal layout from tmux's default 80-column width.
+if [[ -n ${TMUX-} ]]; then
+  window_width=$(tmux display-message -p '#{client_width}')
+else
+  window_width=$(tput cols 2>/dev/null || printf '80')
+fi
+if ! [[ $window_width =~ ^[0-9]+$ ]] || (( window_width < 2 )); then
+  window_width=80
+fi
+
 # Start nvim in the left pane, then split the right side vertically.
-tmux new-session -d -s "$session_name" -c "$project_dir" "nvim ."
+tmux new-session -d -x "$window_width" -s "$session_name" -c "$project_dir" "nvim ."
 tmux split-window -h -l 35% -t "$session_name:0.0" -c "$project_dir"
+tmux resize-pane -t "$session_name:0.0" -x 65%
 
 user_shell=${SHELL:-/bin/bash}
 quoted_shell=$(printf '%q' "$user_shell")

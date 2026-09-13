@@ -172,7 +172,7 @@ check "kitty uses the Seafoam Dusk theme" grep -q 'background #171c1b' "$repo_pa
 check "kitty is translucent" grep -q 'background_opacity 0.60' "$repo_path/config/kitty/kitty.conf"
 check "kitty handles alternate transparent backgrounds" grep -q 'transparent_background_colors #4e6c5e@0.60' "$repo_path/config/kitty/kitty.conf"
 check "inactive windows are translucent" grep -q 'match is-active=false' "$repo_path/config/niri/config.kdl"
-check "firefox opacity is 0.70" grep -A2 -q 'match app-id="\^firefox\$"' "$repo_path/config/niri/config.kdl"
+check "firefox opacity is opaque" grep -A2 -q 'match app-id="\^firefox\$"' "$repo_path/config/niri/config.kdl"
 check "kitty focus transparency is constant" grep -A2 -q 'match app-id="kitty" is-active=false' "$repo_path/config/niri/config.kdl"
 check "kitty focus ring has no backdrop" grep -A2 -q 'match app-id="kitty"' "$repo_path/config/niri/config.kdl"
 check "btop uses the Seafoam Dusk theme" grep -q 'color_theme = "seafoam"' "$repo_path/config/btop/btop.conf"

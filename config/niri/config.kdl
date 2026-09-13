@@ -216,7 +216,7 @@ window-rule {
 
 window-rule {
   match app-id="^firefox$"
-  opacity 0.85
+  opacity 0.70
 }
 
 // Kitty should have identical transparency regardless of focus. Override

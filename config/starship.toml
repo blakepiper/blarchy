@@ -1,24 +1,25 @@
 add_newline = true
 command_timeout = 200
-format = "[$directory$git_branch$git_status$git_state]($style)$cmd_duration$character"
+format = "$directory$git_branch$git_status$git_state$cmd_duration$character"
 
 [character]
-error_symbol = "[✗](bold cyan)"
-success_symbol = "[❯](bold cyan)"
+error_symbol = "[✗](bold #ef2929)"
+success_symbol = "[❯](bold #e95420)"
+vimcmd_symbol = "[❮](bold #e95420)"
 
 [directory]
 truncation_length = 2
 truncation_symbol = "…/"
-repo_root_style = "bold cyan"
-repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
+format = "[ $path$read_only ]($style)"
+style = "fg:#eeeeec bg:#75507b"
 
 [git_branch]
-format = "[$branch]($style) "
-style = "italic cyan"
+format = "[](fg:#75507b bg:#ad7fa8)[ $branch ]($style)"
+style = "fg:#300a24 bg:#ad7fa8 italic"
 
 [git_status]
-format     = '[$all_status$ahead_behind]($style) '
-style      = "cyan"
+format     = "([](fg:#ad7fa8 bg:#c4a000)[ $all_status$ahead_behind]($style))"
+style      = "fg:#300a24 bg:#c4a000"
 ahead      = "⇡${count} "
 diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
 behind     = "⇣${count} "
@@ -32,10 +33,10 @@ renamed    = ""
 deleted    = ""
 
 [git_state]
-format = "([$state( $progress_current/$progress_total)]($style) )"
-style = "bold yellow"
+format = "[](fg:#c4a000 bg:#e95420)[ $state( $progress_current/$progress_total) ]($style)"
+style = "fg:#300a24 bg:#e95420 bold"
 
 [cmd_duration]
 min_time = 2000
-format = "took [$duration]($style) "
-style = "yellow"
+format = "[ took $duration ]($style)"
+style = "fg:#300a24 bg:#c4a000"

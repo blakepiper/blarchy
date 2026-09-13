@@ -214,9 +214,9 @@ window-rule {
   opacity 0.92
 }
 
-// Keep Kitty's background translucent without fading its text and contents;
-// the unfocused adjustment makes focused Kitty only ~5% brighter.
+// Kitty should have identical transparency regardless of focus. Override
+// the generic inactive-window dimming; Kitty controls its own background.
 window-rule {
   match app-id="kitty" is-active=false
-  opacity 0.95
+  opacity 1.0
 }

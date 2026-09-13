@@ -171,7 +171,7 @@ check "niri shows the wallpaper" grep -q 'swaybg -i ~/.config/swaybg/wallpaper.j
 check "kitty uses the Seafoam Dusk theme" grep -q 'background #171c1b' "$repo_path/config/kitty/kitty.conf"
 check "kitty is translucent" grep -q 'background_opacity 0.60' "$repo_path/config/kitty/kitty.conf"
 check "inactive windows are translucent" grep -q 'match is-active=false' "$repo_path/config/niri/config.kdl"
-check "kitty focus adjustment is small" grep -A2 -q 'match app-id="kitty" is-active=false' "$repo_path/config/niri/config.kdl"
+check "kitty focus transparency is constant" grep -A2 -q 'match app-id="kitty" is-active=false' "$repo_path/config/niri/config.kdl"
 check "btop uses the Seafoam Dusk theme" grep -q 'color_theme = "seafoam"' "$repo_path/config/btop/btop.conf"
 check "Seafoam Dusk btop theme exists" test -f "$repo_path/config/btop/themes/seafoam.theme"
 check_fail "no old Ubuntu palette leftovers anywhere" grep -rqi -E \

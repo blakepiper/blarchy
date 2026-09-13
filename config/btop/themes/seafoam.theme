@@ -1,0 +1,59 @@
+# Seafoam Dusk btop theme.
+
+# Main background
+theme[main_bg]="#171c1b"
+
+# Main text and title colors
+theme[main_fg]="#e4f0eb"
+theme[title]="#9fe3c4"
+
+# Highlights and selection
+theme[hi_fg]="#b8f2d6"
+theme[selected_bg]="#3b685c"
+theme[selected_fg]="#17211e"
+theme[inactive_fg]="#6f857c"
+theme[graph_text]="#a9beb6"
+theme[meter_bg]="#334740"
+
+# Box and process colors
+theme[proc_misc]="#a2f0d6"
+theme[cpu_box]="#4b6c62"
+theme[mem_box]="#4b6c62"
+theme[net_box]="#4b6c62"
+theme[proc_box]="#4b6c62"
+theme[div_line]="#334740"
+
+# Temperature and CPU graphs
+theme[temp_start]="#71c8a0"
+theme[temp_mid]="#9fe3c4"
+theme[temp_end]="#e7cf87"
+theme[cpu_start]="#71c8a0"
+theme[cpu_mid]="#9fe3c4"
+theme[cpu_end]="#e7cf87"
+
+# Memory and disk meters
+theme[free_start]="#6fc49d"
+theme[free_mid]="#9be6bc"
+theme[free_end]="#b8f2d6"
+theme[cached_start]="#6fc49d"
+theme[cached_mid]="#9be6bc"
+theme[cached_end]="#b8f2d6"
+theme[available_start]="#6fc49d"
+theme[available_mid]="#9be6bc"
+theme[available_end]="#b8f2d6"
+theme[used_start]="#4b8b73"
+theme[used_mid]="#6fc49d"
+theme[used_end]="#9be6bc"
+
+# Network graphs
+theme[download_start]="#7faed0"
+theme[download_mid]="#8db8d4"
+theme[download_end]="#a0c9e2"
+theme[upload_start]="#7db9a0"
+theme[upload_mid]="#9fe3c4"
+theme[upload_end]="#b8f2d6"
+
+# Process gradient
+theme[process_start]="#d8be73"
+theme[process_mid]="#e7cf87"
+theme[process_end]="#f1d996"

@@ -3,23 +3,23 @@ command_timeout = 200
 format = "$directory$git_branch$git_status$git_state$cmd_duration$character"
 
 [character]
-error_symbol = "[](fg:prev_bg bg:#300a24)[✗](bold #ef2929)"
-success_symbol = "[](fg:prev_bg bg:#300a24)[❯](bold #e95420)"
-vimcmd_symbol = "[](fg:prev_bg bg:#300a24)[❮](bold #e95420)"
+error_symbol = "[](fg:prev_bg bg:#171c1b)[✗](bold #f0919b)"
+success_symbol = "[](fg:prev_bg bg:#171c1b)[❯](bold #9fe3c4)"
+vimcmd_symbol = "[](fg:prev_bg bg:#171c1b)[❮](bold #9fe3c4)"
 
 [directory]
 truncation_length = 2
 truncation_symbol = "…/"
 format = "[ $path$read_only ]($style)"
-style = "fg:#eeeeec bg:#75507b"
+style = "fg:#e4f0eb bg:#3e6257"
 
 [git_branch]
-format = "[](fg:#75507b bg:#ad7fa8)[ $branch ]($style)"
-style = "fg:#300a24 bg:#ad7fa8 italic"
+format = "[](fg:#3e6257 bg:#7db9a0)[ $branch ]($style)"
+style = "fg:#17211e bg:#7db9a0 italic"
 
 [git_status]
-format     = "([](fg:#ad7fa8 bg:#e95420)[ $all_status$ahead_behind]($style))"
-style      = "fg:#300a24 bg:#e95420"
+format     = "([](fg:#7db9a0 bg:#9fe3c4)[ $all_status$ahead_behind]($style))"
+style      = "fg:#17211e bg:#9fe3c4"
 ahead      = "⇡${count} "
 diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
 behind     = "⇣${count} "
@@ -33,10 +33,10 @@ renamed    = ""
 deleted    = ""
 
 [git_state]
-format = "[](fg:prev_bg bg:#e95420)[ $state( $progress_current/$progress_total) ]($style)"
-style = "fg:#300a24 bg:#e95420 bold"
+format = "[](fg:prev_bg bg:#9fe3c4)[ $state( $progress_current/$progress_total) ]($style)"
+style = "fg:#17211e bg:#9fe3c4 bold"
 
 [cmd_duration]
 min_time = 2000
 format = "[ took $duration ]($style)"
-style = "fg:#300a24 bg:#e95420"
+style = "fg:#17211e bg:#9fe3c4"

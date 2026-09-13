@@ -1,7 +1,7 @@
 font=JetBrainsMono Nerd Font 10
-background-color=#300a24f2
-text-color=#eeeeec
-border-color=#e95420
+background-color=#202925f2
+text-color=#e4f0eb
+border-color=#9fe3c4
 border-size=2
 border-radius=8
 padding=12
@@ -10,5 +10,5 @@ max-visible=5
 layer=overlay
 
 [urgency=critical]
-background-color=#cc0000
-text-color=#eeeeec
+background-color=#8c424d
+text-color=#f1fff9

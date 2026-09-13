@@ -1,4 +1,4 @@
-/* One quiet surface; orange is reserved for focus and enabled controls. */
+/* Seafoam Dusk: charcoal surfaces with seafoam focus and enabled states. */
 * {
   font-family: "JetBrainsMono Nerd Font Mono", monospace;
   font-size: 12px;
@@ -10,10 +10,10 @@
 }
 
 window#waybar {
-  background: rgba(31, 23, 30, 0.97);
-  color: #eee7eb;
+  background: rgba(23, 28, 27, 0.93);
+  color: #e4f0eb;
   border: none;
-  border-bottom: 1px solid #493640;
+  border-bottom: 1px solid #38514a;
   border-radius: 0;
 }
 
@@ -53,23 +53,23 @@ button:hover {
   min-width: 28px;
   margin: 0 2px;
   border-radius: 4px;
-  color: #ab98a4;
+  color: #8fa9a0;
 }
 
 #workspaces button.active {
-  color: #eee7eb;
-  background: #49303f;
+  color: #e4f0eb;
+  background: #2e4840;
 }
 
 #workspaces button.focused {
-  color: #ffffff;
-  background: #b84420;
+  color: #17211e;
+  background: #9fe3c4;
   font-weight: bold;
 }
 
 #workspaces button.urgent {
-  color: #ffffff;
-  background: #9e3545;
+  color: #f1fff9;
+  background: #6b3d4a;
 }
 
 #clock,
@@ -92,36 +92,36 @@ button:hover {
 #clock {
   font-weight: bold;
   padding: 0 14px;
-  color: #f5edf1;
+  color: #e7f2ee;
 }
 
 #cpu,
 #memory {
-  color: #bcaab5;
+  color: #9ab0a8;
   padding: 0 6px;
 }
 
 #custom-ai-usage {
-  color: #dbc0d2;
-  background: #392a35;
+  color: #bfd6cb;
+  background: #26332f;
   margin-left: 8px;
   margin-right: 8px;
 }
 
 #custom-night-mode,
 #custom-awake {
-  color: #ab98a4;
+  color: #8fa9a0;
 }
 
 #custom-night-mode.night,
 #custom-night-mode.night-plus,
 #custom-awake.activated {
-  color: #ffc09a;
-  background: #503326;
+  color: #d8c17f;
+  background: #45402a;
 }
 
 #custom-night-mode.night-plus {
-  box-shadow: inset 0 -2px #f09462;
+  box-shadow: inset 0 -2px #d8c17f;
 }
 
 #workspaces button:hover,
@@ -133,15 +133,15 @@ button:hover {
 #bluetooth:hover,
 #battery:hover,
 #custom-battery:hover {
-  background: #503b49;
-  color: #ffffff;
+  background: #334f46;
+  color: #f1fff9;
 }
 
 #custom-ai-usage.unknown,
 #pulseaudio.muted,
 #bluetooth.off,
 #bluetooth.disabled {
-  color: #ab98a4;
+  color: #8fa9a0;
 }
 
 #custom-ai-usage.warning,
@@ -149,21 +149,21 @@ button:hover {
 #custom-battery.warning,
 #network.disconnected,
 #network.linked {
-  color: #f3c078;
+  color: #e7cf87;
 }
 
 #custom-ai-usage.critical,
 #battery.critical:not(.charging):not(.plugged),
 #custom-battery.critical {
-  color: #ffb4bc;
-  background: #572c39;
+  color: #f0919b;
+  background: #653c47;
 }
 
 #battery.charging,
 #battery.plugged,
 #custom-battery.charging,
 #custom-battery.plugged {
-  color: #b5d6a0;
+  color: #98e6b8;
 }
 
 #tray {
@@ -176,19 +176,19 @@ button:hover {
 
 #tray > .needs-attention {
   -gtk-icon-effect: highlight;
-  background: #572c39;
+  background: #653c47;
   border-radius: 5px;
 }
 
 tooltip {
-  background: #271e26;
-  border: 1px solid #604653;
+  background: #202925;
+  border: 1px solid #4b6c62;
   border-radius: 10px;
 }
 
 tooltip label {
   padding: 8px;
-  color: #eee7eb;
+  color: #e4f0eb;
 }
 
 /* Hide Niri's spare empty workspace, keeping all four numbered buttons visible.
@@ -207,7 +207,7 @@ tooltip label {
 
 /* Brightness: a visible handle and compact track for direct dragging. */
 #backlight {
-  color: #bcaab5;
+  color: #9ab0a8;
   margin: 2px 0 2px 4px;
   padding: 0 4px;
 }
@@ -221,20 +221,20 @@ tooltip label {
   min-width: 72px;
   min-height: 4px;
   border-radius: 4px;
-  background: #493640;
+  background: #38514a;
 }
 
 #backlight-slider highlight {
   min-height: 4px;
   border-radius: 4px;
-  background: #f09462;
+  background: #76cda8;
 }
 
 #backlight-slider slider {
   min-width: 10px;
   min-height: 10px;
   border-radius: 50%;
-  background: #ffc09a;
+  background: #b8f2d6;
   box-shadow: none;
 }
 

@@ -58,8 +58,9 @@ layout {
 
   focus-ring {
     width 2
-    active-color "#e95420"
-    inactive-color "#5e4356"
+    active-color "#9fe3c4"
+    inactive-color "#3d6258"
+    urgent-color "#e98591"
   }
 
   border { off; }
@@ -83,7 +84,7 @@ prefer-no-csd
 
 overview {
   zoom 0.7
-  backdrop-color "#2c001e"
+  backdrop-color "#171c1b"
 }
 
 hotkey-overlay {
@@ -204,4 +205,11 @@ window-rule {
 window-rule {
   match app-id="^firefox$" title="^Sharing Indicator$"
   open-floating true
+}
+
+// Seafoam Dusk: keep unfocused windows readable while letting the desktop
+// show through around them.
+window-rule {
+  match is-active=false
+  opacity 0.92
 }

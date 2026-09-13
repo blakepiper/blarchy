@@ -214,7 +214,7 @@ any desired configuration changes manually. There is no self-updater.
 | Notifications | mako |
 | Lock / idle | swaylock + swayidle (locks after 10 min) |
 | Wallpaper | swaybg (bundled Ubuntu wallpaper at `~/.config/swaybg/wallpaper.jpg`) |
-| Terminal | kitty (Ubuntu aubergine theme) |
+| Terminal | kitty (Seafoam Dusk theme with translucent windows) |
 | Multiplexer | prettymux (`Super` + `Shift` + `Enter`) |
 | Browser | Firefox (uBlock Origin and Dark Reader pre-installed; sponsored content, recommended stories, and built-in AI disabled) |
 | File manager | Nautilus |

@@ -1,29 +1,29 @@
--- Ubuntu palette from the active Kitty configuration.
+-- Seafoam Dusk palette shared with the active Kitty configuration.
 
 local c = {
-  bg = "#300a24",
-  fg = "#eeeeec",
-  cursor = "#eeeeec",
-  cursor_text = "#300a24",
-  selection_bg = "#75507b",
-  selection_fg = "#eeeeec",
+  bg = "#171c1b",
+  fg = "#e4f0eb",
+  cursor = "#b8f2d6",
+  cursor_text = "#17211e",
+  selection_bg = "#3b685c",
+  selection_fg = "#f1fff9",
 
-  black = "#2e3436",
-  red = "#cc0000",
-  green = "#4e9a06",
-  yellow = "#c4a000",
-  blue = "#3465a4",
-  magenta = "#75507b",
-  cyan = "#06989a",
-  white = "#d3d7cf",
-  bright_black = "#555753",
-  bright_red = "#ef2929",
-  bright_green = "#8ae234",
-  bright_yellow = "#fce94f",
-  bright_blue = "#729fcf",
-  bright_magenta = "#ad7fa8",
-  bright_cyan = "#34e2e2",
-  bright_white = "#eeeeec",
+  black = "#202925",
+  red = "#d97786",
+  green = "#71c8a0",
+  yellow = "#d8be73",
+  blue = "#7faed0",
+  magenta = "#3e6257",
+  cyan = "#65ceb5",
+  white = "#c5d5ce",
+  bright_black = "#667b73",
+  bright_red = "#f0919b",
+  bright_green = "#9be6bc",
+  bright_yellow = "#f1d996",
+  bright_blue = "#a0c9e2",
+  bright_magenta = "#7db9a0",
+  bright_cyan = "#a2f0d6",
+  bright_white = "#f0faf6",
 }
 
 local ansi = {
@@ -52,7 +52,7 @@ end
 
 vim.o.background = "dark"
 vim.o.termguicolors = true
-vim.g.colors_name = "ubuntu"
+vim.g.colors_name = "seafoam"
 
 local function hi(group, opts)
   vim.api.nvim_set_hl(0, group, opts)
@@ -582,12 +582,12 @@ apply()
 
 -- Reapply after LazyVim's lazy UI plugins initialize and when this scheme is
 -- selected again from a colorscheme picker.
-local group = vim.api.nvim_create_augroup("ubuntu_colorscheme", { clear = true })
+local group = vim.api.nvim_create_augroup("seafoam_colorscheme", { clear = true })
 vim.api.nvim_create_autocmd({ "ColorScheme", "User" }, {
   group = group,
-  pattern = { "ubuntu", "VeryLazy" },
+  pattern = { "seafoam", "VeryLazy" },
   callback = function()
-    if vim.g.colors_name == "ubuntu" then
+    if vim.g.colors_name == "seafoam" then
       apply()
     end
   end,

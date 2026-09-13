@@ -213,3 +213,10 @@ window-rule {
   match is-active=false
   opacity 0.92
 }
+
+// Keep kitty at the same translucent baseline when focused; its focused
+// state is only slightly brighter than the inactive composite.
+window-rule {
+  match app-id="kitty" is-active=false
+  opacity 0.96
+}

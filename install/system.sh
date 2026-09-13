@@ -26,6 +26,7 @@ fi
 # Login screen: greetd + tuigreet launching the Niri session.
 mkdir -p /etc/greetd
 install -m 0644 "$repo/etc/greetd/config.toml" /etc/greetd/config.toml
+install -Dm 0644 "$repo/etc/keyd/external-keyboard.conf" /etc/keyd/external-keyboard.conf
 install -m 0644 "$repo/etc/systemd/system/blarchy-battery-limit.service" \
   /etc/systemd/system/blarchy-battery-limit.service
 install -Dm 0755 "$repo/etc/lib/blarchy/battery-limit" /usr/local/lib/blarchy/battery-limit
@@ -70,6 +71,11 @@ enable_if_available() {
     systemctl enable "$unit"
   fi
 }
+
+# Apply the external keyboard mapping at the evdev layer so it does not alter
+# the laptop's built-in keyboard. The service is harmless when that keyboard
+# is disconnected and will pick it up when it is plugged in later.
+enable_if_available keyd.service
 
 enable_if_available systemd-oomd.service
 

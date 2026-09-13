@@ -6,6 +6,7 @@
 # Compositor and Wayland session
 niri
 xwayland-satellite
+keyd # Device-specific keyboard remapping
 qt5-wayland
 qt6-wayland
 xdg-desktop-portal-gtk

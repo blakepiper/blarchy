@@ -195,6 +195,8 @@ check_fail "mouse-follow is omitted, never set off" grep -q 'focus-follows-mouse
 check "battery-limit unit exists" test -f "$repo_path/etc/systemd/system/blarchy-battery-limit.service"
 check "battery-limit script parses" bash -n "$repo_path/etc/lib/blarchy/battery-limit"
 check "system setup installs the battery unit" grep -q 'blarchy-battery-limit' "$repo_path/install/system.sh"
+check "system setup installs Bluetooth tray suppression" grep -q '10-bluetooth' "$repo_path/install/system.sh"
+check "Bluetooth tray suppression disables indicator plugins" grep -q "!ShowConnected.*!StatusNotifierItem" "$repo_path/etc/dconf/db/blarchy.d/10-bluetooth"
 
 # Removed desktops stay removed.
 check_fail "unused text logo is removed" test -e "$repo_path/logo.txt"

@@ -34,6 +34,7 @@ install -Dm 0644 "$repo/etc/firefox/policies/policies.json" /etc/firefox/policie
 
 # System dark defaults remain overridable by each user's dconf settings.
 install -Dm 0644 "$repo/etc/dconf/db/blarchy.d/00-interface" /etc/dconf/db/blarchy.d/00-interface
+install -Dm 0644 "$repo/etc/dconf/db/blarchy.d/10-bluetooth" /etc/dconf/db/blarchy.d/10-bluetooth
 mkdir -p /etc/dconf/profile
 if [[ ! -e /etc/dconf/profile/user ]]; then
   printf 'user-db:user\n' >/etc/dconf/profile/user

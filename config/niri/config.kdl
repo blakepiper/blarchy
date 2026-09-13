@@ -214,9 +214,14 @@ window-rule {
   opacity 0.92
 }
 
-// Keep kitty at the same translucent baseline when focused; its focused
-// state is only slightly brighter than the inactive composite.
+// Kitty uses compositor opacity so focus changes the whole surface rather
+// than only its terminal background. Focused is just ~6% brighter than idle.
 window-rule {
   match app-id="kitty" is-active=false
-  opacity 0.95
+  opacity 0.68
+}
+
+window-rule {
+  match app-id="kitty" is-active=true
+  opacity 0.72
 }

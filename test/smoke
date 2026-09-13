@@ -169,8 +169,9 @@ check "tmux enables mouse" grep -qx 'set -g mouse on' "$repo_path/config/tmux/tm
 check "wallpaper bundled" test -f "$repo_path/config/swaybg/wallpaper.jpg"
 check "niri shows the wallpaper" grep -q 'swaybg -i ~/.config/swaybg/wallpaper.jpg' "$repo_path/config/niri/config.kdl"
 check "kitty uses the Seafoam Dusk theme" grep -q 'background #171c1b' "$repo_path/config/kitty/kitty.conf"
-check "kitty is translucent" grep -q 'background_opacity 0.70' "$repo_path/config/kitty/kitty.conf"
+check "kitty transparency is compositor-controlled" grep -q 'background_opacity 1.0' "$repo_path/config/kitty/kitty.conf"
 check "inactive windows are translucent" grep -q 'match is-active=false' "$repo_path/config/niri/config.kdl"
+check "focused kitty is slightly brighter" grep -q 'match app-id="kitty" is-active=true' "$repo_path/config/niri/config.kdl"
 check "btop uses the Seafoam Dusk theme" grep -q 'color_theme = "seafoam"' "$repo_path/config/btop/btop.conf"
 check "Seafoam Dusk btop theme exists" test -f "$repo_path/config/btop/themes/seafoam.theme"
 check_fail "no old Ubuntu palette leftovers anywhere" grep -rqi -E \

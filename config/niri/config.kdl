@@ -220,3 +220,8 @@ window-rule {
   match app-id="kitty" is-active=false
   opacity 1.0
 }
+
+window-rule {
+  match app-id="kitty"
+  draw-border-with-background false
+}

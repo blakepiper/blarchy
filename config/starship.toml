@@ -3,9 +3,9 @@ command_timeout = 200
 format = "$directory$git_branch$git_status$git_state$cmd_duration$character"
 
 [character]
-error_symbol = "[✗](bold #ef2929)"
-success_symbol = "[❯](bold #e95420)"
-vimcmd_symbol = "[❮](bold #e95420)"
+error_symbol = "[](fg:prev_bg bg:#300a24)[✗](bold #ef2929)"
+success_symbol = "[](fg:prev_bg bg:#300a24)[❯](bold #e95420)"
+vimcmd_symbol = "[](fg:prev_bg bg:#300a24)[❮](bold #e95420)"
 
 [directory]
 truncation_length = 2

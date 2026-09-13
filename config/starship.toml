@@ -18,8 +18,8 @@ format = "[](fg:#75507b bg:#ad7fa8)[ $branch ]($style)"
 style = "fg:#300a24 bg:#ad7fa8 italic"
 
 [git_status]
-format     = "([](fg:#ad7fa8 bg:#c4a000)[ $all_status$ahead_behind]($style))"
-style      = "fg:#300a24 bg:#c4a000"
+format     = "([](fg:#ad7fa8 bg:#e95420)[ $all_status$ahead_behind]($style))"
+style      = "fg:#300a24 bg:#e95420"
 ahead      = "⇡${count} "
 diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
 behind     = "⇣${count} "
@@ -33,10 +33,10 @@ renamed    = ""
 deleted    = ""
 
 [git_state]
-format = "[](fg:#c4a000 bg:#e95420)[ $state( $progress_current/$progress_total) ]($style)"
+format = "[](fg:prev_bg bg:#e95420)[ $state( $progress_current/$progress_total) ]($style)"
 style = "fg:#300a24 bg:#e95420 bold"
 
 [cmd_duration]
 min_time = 2000
 format = "[ took $duration ]($style)"
-style = "fg:#300a24 bg:#c4a000"
+style = "fg:#300a24 bg:#e95420"

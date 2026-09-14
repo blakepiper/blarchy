@@ -50,7 +50,7 @@
     "tooltip": true
   },
   "backlight": {
-    "format": "  {percent}%",
+    "format": "",
     "tooltip-format": "Brightness: {percent}% · Drag the slider to adjust"
   },
   "backlight/slider": {
@@ -59,11 +59,11 @@
     "orientation": "horizontal"
   },
   "pulseaudio": {
-    "format": "{icon}  {volume}%",
-    "format-bluetooth": "{icon}  {volume}%",
+    "format": "{icon}",
+    "format-bluetooth": "{icon}",
     "format-bluetooth-muted": "  Muted",
     "format-muted": "  Muted",
-    "format-source": "  {volume}%",
+    "format-source": "",
     "format-source-muted": "  Muted",
     "format-icons": {
       "headphone": "",

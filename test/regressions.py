@@ -78,6 +78,7 @@ class RegressionTests(unittest.TestCase):
     self.assertTrue(defaults["Settings"].getboolean("gtk-application-prefer-dark-theme"))
     bar = json.loads((REPO / "config/waybar/config.jsonc").read_text())
     self.assertEqual(bar["network"]["on-click"], "~/.local/bin/network-settings")
+    self.assertEqual(bar["network"]["format-wifi"], "")
     self.assertIn("bluetooth", bar["modules-right"])
     self.assertEqual(bar["bluetooth"]["on-click"], "blueman-manager")
     self.assertEqual(bar["bluetooth"]["format-no-controller"], "")

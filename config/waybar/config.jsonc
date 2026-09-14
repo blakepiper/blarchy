@@ -77,7 +77,7 @@
     "scroll-step": 5
   },
   "network": {
-    "format-wifi": "  {signalStrength}%",
+    "format-wifi": "",
     "format-ethernet": "  Wired",
     "format-linked": "  No IP",
     "format-disconnected": "  Offline",

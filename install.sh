@@ -145,7 +145,7 @@ cat <<'DONE'
 
 Blarchy installation complete.
 
-Reboot when convenient, then log in through the greetd prompt into
+Reboot when convenient, then log in through the SDDM login screen into
 Niri. Your disk layout, bootloader, and other operating systems were
 not changed.
 

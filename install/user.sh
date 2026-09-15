@@ -41,6 +41,7 @@ seed_tree() {
 }
 
 seed_tree "$repo/config" "$HOME/.config"
+seed_tree "$repo/assets/pictures" "$HOME/Pictures"
 
 # Screenshots land here (matches the Niri screenshot-path setting).
 mkdir -p "$HOME/Pictures/Screenshots"

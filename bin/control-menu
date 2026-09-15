@@ -22,13 +22,13 @@ confirm() {
 }
 
 do_lock() {
-  exec swaylock -f
+  exec hyprlock
 }
 
 do_suspend() {
   # Lock first, then suspend. swayidle also locks on before-sleep,
   # so this is double-safe if that hook fires too.
-  swaylock -f &
+  hyprlock &
   sleep 0.5
   exec systemctl suspend
 }

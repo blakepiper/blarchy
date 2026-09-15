@@ -38,11 +38,16 @@ input {
   position x=0 y=0
 }
 
-// Keep workspaces 1-4 available even when empty.
+// Keep workspaces 1-9 available in ascending order, even when empty.
 workspace "1"
 workspace "2"
 workspace "3"
 workspace "4"
+workspace "5"
+workspace "6"
+workspace "7"
+workspace "8"
+workspace "9"
 
 layout {
   gaps 8
@@ -69,13 +74,13 @@ layout {
 // Programs started with the compositor session.
 spawn-at-startup "mako"
 spawn-at-startup "waybar"
-spawn-sh-at-startup "swaybg -i ~/.config/swaybg/wallpaper.jpg -m fill"
+spawn-sh-at-startup "swaybg -i ~/Pictures/mountain.png -m fill"
 spawn-at-startup "/usr/lib/polkit-kde-authentication-agent-1"
 spawn-at-startup "gnome-keyring-daemon" "--start" "--components=secrets"
 spawn-at-startup "udiskie" "--tray"
 spawn-at-startup "sh" "-c" "wl-paste --type text --watch cliphist store"
 spawn-at-startup "sh" "-c" "wl-paste --type image --watch cliphist store"
-spawn-at-startup "swayidle" "-w" "timeout" "600" "~/.local/bin/keep-awake idle-action swaylock -f" "timeout" "900" "~/.local/bin/keep-awake idle-action niri msg action power-off-monitors" "before-sleep" "~/.local/bin/keep-awake idle-action swaylock -f"
+spawn-at-startup "swayidle" "-w" "timeout" "600" "~/.local/bin/keep-awake idle-action hyprlock" "timeout" "900" "~/.local/bin/keep-awake idle-action niri msg action power-off-monitors" "before-sleep" "~/.local/bin/keep-awake idle-action hyprlock"
 // Restore the night-mode temperature when it was left on (exits at once when off).
 spawn-at-startup "sh" "-c" "~/.local/bin/night-mode run"
 
@@ -115,7 +120,7 @@ binds {
 
   // Lock and power.
   Mod+Shift+Space { spawn-sh "~/.local/bin/control-menu"; }
-  Mod+L { spawn "swaylock" "-f"; }
+  Mod+L { spawn "hyprlock"; }
   Mod+N { spawn-sh "~/.local/bin/night-mode next"; }
   Mod+Shift+E { quit; }
   Mod+Shift+P { power-off-monitors; }
@@ -156,24 +161,24 @@ binds {
   Mod+Period { consume-or-expel-window-right; }
 
   // Workspaces 1-9.
-  Mod+1 { focus-workspace 1; }
+  Mod+1 { focus-workspace "1"; }
   Mod+2 { focus-workspace "2"; }
   Mod+3 { focus-workspace "3"; }
   Mod+4 { focus-workspace "4"; }
-  Mod+5 { focus-workspace 5; }
-  Mod+6 { focus-workspace 6; }
-  Mod+7 { focus-workspace 7; }
-  Mod+8 { focus-workspace 8; }
-  Mod+9 { focus-workspace 9; }
-  Mod+Shift+1 { move-column-to-workspace 1; }
+  Mod+5 { focus-workspace "5"; }
+  Mod+6 { focus-workspace "6"; }
+  Mod+7 { focus-workspace "7"; }
+  Mod+8 { focus-workspace "8"; }
+  Mod+9 { focus-workspace "9"; }
+  Mod+Shift+1 { move-column-to-workspace "1"; }
   Mod+Shift+2 { move-column-to-workspace "2"; }
   Mod+Shift+3 { move-column-to-workspace "3"; }
   Mod+Shift+4 { move-column-to-workspace "4"; }
-  Mod+Shift+5 { move-column-to-workspace 5; }
-  Mod+Shift+6 { move-column-to-workspace 6; }
-  Mod+Shift+7 { move-column-to-workspace 7; }
-  Mod+Shift+8 { move-column-to-workspace 8; }
-  Mod+Shift+9 { move-column-to-workspace 9; }
+  Mod+Shift+5 { move-column-to-workspace "5"; }
+  Mod+Shift+6 { move-column-to-workspace "6"; }
+  Mod+Shift+7 { move-column-to-workspace "7"; }
+  Mod+Shift+8 { move-column-to-workspace "8"; }
+  Mod+Shift+9 { move-column-to-workspace "9"; }
 
   // Media and brightness keys.
   XF86AudioRaiseVolume { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }

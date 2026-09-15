@@ -52,10 +52,11 @@ fi
 for manifest in packages packages-aur; do
   check "install/$manifest is non-empty" test -s "$repo_path/install/$manifest"
 done
-check_fail "no hyprland packages" grep -qi -E 'hypr|xfce|alacritty|quickshell' "$repo_path/install/packages"
-check "greetd in packages" grep -qx 'greetd' "$repo_path/install/packages"
-check "greetd-tuigreet in packages" grep -qx 'greetd-tuigreet' "$repo_path/install/packages"
-check_fail "no sddm packages" grep -qx 'sddm' "$repo_path/install/packages"
+check_fail "no other compositor packages" grep -qi -E 'hyprland|xfce|alacritty|quickshell' "$repo_path/install/packages"
+check "SDDM in packages" grep -qx 'sddm' "$repo_path/install/packages"
+check "Hyprlock in packages" grep -qx 'hyprlock' "$repo_path/install/packages"
+check "SilentSDDM in AUR packages" grep -q '^sddm-silent-theme ' "$repo_path/install/packages-aur"
+check_fail "retired login and locker packages absent" grep -qxE 'greetd|greetd-tuigreet|swaylock' "$repo_path/install/packages"
 check "kitty in packages" grep -qx 'kitty' "$repo_path/install/packages"
 check "niri in packages" grep -qx 'niri' "$repo_path/install/packages"
 check "waybar in packages" grep -qx 'waybar' "$repo_path/install/packages"
@@ -103,7 +104,7 @@ check "waybar config is JSON" python3 -c "
 import json
 json.load(open('$repo_path/config/waybar/config.jsonc'))
 "
-check "greetd config exists" test -f "$repo_path/etc/greetd/config.toml"
+check "SDDM theme configured" grep -qx 'Current=silent' "$repo_path/etc/sddm.conf.d/90-silent.conf"
 
 # Compile in memory, without leaving __pycache__ in managed helper directories.
 check "helpers compile" python3 -c '
@@ -166,8 +167,9 @@ check "tmux is installed" grep -qx 'tmux' "$repo_path/install/packages"
 check "tmux enables mouse" grep -qx 'set -g mouse on' "$repo_path/config/tmux/tmux.conf"
 
 # Wallpaper and terminal theme.
-check "wallpaper bundled" test -f "$repo_path/config/swaybg/wallpaper.jpg"
-check "niri shows the wallpaper" grep -q 'swaybg -i ~/.config/swaybg/wallpaper.jpg' "$repo_path/config/niri/config.kdl"
+check "wallpaper bundled" test -f "$repo_path/assets/pictures/mountain.png"
+check "avatar bundled" test -f "$repo_path/assets/pictures/hermes.jpg"
+check "niri shows the wallpaper" grep -q 'swaybg -i ~/Pictures/mountain.png' "$repo_path/config/niri/config.kdl"
 check "kitty uses the Seafoam Dusk theme" grep -q 'background #171c1b' "$repo_path/config/kitty/kitty.conf"
 check "kitty is translucent" grep -q 'background_opacity 0.60' "$repo_path/config/kitty/kitty.conf"
 check "kitty handles alternate transparent backgrounds" grep -q 'transparent_background_colors #4e6c5e@0.60' "$repo_path/config/kitty/kitty.conf"
@@ -214,7 +216,7 @@ assert not {'theme', 'keybinds', 'tui'} & runtime.keys()
 assert runtime['autoupdate'] is False
 assert tui['theme'] == 'system'
 "
-check_fail "no hypr config" test -e "$repo_path/config/hypr"
+check "Hyprlock config exists" test -f "$repo_path/config/hypr/hyprlock.conf"
 check_fail "no xfce config" test -e "$repo_path/config/xfce4"
 check_fail "no quickshell dir" test -e "$repo_path/shell"
 check "bin/ holds only managed helpers" python3 -c "

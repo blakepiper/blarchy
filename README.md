@@ -149,7 +149,7 @@ the firewall reminder if you use SSH. Then run:
 sudo reboot
 ```
 
-Log in at the greetd prompt with the same username and password. Select Niri
+Log in at the SDDM login screen with the same username and password. Select Niri
 if prompted for a session. Once the desktop appears, press **Super + Enter**
 to open a terminal or **Super + Space** to launch an application. On most
 keyboards, Super is the Windows-logo key.
@@ -164,7 +164,7 @@ The installer:
   tools it finds — see [docs/HARDWARE.md](./docs/HARDWARE.md);
 - installs the pacman packages in [`install/packages`](./install/packages)
   plus the AUR packages in [`install/packages-aur`](./install/packages-aur);
-- sets up `greetd` + `tuigreet` as the login screen (keeping an existing
+- sets up SDDM + SilentSDDM as the login screen (keeping an existing
   display manager if one is already enabled);
 - preserves archinstall networking or enables NetworkManager, plus the hardware-appropriate
   Bluetooth and power services;
@@ -208,12 +208,12 @@ any desired configuration changes manually. There is no self-updater.
 | Role | Default |
 | --- | --- |
 | Compositor | Niri (scrollable tiling) |
-| Login | greetd + tuigreet |
+| Login | SDDM + SilentSDDM (default preset, Hermes avatar) |
 | Bar | Waybar (workspaces, CPU, memory, night mode, caffeinate, AI usage, audio, network, Bluetooth, battery, tray) |
 | Launcher | fuzzel |
 | Notifications | mako |
-| Lock / idle | swaylock + swayidle (locks after 10 min) |
-| Wallpaper | swaybg (bundled Ubuntu wallpaper at `~/.config/swaybg/wallpaper.jpg`) |
+| Lock / idle | Hyprlock + swayidle (locks after 10 min) |
+| Wallpaper | swaybg (mountain wallpaper at `~/Pictures/mountain.png`) |
 | Terminal | kitty (Seafoam Dusk theme with translucent windows) |
 | Multiplexer | prettymux (`Super` + `Shift` + `Enter`) |
 | Browser | Firefox (uBlock Origin and Dark Reader pre-installed; sponsored content, recommended stories, and built-in AI disabled) |
@@ -247,10 +247,18 @@ Click the Bluetooth indicator to open Blueman for
 pairing and managing devices. Bluetooth tools install only when an adapter
 is detected, and the indicator is hidden when no controller is available.
 
-The greetd password login unlocks the login keyring through optional PAM
+The SDDM password login unlocks the login keyring through optional PAM
 hooks. Password changes through `passwd` also update the keyring password.
 An existing keyring with a different password still needs to be unlocked
 with its old password; the installer does not reset stored secrets.
+
+SilentSDDM uses its default preset and updates through the AUR package
+`sddm-silent-theme`. Its settings are in `/etc/sddm.conf.d/90-silent.conf`.
+The installer seeds the Hermes avatar for the installing account in
+`/usr/share/sddm/faces/<username>.face.icon`, preserving an existing avatar.
+The mountain wallpaper and Hermes image are seeded into `~/Pictures`.
+Hyprlock settings live in `~/.config/hypr/hyprlock.conf`; verify changes by
+locking and unlocking normally, never by killing a live locker with a timeout.
 
 ## Terminal suggestions
 
@@ -399,7 +407,8 @@ yay -S spotify   # optional music player
 bin/          desktop helpers (topbar panels, AI usage, night mode, displays, clipboard, network, dev workspace)
 config/       user configuration defaults (nvim, niri, kitty, tmux, waybar, ...)
 docs/         hardware detection notes
-etc/          system defaults (greetd, Firefox policies, dark mode, battery limit)
+etc/          system defaults (SDDM, Firefox policies, dark mode, battery limit)
+assets/       mountain wallpaper and Hermes login avatar
 install/      package manifests, hardware detection, system/user setup
 test/         smoke checks runnable on any machine
 install.sh    the installer

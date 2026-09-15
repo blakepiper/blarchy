@@ -25,7 +25,7 @@ gtk-layer-shell
 fuzzel
 mako
 libnotify
-swaylock
+hyprlock
 swayidle
 swaybg
 gammastep
@@ -36,8 +36,11 @@ tmux
 ghostty-terminfo # prettymux uses xterm-ghostty; required by clear and other terminal tools
 
 # Login, network, bluetooth, audio, power
-greetd
-greetd-tuigreet
+sddm
+qt6-svg
+qt6-virtualkeyboard
+qt6-multimedia-ffmpeg
+qt6-imageformats
 networkmanager
 libnm
 wireless-regdb

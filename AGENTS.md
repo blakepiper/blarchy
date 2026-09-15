@@ -22,7 +22,7 @@ the intended desktop user, and running `./install.sh`.
 - Hardware-specific drivers and services are derived at install time by
   `install/hardware.sh`. Never hardcode machine-specific drivers into the
   base package list.
-- The desktop stack is Niri + Waybar + fuzzel + mako + swaylock/swayidle
+- The desktop stack is Niri + Waybar + fuzzel + mako + hyprlock/swayidle
   + swaybg + kitty. Do not reintroduce a second compositor, desktop
   environment, display manager, or bar without explicit user approval.
 - The terminal emulator is kitty. The general terminal multiplexer is

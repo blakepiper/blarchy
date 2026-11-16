@@ -38,7 +38,6 @@ seed_tree() {
 }
 
 seed_tree "$repo/config" "$HOME/.config"
-seed_tree "$repo/assets/pictures" "$HOME/Pictures"
 mkdir -p "$HOME/Pictures/Screenshots"
 
 # Interactive Bash: ble.sh, Starship, and local helper commands.

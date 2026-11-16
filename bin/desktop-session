@@ -23,7 +23,7 @@ trap cleanup EXIT
 trap 'exit 0' INT TERM
 
 start_child mako
-start_child swaybg -i "$HOME/Pictures/mountain.png" -m fill
+start_child swaybg -c '#1a1b26'
 start_child wl-paste --type text --watch cliphist store
 start_child wl-paste --type image --watch cliphist store
 start_child udiskie --tray

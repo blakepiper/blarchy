@@ -1,6 +1,10 @@
-# Arch desktop install
+<div align="center">
+  <img src="./logo.svg" alt="Blarchy" width="700" style="display: block; max-width: 100%; height: auto;">
+</div>
 
-This repository configures a fresh Arch Linux installation with Hyprland,
+# Blarchy
+
+Blarchy configures a fresh Arch Linux installation with Hyprland,
 Quickshell, Wofi, Ghostty, and a small set of desktop applications. It does not
 install Arch, partition disks, or configure a bootloader.
 
@@ -54,7 +58,7 @@ No package versions are pinned, and there is no repository self-updater.
 | Notifications | mako |
 | Terminal | Ghostty |
 | Lock and idle | hyprlock and hypridle |
-| Wallpaper | swaybg |
+| Wallpaper | swaybg with a solid dark background |
 | Editor | vanilla Neovim with an empty `init.lua` |
 | Project workspace | tmux through `dev` |
 | System information | fastfetch |

@@ -140,7 +140,7 @@ for path in [root / "bin/ai-usage", *root.glob("bin/ai-usage-scanners/*.py"), ro
 '
 if command -v systemd-analyze >/dev/null 2>&1 && [[ -x /bin/bash && -x /usr/bin/systemd-inhibit ]]; then
   check "battery-limit unit verifies" systemd-analyze verify "$repo_path/etc/systemd/system/battery-charge-limit.service"
-  check "keep-awake user unit verifies" systemd-analyze --user verify "$repo_path/config/systemd/user/keep-awake.service"
+  check "keep-awake unit syntax verifies" systemd-analyze verify "$repo_path/config/systemd/user/keep-awake.service"
 else
   printf 'skip: systemd unit validation needs standard Arch paths\n'
 fi

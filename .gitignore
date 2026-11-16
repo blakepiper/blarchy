@@ -5,6 +5,3 @@ __pycache__/
 
 # macOS metadata
 .DS_Store
-
-# Local AI tooling state
-.ai/

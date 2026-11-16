@@ -1,0 +1,36 @@
+#!/bin/bash
+# Quick access to the session's device settings.
+
+set -euo pipefail
+
+choices=('Audio devices' 'Network connections')
+if command -v blueman-manager >/dev/null 2>&1; then
+  choices+=('Bluetooth devices')
+fi
+if command -v powerprofilesctl >/dev/null 2>&1; then
+  choices+=('Power mode')
+fi
+choices+=('Display configuration')
+
+choice=$(printf '%s\n' "${choices[@]}" | wofi --dmenu --no-custom-entry --prompt 'Settings') || exit 0
+
+case $choice in
+  'Audio devices') exec pavucontrol ;;
+  'Network connections') exec nm-connection-editor ;;
+  'Bluetooth devices') exec blueman-manager ;;
+  'Power mode')
+    profile=$(printf '%s\n' 'Performance' 'Balanced' 'Power Saver' \
+      | wofi --dmenu --hide-search --no-custom-entry --prompt 'Power mode') || exit 0
+    case $profile in
+      Performance) profile=performance ;;
+      Balanced) profile=balanced ;;
+      'Power Saver') profile=power-saver ;;
+      *) exit 0 ;;
+    esac
+    exec "$HOME/.local/bin/session-controls" power-mode "$profile"
+    ;;
+  'Display configuration')
+    exec ghostty +new-window -e /usr/bin/nvim "$HOME/.config/hypr/hyprland.lua"
+    ;;
+  *) exit 0 ;;
+esac

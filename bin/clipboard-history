@@ -3,7 +3,7 @@
 # Select text or an image from history, then paste normally in the target app.
 set -euo pipefail
 
-selection=$(cliphist list | fuzzel --dmenu --prompt 'Clipboard: ') || exit 0
+selection=$(cliphist list | wofi --dmenu --prompt 'Clipboard: ') || exit 0
 [[ -n $selection ]] || exit 0
 
 # Decode before taking ownership of the clipboard. A cancellation or missing

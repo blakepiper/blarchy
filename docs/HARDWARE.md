@@ -37,7 +37,7 @@ Detection results print during the install under the `hardware:` prefix.
 
 ## Battery charge limit
 
-On laptops the installer enables `blarchy-battery-limit.service`, which
+On laptops the installer enables `battery-charge-limit.service`, which
 sets `charge_control_end_threshold=80` (and `charge_control_start_threshold=75`
 where supported) on every battery at boot. This uses the kernel
 charge-control API, so it works on most modern ThinkPads, Dells, ASUS,

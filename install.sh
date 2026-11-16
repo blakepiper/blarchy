@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Blarchy: turn a minimal Arch system into a configured Niri desktop.
+# Configure a minimal Arch installation with a manually started Hyprland session.
 #
 # Expected starting point: Arch installed with archinstall (base system,
 # no desktop), booted, connected to wifi, with git installed and a
@@ -12,8 +12,8 @@
 #   ./install.sh
 #
 # Retry a failed install by rerunning ./install.sh. Package installation uses
-# --needed, system integration converges on this repository, and user
-# configuration files are never overwritten.
+# --needed, system integration is idempotent, and user config files are seeded
+# only when they do not already exist.
 
 set -euo pipefail
 trap 'echo "Installation failed. Resolve the error above, then retry ./install.sh." >&2' ERR
@@ -31,7 +31,7 @@ usage() {
   cat <<'USAGE'
 Usage: ./install.sh
 
-Install the blarchy Arch + Niri desktop on this machine.
+Install the Arch desktop configuration on this machine.
 
 Requires: Arch Linux, working networking, and a non-root user with
 sudo access. Run as the user who will use the desktop, not as root.
@@ -113,43 +113,40 @@ install_yay
 yay -Y --devel --save
 
 # shellcheck source=install/hardware.sh
-export BLARCHY_REPO="$repo_path"
+export INSTALL_REPO="$repo_path"
 source "$repo_path/install/hardware.sh"
-blarchy_detect_hardware
+installer_detect_hardware
 
 mapfile -t repo_packages < <(load_package_list "$repo_path/install/packages")
 mapfile -t aur_packages < <(load_package_list "$repo_path/install/packages-aur")
 
-echo "Install repository packages (${#repo_packages[@]} base + ${#BLARCHY_HW_PACKAGES[@]} hardware-detected)"
-sudo pacman -S --needed --noconfirm "${repo_packages[@]}" "${BLARCHY_HW_PACKAGES[@]}"
+echo "Install Arch packages (${#repo_packages[@]} base + ${#INSTALL_HW_PACKAGES[@]} hardware-detected)"
+sudo pacman -S --needed --noconfirm "${repo_packages[@]}" "${INSTALL_HW_PACKAGES[@]}"
 
 if (( ${#aur_packages[@]} )); then
   echo "Build and install AUR packages: ${aur_packages[*]}"
   yay -Syu --needed --noconfirm --removemake --cleanafter "${aur_packages[@]}"
 fi
 
-echo "Validate desktop configuration"
-niri validate --config "$repo_path/config/niri/config.kdl"
-
 echo "Install system integration"
-sudo env BLARCHY_REPO="$repo_path" \
-  BLARCHY_USER="$install_user" \
-  BLARCHY_ENABLE_BLUETOOTH="$BLARCHY_HAS_BLUETOOTH" \
-  BLARCHY_ENABLE_PPD="$BLARCHY_IS_LAPTOP" \
+sudo env INSTALL_REPO="$repo_path" \
+  INSTALL_USER="$install_user" \
+  INSTALL_ENABLE_BLUETOOTH="$INSTALL_HAS_BLUETOOTH" \
+  INSTALL_ENABLE_PPD="$INSTALL_IS_LAPTOP" \
   bash "$repo_path/install/system.sh"
 
 echo "Seed user configuration"
-BLARCHY_REPO="$repo_path" bash "$repo_path/install/user.sh"
+INSTALL_REPO="$repo_path" bash "$repo_path/install/user.sh"
 
 cat <<'DONE'
 
-Blarchy installation complete.
+Installation complete.
 
-Reboot when convenient, then log in through the SDDM login screen into
-Niri. Your disk layout, bootloader, and other operating systems were
-not changed.
+Reboot when convenient, log in at the TTY, then run start-hyprland.
+Your disk layout, bootloader, and other operating systems were not changed.
 
 The firewall denies incoming connections after reboot. Before rebooting,
 add any rules you need (for example: sudo ufw allow 22/tcp for SSH).
-Keep packages current with yay -Syu; no repository update is needed.
+Keep official packages current with pacman -Syu and AUR exceptions with
+yay -Syu.
 DONE

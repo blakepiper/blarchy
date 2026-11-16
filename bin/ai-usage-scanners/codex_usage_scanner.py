@@ -12,7 +12,7 @@ def local_day(value):
   if value is None:
     return datetime.now().strftime("%Y-%m-%d")
   if isinstance(value, (int, float)):
-    # pi message timestamps are milliseconds; Codex timestamps are usually seconds.
+    # Codex timestamps may be seconds or milliseconds.
     if value > 10_000_000_000:
       value = value / 1000
     return datetime.fromtimestamp(value).strftime("%Y-%m-%d")
@@ -58,80 +58,12 @@ now = datetime.now()
 today = now.strftime("%Y-%m-%d")
 today_prompts = 0
 today_total_tokens = 0
-seen_pi_messages = set()
-
-
 def add_usage(day, input_tokens, output_tokens, cache_read, cache_write):
   global today_prompts, today_total_tokens
   total = input_tokens + output_tokens + cache_read + cache_write
   if day == today:
     today_prompts += 1
     today_total_tokens += total
-
-
-def scan_pi_sessions():
-  root = Path.home() / ".pi" / "agent" / "sessions"
-  if not root.exists():
-    return
-  try:
-    rg = find_command("rg") or "rg"
-    proc = subprocess.Popen(
-      [rg, "--json", "-e", '"provider":"openai-codex"', "-e", '"api":"openai-codex"', str(root)],
-      stdout=subprocess.PIPE,
-      stderr=subprocess.DEVNULL,
-      text=True,
-      errors="replace",
-      env=ENV,
-    )
-  except FileNotFoundError:
-    return
-
-  assert proc.stdout is not None
-  for raw in proc.stdout:
-    try:
-      event = json.loads(raw)
-      if event.get("type") != "match":
-        continue
-      line = event.get("data", {}).get("lines", {}).get("text", "")
-      path = event.get("data", {}).get("path", {}).get("text", "pi-session")
-      entry = json.loads(line)
-    except Exception:
-      continue
-
-    if entry.get("type") != "message":
-      continue
-    message_key = path + ":" + str(entry.get("id") or "")
-    if message_key in seen_pi_messages:
-      continue
-    seen_pi_messages.add(message_key)
-    message = entry.get("message") or {}
-    if message.get("role") != "assistant":
-      continue
-    provider = str(message.get("provider") or "")
-    api = str(message.get("api") or "")
-    if provider != "openai-codex" and not api.startswith("openai-codex"):
-      continue
-
-    usage = message.get("usage") or {}
-    if not usage:
-      continue
-    total = number(usage.get("totalTokens"))
-    input_tokens = number(usage.get("input"))
-    output_tokens = number(usage.get("output"))
-    cache_read = number(usage.get("cacheRead"))
-    cache_write = number(usage.get("cacheWrite"))
-    if total and not (input_tokens or output_tokens or cache_read or cache_write):
-      input_tokens = total
-    if not (input_tokens or output_tokens or cache_read or cache_write):
-      continue
-
-    day = local_day(entry.get("timestamp") or message.get("timestamp"))
-    add_usage(day, input_tokens, output_tokens, cache_read, cache_write)
-
-  try:
-    proc.wait(timeout=1)
-  except Exception:
-    proc.kill()
 
 
 def scan_native_codex_sessions():
@@ -235,7 +167,7 @@ def fetch_codex_rpc():
     return result
 
   try:
-    rpc_request(proc, 1, "initialize", {"clientInfo": {"name": "blarchy-ai-usage", "version": "1"}}, timeout=8)
+    rpc_request(proc, 1, "initialize", {"clientInfo": {"name": "desktop-ai-usage", "version": "1"}}, timeout=8)
     proc.stdin.write(json.dumps({"method": "initialized", "params": {}}) + "\n")
     proc.stdin.flush()
     account_msg = rpc_request(proc, 2, "account/read", timeout=4)
@@ -282,7 +214,6 @@ def fetch_codex_rpc():
 
 
 if __name__ == "__main__":
-  scan_pi_sessions()
   scan_native_codex_sessions()
   out = {
     "todayPrompts": today_prompts,

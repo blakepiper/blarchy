@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# dev: open the current project in a three-pane tmux session - nvim on the
-# left, a blank shell in the upper-right, and hyfetch in the lower-right.
+# Open the current project in a three-pane tmux session with nvim and fastfetch.
 #
 # Usage: dev (run from inside the project directory)
 
@@ -15,8 +14,8 @@ if ! command -v nvim >/dev/null 2>&1; then
   echo "dev: nvim not found on PATH." >&2
   exit 1
 fi
-if ! command -v hyfetch >/dev/null 2>&1; then
-  echo "dev: hyfetch not found on PATH." >&2
+if ! command -v fastfetch >/dev/null 2>&1; then
+  echo "dev: fastfetch not found on PATH." >&2
   exit 1
 fi
 
@@ -58,7 +57,7 @@ tmux resize-pane -t "$session_name:0.0" -x 65%
 user_shell=${SHELL:-/bin/bash}
 quoted_shell=$(printf '%q' "$user_shell")
 tmux split-window -v -t "$session_name:0.1" -c "$project_dir" \
-  "$quoted_shell -i -c 'hyfetch; exec $quoted_shell -i'"
+  "$quoted_shell -i -c 'fastfetch; exec $quoted_shell -i'"
 
 tmux select-pane -t "$session_name:0.0"
 attach

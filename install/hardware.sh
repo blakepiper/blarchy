@@ -1,48 +1,48 @@
-# Hardware detection for the blarchy installer. Sourced by install.sh,
-# never executed directly. Sets BLARCHY_* variables and fills the
-# BLARCHY_HW_PACKAGES array with the extra pacman packages the detected
+# Hardware detection for the installer. Sourced by install.sh,
+# never executed directly. Sets INSTALL_* values and fills the
+# INSTALL_HW_PACKAGES array with the extra pacman packages the detected
 # hardware needs.
 # shellcheck shell=bash
 # shellcheck disable=SC2034 # variables are consumed by the sourcing install.sh
 
-BLARCHY_HW_PACKAGES=()
-BLARCHY_IS_LAPTOP=0
-BLARCHY_HAS_BLUETOOTH=0
-BLARCHY_HAS_NVIDIA=0
-BLARCHY_HAS_INTEL_GPU=0
-BLARCHY_HAS_AMD_GPU=0
-BLARCHY_CPU_VENDOR=""
-BLARCHY_VIRT=""
-BLARCHY_SUMMARY=()
+INSTALL_HW_PACKAGES=()
+INSTALL_IS_LAPTOP=0
+INSTALL_HAS_BLUETOOTH=0
+INSTALL_HAS_NVIDIA=0
+INSTALL_HAS_INTEL_GPU=0
+INSTALL_HAS_AMD_GPU=0
+INSTALL_CPU_VENDOR=""
+INSTALL_VIRT=""
+INSTALL_SUMMARY=()
 
-blarchy_hw_note() {
-  BLARCHY_SUMMARY+=("$1")
+installer_note() {
+  INSTALL_SUMMARY+=("$1")
   printf '  hardware: %s\n' "$1"
 }
 
-blarchy_detect_cpu() {
+installer_detect_cpu() {
   local vendor=""
 
   if [[ -r /proc/cpuinfo ]]; then
     vendor=$(awk '/^vendor_id/ {print $3; exit}' /proc/cpuinfo)
   fi
-  BLARCHY_CPU_VENDOR=$vendor
+  INSTALL_CPU_VENDOR=$vendor
   case $vendor in
     GenuineIntel)
-      BLARCHY_HW_PACKAGES+=(intel-ucode sof-firmware)
-      blarchy_hw_note "Intel CPU (intel-ucode, sof-firmware for audio)"
+      INSTALL_HW_PACKAGES+=(intel-ucode sof-firmware)
+      installer_note "Intel CPU (intel-ucode, sof-firmware for audio)"
       ;;
     AuthenticAMD)
-      BLARCHY_HW_PACKAGES+=(amd-ucode)
-      blarchy_hw_note "AMD CPU (amd-ucode)"
+      INSTALL_HW_PACKAGES+=(amd-ucode)
+      installer_note "AMD CPU (amd-ucode)"
       ;;
     *)
-      blarchy_hw_note "Unknown CPU vendor (${vendor:-unreadable}); skipping microcode"
+      installer_note "Unknown CPU vendor (${vendor:-unreadable}); skipping microcode"
       ;;
   esac
 }
 
-blarchy_detect_gpu() {
+installer_detect_gpu() {
   local pci_root="${1:-/sys/bus/pci/devices}"
   local device class vendor id subvendor subdevice
   local nvidia_ids=()
@@ -53,10 +53,10 @@ blarchy_detect_gpu() {
     [[ $class == 0x03* ]] || continue
     vendor=$(<"$device/vendor")
     case $vendor in
-      0x8086) BLARCHY_HAS_INTEL_GPU=1 ;;
-      0x1002) BLARCHY_HAS_AMD_GPU=1 ;;
+      0x8086) INSTALL_HAS_INTEL_GPU=1 ;;
+      0x1002) INSTALL_HAS_AMD_GPU=1 ;;
       0x10de)
-        BLARCHY_HAS_NVIDIA=1
+        INSTALL_HAS_NVIDIA=1
         id=$(<"$device/device")
         subvendor=$(<"$device/subsystem_vendor")
         subdevice=$(<"$device/subsystem_device")
@@ -65,25 +65,25 @@ blarchy_detect_gpu() {
     esac
   done
 
-  if (( BLARCHY_HAS_INTEL_GPU )); then
-    BLARCHY_HW_PACKAGES+=(vulkan-intel intel-media-driver)
-    blarchy_hw_note "Intel GPU (vulkan-intel, intel-media-driver)"
+  if (( INSTALL_HAS_INTEL_GPU )); then
+    INSTALL_HW_PACKAGES+=(vulkan-intel intel-media-driver)
+    installer_note "Intel GPU (vulkan-intel, intel-media-driver)"
   fi
-  if (( BLARCHY_HAS_AMD_GPU )); then
-    BLARCHY_HW_PACKAGES+=(vulkan-radeon)
-    blarchy_hw_note "AMD GPU (vulkan-radeon)"
+  if (( INSTALL_HAS_AMD_GPU )); then
+    INSTALL_HW_PACKAGES+=(vulkan-radeon)
+    installer_note "AMD GPU (vulkan-radeon)"
   fi
-  if (( BLARCHY_HAS_NVIDIA )); then
-    blarchy_nvidia_packages "${nvidia_ids[@]}"
+  if (( INSTALL_HAS_NVIDIA )); then
+    installer_nvidia_packages "${nvidia_ids[@]}"
   fi
-  if (( BLARCHY_HAS_INTEL_GPU == 0 && BLARCHY_HAS_AMD_GPU == 0 && BLARCHY_HAS_NVIDIA == 0 )); then
-    blarchy_hw_note "No vendor-specific GPU packages needed; using base mesa stack"
+  if (( INSTALL_HAS_INTEL_GPU == 0 && INSTALL_HAS_AMD_GPU == 0 && INSTALL_HAS_NVIDIA == 0 )); then
+    installer_note "No vendor-specific GPU packages needed; using base mesa stack"
   fi
 }
 
-blarchy_nvidia_packages() {
+installer_nvidia_packages() {
   local version supported gpu id subsystem kernel_file kernel
-  local modules_root="${BLARCHY_MODULES_PATH:-/usr/lib/modules}"
+  local modules_root="${INSTALL_MODULES_PATH:-/usr/lib/modules}"
   local kernels=()
   # Use the compatibility table for Arch's current driver, not a bundled
   # GPU-generation list that goes stale when NVIDIA changes support.
@@ -117,17 +117,17 @@ blarchy_nvidia_packages() {
       return 1
     fi
     kernels+=("$kernel")
-    BLARCHY_HW_PACKAGES+=("$kernel-headers")
+    INSTALL_HW_PACKAGES+=("$kernel-headers")
   done
   if (( ${#kernels[@]} == 0 )); then
     echo "Error: no installed kernel pkgbase found under /usr/lib/modules." >&2
     return 1
   fi
-  BLARCHY_HW_PACKAGES+=(nvidia-open-dkms nvidia-utils)
-  blarchy_hw_note "NVIDIA GPU supported by driver $version (DKMS for ${kernels[*]})"
+  INSTALL_HW_PACKAGES+=(nvidia-open-dkms nvidia-utils)
+  installer_note "NVIDIA GPU supported by driver $version (DKMS for ${kernels[*]})"
 }
 
-blarchy_detect_form_factor() {
+installer_detect_form_factor() {
   local sys_root="${1:-/sys}"
   local chassis=""
 
@@ -138,87 +138,86 @@ blarchy_detect_form_factor() {
   # 31 convertible/detachable.
   case $chassis in
     8|9|10|11|14|31)
-      BLARCHY_IS_LAPTOP=1
+      INSTALL_IS_LAPTOP=1
       ;;
   esac
   if compgen -G "$sys_root/class/power_supply/BAT*" >/dev/null; then
-    BLARCHY_IS_LAPTOP=1
+    INSTALL_IS_LAPTOP=1
   fi
-  if (( BLARCHY_IS_LAPTOP == 1 )); then
-    BLARCHY_HW_PACKAGES+=(power-profiles-daemon)
-    blarchy_hw_note "Laptop form factor (power-profiles-daemon enabled)"
+  if (( INSTALL_IS_LAPTOP == 1 )); then
+    INSTALL_HW_PACKAGES+=(power-profiles-daemon)
+    installer_note "Laptop form factor (power-profiles-daemon enabled)"
   else
-    blarchy_hw_note "Desktop form factor"
+    installer_note "Desktop form factor"
   fi
-  if compgen -G "$sys_root/class/backlight/*" >/dev/null || (( BLARCHY_IS_LAPTOP )); then
-    BLARCHY_HW_PACKAGES+=(brightnessctl)
+  if compgen -G "$sys_root/class/backlight/*" >/dev/null || (( INSTALL_IS_LAPTOP )); then
+    INSTALL_HW_PACKAGES+=(brightnessctl)
   fi
 }
 
-blarchy_detect_bluetooth() {
+installer_detect_bluetooth() {
   local sys_root="${1:-/sys}"
   if compgen -G "$sys_root/class/bluetooth/hci*" >/dev/null ||
     { command -v lsusb >/dev/null 2>&1 && lsusb 2>/dev/null | grep -qi bluetooth; } ||
     { command -v lspci >/dev/null 2>&1 && lspci 2>/dev/null | grep -qi bluetooth; }; then
-    BLARCHY_HAS_BLUETOOTH=1
-    BLARCHY_HW_PACKAGES+=(bluez bluez-utils blueman)
-    blarchy_hw_note "Bluetooth adapter present (bluetooth.service will be enabled)"
+    INSTALL_HAS_BLUETOOTH=1
+    INSTALL_HW_PACKAGES+=(bluez bluez-utils blueman)
+    installer_note "Bluetooth adapter present (bluetooth.service will be enabled)"
   else
-    blarchy_hw_note "No Bluetooth adapter detected; bluetooth.service left disabled"
+    installer_note "No Bluetooth adapter detected; bluetooth.service left disabled"
   fi
 }
 
-blarchy_detect_virt() {
+installer_detect_virt() {
   if command -v systemd-detect-virt >/dev/null 2>&1; then
-    BLARCHY_VIRT=$(systemd-detect-virt 2>/dev/null || true)
+    INSTALL_VIRT=$(systemd-detect-virt 2>/dev/null || true)
   fi
-  case $BLARCHY_VIRT in
+  case $INSTALL_VIRT in
     qemu|kvm)
-      BLARCHY_HW_PACKAGES+=(qemu-guest-agent spice-vdagent)
-      blarchy_hw_note "QEMU/KVM guest (qemu-guest-agent, spice-vdagent)"
+      INSTALL_HW_PACKAGES+=(qemu-guest-agent spice-vdagent)
+      installer_note "QEMU/KVM guest (qemu-guest-agent, spice-vdagent)"
       ;;
     vmware)
-      BLARCHY_HW_PACKAGES+=(open-vm-tools)
-      blarchy_hw_note "VMware guest (open-vm-tools)"
+      INSTALL_HW_PACKAGES+=(open-vm-tools)
+      installer_note "VMware guest (open-vm-tools)"
       ;;
     oracle)
-      BLARCHY_HW_PACKAGES+=(virtualbox-guest-utils)
-      blarchy_hw_note "VirtualBox guest (virtualbox-guest-utils)"
+      INSTALL_HW_PACKAGES+=(virtualbox-guest-utils)
+      installer_note "VirtualBox guest (virtualbox-guest-utils)"
       ;;
     none|"")
       ;;
     *)
-      blarchy_hw_note "Virtualized environment ($BLARCHY_VIRT); no guest tools added"
+      installer_note "Virtualized environment ($INSTALL_VIRT); no guest tools added"
       ;;
   esac
 }
 
-blarchy_detect_fingerprint() {
+installer_detect_fingerprint() {
   if command -v lsusb >/dev/null 2>&1 &&
     lsusb 2>/dev/null | grep -qi -E 'fingerprint|validity|synaptics.*fp|elan.*fp'; then
-    BLARCHY_HW_PACKAGES+=(fprintd)
-    blarchy_hw_note "Fingerprint reader present (fprintd; enroll with fprintd-enroll)"
+    INSTALL_HW_PACKAGES+=(fprintd)
+    installer_note "Fingerprint reader present (fprintd; enroll with fprintd-enroll)"
   fi
 }
 
-blarchy_detect_wifi() {
+installer_detect_wifi() {
   if compgen -G '/sys/class/net/w*' >/dev/null; then
-    blarchy_hw_note "Wireless interface present (existing archinstall networking is preserved)"
+    installer_note "Wireless interface present (existing archinstall networking is preserved)"
   fi
 }
 
-blarchy_detect_displays() {
-  local displays_script="${BLARCHY_REPO:-}/bin/displays"
+installer_detect_displays() {
+  local displays_script="${INSTALL_REPO:-}/bin/displays"
   local drm_line connector status preferred kind connected_count
 
   if [[ ! -x $displays_script ]]; then
-    blarchy_hw_note "Display detection skipped (bin/displays not found)"
+    installer_note "Display detection skipped (bin/displays not found)"
     return
   fi
 
-  # Install-time report of every DRM output. Connector names here are the
-  # same names Niri uses, so they can go straight into an output block.
-  # Niri itself hotplugs displays at runtime; nothing here needs configuring.
+  # Report DRM outputs at install time. The session config handles hotplug;
+  # this report does not write machine-specific display rules.
   connected_count=0
   while IFS= read -r drm_line; do
     [[ -n $drm_line ]] || continue
@@ -231,22 +230,22 @@ blarchy_detect_displays() {
     esac
     if [[ $status == connected ]]; then
       connected_count=$((connected_count + 1))
-      blarchy_hw_note "$kind $connector connected (preferred mode $preferred)"
+      installer_note "$kind $connector connected (preferred mode $preferred)"
     fi
   done < <(bash "$displays_script" --drm 2>/dev/null || true)
   if (( connected_count == 0 )); then
-    blarchy_hw_note "No connected displays detected through DRM"
+    installer_note "No connected displays detected through DRM"
   fi
 }
 
-blarchy_detect_hardware() {
+installer_detect_hardware() {
   echo "Detect hardware"
-  blarchy_detect_cpu
-  blarchy_detect_gpu
-  blarchy_detect_form_factor
-  blarchy_detect_bluetooth
-  blarchy_detect_virt
-  blarchy_detect_fingerprint
-  blarchy_detect_wifi
-  blarchy_detect_displays
+  installer_detect_cpu
+  installer_detect_gpu
+  installer_detect_form_factor
+  installer_detect_bluetooth
+  installer_detect_virt
+  installer_detect_fingerprint
+  installer_detect_wifi
+  installer_detect_displays
 }

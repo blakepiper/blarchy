@@ -1,12 +1,6 @@
-# AUR packages, installed through yay so that `yay -Syu` keeps them
-# updated like any other package.
+# AUR exceptions only. Ordinary packages are installed and updated by pacman.
 #
 # One package per line. Trailing "# comment" is allowed.
 
-prettymux-bin # prebuilt prettymux terminal multiplexer (yay -Syu updates it)
 blesh-git # Bash autosuggestions and syntax highlighting
-sddm-silent-theme # SilentSDDM and its Red Hat fonts
-claude-code # Anthropic's Claude Code agent CLI (`claude` command)
-openai-codex-bin # OpenAI Codex CLI (`codex` command)
-oh-my-pi-bin # pi coding agent with IDE integration (`pi` command)
-opencode-bin # OpenCode agent CLI (`opencode` command)
+openai-codex-bin # OpenAI Codex CLI

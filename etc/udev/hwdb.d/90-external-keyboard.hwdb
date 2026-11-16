@@ -1,0 +1,8 @@
+# The external mechanical keyboard puts Command in the Alt key positions.
+# Map Command to Super and Alt/Windows to Alt for USB only. The built-in
+# keyboard and Bluetooth devices keep their normal mapping.
+evdev:input:b0003v1FC9pE8C7*
+ KEYBOARD_KEY_700e2=leftmeta
+ KEYBOARD_KEY_700e3=leftalt
+ KEYBOARD_KEY_700e6=rightmeta
+ KEYBOARD_KEY_700e7=rightalt

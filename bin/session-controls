@@ -1,0 +1,89 @@
+#!/bin/bash
+# Power-profile and night-light controls used by Quickshell.
+
+set -euo pipefail
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/desktop-session"
+nightlight_file="$state_dir/nightlight-level"
+
+nightlight_level() {
+  local level=0
+  [[ ! -r $nightlight_file ]] || read -r level <"$nightlight_file"
+  [[ $level =~ ^[0-9]+$ ]] || level=0
+  (( level <= 100 )) || level=100
+  printf '%s\n' "$level"
+}
+
+apply_nightlight() {
+  local level="$1"
+  local temperature
+  [[ -n ${WAYLAND_DISPLAY:-} ]] || return 0
+  systemctl --user start hyprsunset.service
+  if (( level == 0 )); then
+    hyprctl hyprsunset identity
+  else
+    temperature=$((6500 - level * 40))
+    hyprctl hyprsunset temperature "$temperature"
+  fi
+}
+
+set_nightlight() {
+  local level="$1"
+  local temporary
+  [[ $level =~ ^[0-9]+$ ]] && (( level <= 100 )) || {
+    echo 'Night-light intensity must be between 0 and 100.' >&2
+    return 2
+  }
+  mkdir -p "$state_dir"
+  temporary=$(mktemp "$state_dir/.nightlight.XXXXXX")
+  printf '%s\n' "$level" >"$temporary"
+  mv -f -- "$temporary" "$nightlight_file"
+  apply_nightlight "$level"
+}
+
+power_mode() {
+  local action="${1:-get}"
+  if ! command -v powerprofilesctl >/dev/null 2>&1; then
+    printf 'unavailable\n'
+    return 0
+  fi
+  if [[ $action == get ]]; then
+    powerprofilesctl get
+  else
+    case $action in
+      performance|balanced|power-saver) powerprofilesctl set "$action" ;;
+      *) echo "Unknown power profile: $action" >&2; return 2 ;;
+    esac
+  fi
+}
+
+case "${1:-}" in
+  power-mode)
+    shift
+    power_mode "${1:-get}"
+    ;;
+  nightlight-level)
+    shift
+    if [[ ${1:-} == --intensity ]]; then
+      set_nightlight "${2:-}"
+    else
+      nightlight_level
+    fi
+    ;;
+  nightlight-cycle)
+    current=$(nightlight_level)
+    case $current in
+      0) next=50 ;;
+      50) next=100 ;;
+      *) next=0 ;;
+    esac
+    set_nightlight "$next"
+    ;;
+  nightlight-apply)
+    apply_nightlight "$(nightlight_level)"
+    ;;
+  *)
+    echo 'Usage: session-controls {power-mode [profile]|nightlight-level [--intensity 0-100]|nightlight-cycle|nightlight-apply}' >&2
+    exit 2
+    ;;
+esac

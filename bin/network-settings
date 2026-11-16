@@ -1,5 +1,0 @@
-#!/bin/bash
-set -euo pipefail
-
-# The panel uses the active network stack; never start a competing manager.
-exec "$(dirname -- "$(readlink -f -- "$0")")/topbar-panel" wifi

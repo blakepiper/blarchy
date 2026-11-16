@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Smoke test for the blarchy installer. Runs on any machine with bash
-# and python3; no Arch system required.
+# Offline smoke checks for the Arch desktop installer.
 #
 # Usage: ./test/smoke
 
 set -euo pipefail
 
 repo_path=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+cd "$repo_path"
 failures=0
 
 check() {
@@ -32,211 +32,137 @@ check_fail() {
   fi
 }
 
-# Installer scripts parse.
-check "install.sh parses" bash -n "$repo_path/install.sh"
-for leaf in hardware.sh system.sh user.sh pam.sh; do
-  check "install/$leaf parses" bash -n "$repo_path/install/$leaf"
+shell_files=(
+  "$repo_path/install.sh"
+  "$repo_path/install/hardware.sh"
+  "$repo_path/install/system.sh"
+  "$repo_path/install/user.sh"
+  "$repo_path/install/pam.sh"
+  "$repo_path/test/smoke"
+  "$repo_path/bin/clipboard-history"
+  "$repo_path/bin/control-menu"
+  "$repo_path/bin/desktop-session"
+  "$repo_path/bin/dev"
+  "$repo_path/bin/displays"
+  "$repo_path/bin/keep-awake"
+  "$repo_path/bin/screenshot"
+  "$repo_path/bin/session-controls"
+  "$repo_path/bin/settings-menu"
+  "$repo_path/etc/lib/battery-charge-limit"
+)
+for path in "${shell_files[@]}"; do
+  check "${path#"$repo_path"/} parses" bash -n "$path"
 done
 if command -v shellcheck >/dev/null 2>&1; then
-  check "shellcheck install.sh" shellcheck -S warning "$repo_path/install.sh"
-  check "shellcheck install leaves" shellcheck -S warning \
-    "$repo_path/install/hardware.sh" \
-    "$repo_path/install/system.sh" \
-    "$repo_path/install/user.sh" \
-    "$repo_path/install/pam.sh"
+  check "shellcheck installer and desktop scripts" shellcheck -S warning "${shell_files[@]}"
 else
   printf 'skip: shellcheck not installed\n'
 fi
 
-# Package manifests are non-empty and carry no removed desktop's packages.
 for manifest in packages packages-aur; do
   check "install/$manifest is non-empty" test -s "$repo_path/install/$manifest"
 done
-check_fail "no other compositor packages" grep -qi -E 'hyprland|xfce|alacritty|quickshell' "$repo_path/install/packages"
-check "SDDM in packages" grep -qx 'sddm' "$repo_path/install/packages"
-check "Hyprlock in packages" grep -qx 'hyprlock' "$repo_path/install/packages"
-check "SilentSDDM in AUR packages" grep -q '^sddm-silent-theme ' "$repo_path/install/packages-aur"
-check_fail "retired login and locker packages absent" grep -qxE 'greetd|greetd-tuigreet|swaylock' "$repo_path/install/packages"
-check "kitty in packages" grep -qx 'kitty' "$repo_path/install/packages"
-check "niri in packages" grep -qx 'niri' "$repo_path/install/packages"
-check "waybar in packages" grep -qx 'waybar' "$repo_path/install/packages"
-check "fuzzel in packages" grep -qx 'fuzzel' "$repo_path/install/packages"
-check "prettymux in AUR list" grep -q 'prettymux' "$repo_path/install/packages-aur"
-check "blesh in AUR list" grep -q '^blesh-git\( #.*\)\?$' "$repo_path/install/packages-aur"
-check "yay checks development updates by default" grep -q '^yay -Y --devel --save$' "$repo_path/install.sh"
-check "kitty opens the configured Bash shell" grep -qx 'shell /bin/bash' "$repo_path/config/kitty/kitty.conf"
-check "blesh config parses" bash -n "$repo_path/config/blesh/init.sh"
-check_fail "vscodium absent from AUR list" grep -qi -E 'vscodium|codium' "$repo_path/install/packages-aur"
-check_fail "no terminal-code references" grep -rqi -E 'tode|terminal-code' "$repo_path/install.sh" "$repo_path/README.md" "$repo_path/bin/dev" "$repo_path/config/niri/config.kdl"
-for agent in claude-code openai-codex-bin oh-my-pi-bin opencode-bin; do
-  check "$agent in AUR list" grep -qx "$agent\( #.*\)\?" "$repo_path/install/packages-aur"
-done
+check "Hyprland in official package list" grep -qx 'hyprland' "$repo_path/install/packages"
+check "Quickshell in official package list" grep -qx 'quickshell' "$repo_path/install/packages"
+check "Wofi in official package list" grep -qx 'wofi' "$repo_path/install/packages"
+check "Ghostty in official package list" grep -qx 'ghostty' "$repo_path/install/packages"
+check "Neovim in official package list" grep -qx 'neovim' "$repo_path/install/packages"
+check "Fastfetch replaces Neofetch" grep -qx 'fastfetch' "$repo_path/install/packages"
+check "Firefox is installed from pacman without duplicate extension packages" python3 -c '
+from pathlib import Path
+packages = [line.split("#", 1)[0].strip() for line in Path("install/packages").read_text().splitlines()]
+packages = [line for line in packages if line]
+assert "firefox" in packages
+assert not {"firefox-ublock-origin", "firefox-dark-reader"} & set(packages)
+'
+check_fail "Neofetch absent from packages" grep -qi 'neofetch' "$repo_path/install/packages" "$repo_path/install/packages-aur"
+check "only approved AUR exceptions are listed" python3 -c '
+from pathlib import Path
+packages = [line.split("#", 1)[0].strip() for line in Path("install/packages-aur").read_text().splitlines()]
+packages = [line for line in packages if line]
+assert packages == ["blesh-git", "openai-codex-bin"], packages
+'
+check "yay checks development updates by default" grep -qx 'yay -Y --devel --save' "$repo_path/install.sh"
 
-# Compositor and bar configs exist and look structurally sound.
-check "niri config exists" test -f "$repo_path/config/niri/config.kdl"
-check "nvim config exists" test -f "$repo_path/config/nvim/init.lua"
-check "nvim plugin lockfile exists" test -f "$repo_path/config/nvim/lazy-lock.json"
-check "niri desktop bindings" python3 -c "
-import sys
-text = open('$repo_path/config/niri/config.kdl').read()
-assert 'spawn \"kitty\"' in text, 'kitty spawn missing'
-assert 'spawn \"fuzzel\"' in text, 'fuzzel spawn missing'
-assert 'tode' not in text, 'terminal-code reference still present'
-assert 'Mod+Shift+F { maximize-column; }' in text, 'maximize binding missing'
-assert 'Mod+Shift+F { fullscreen-window; }' not in text, 'fullscreen binding still present'
-assert 'Mod+Shift+S { screenshot; }' in text, 'native screenshot binding missing'
-assert 'cliphist store' in text, 'cliphist watcher missing'
-"
-check_fail "no struts block (waybar reserves its own space)" grep -q 'struts' "$repo_path/config/niri/config.kdl"
-check_fail "kitty config is self-contained (no external includes)" grep -q '^include' "$repo_path/config/kitty/kitty.conf"
-check "clipboard picker parses" bash -n "$repo_path/bin/clipboard-history"
-check "power menu parses" bash -n "$repo_path/bin/control-menu"
-check "niri binds the power menu" grep -q 'control-menu' "$repo_path/config/niri/config.kdl"
-check "user setup installs control-menu" grep -q 'bin/control-menu' "$repo_path/install/user.sh"
-check "libnotify in packages (notification senders)" grep -qx 'libnotify' "$repo_path/install/packages"
-check "papers (not evince) in packages" grep -qx 'papers' "$repo_path/install/packages"
-check_fail "no evince in packages" grep -qx 'evince' "$repo_path/install/packages"
-check_fail "no avahi without nsswitch integration" grep -qx 'avahi' "$repo_path/install/packages"
-check_fail "no tensaku references" grep -rqi 'tensaku' "$repo_path/config" "$repo_path/install" "$repo_path/bin"
-check "waybar ai-usage uses absolute path" grep -q '~/.local/bin/ai-usage' "$repo_path/config/waybar/config.jsonc"
-check "user setup copies (not symlinks) ai-usage" grep -q 'cp -a "\$repo/bin/ai-usage"' "$repo_path/install/user.sh"
-check "waybar config is JSON" python3 -c "
-import json
-json.load(open('$repo_path/config/waybar/config.jsonc'))
-"
-check "SDDM theme configured" grep -qx 'Current=silent' "$repo_path/etc/sddm.conf.d/90-silent.conf"
+check "Neovim config is empty" test ! -s "$repo_path/config/nvim/init.lua"
+check "Hyprland Lua config exists" test -s "$repo_path/config/hypr/hyprland.lua"
+check "Quickshell shows the Arch logo" grep -Fq '\uf303' "$repo_path/config/quickshell/shell.qml"
+check "Hyprland starts directly from the TTY" grep -q '^start-hyprland$' "$repo_path/README.md"
+check_fail "system integration does not enable a display manager" \
+  grep -qE 'sddm\.service|display-manager\.service' "$repo_path/install/system.sh"
+check_fail "no SDDM config" test -e "$repo_path/etc/sddm.conf.d"
+check_fail "no Niri config" test -e "$repo_path/config/niri"
+check_fail "no Kitty config" test -e "$repo_path/config/kitty"
+check_fail "no Waybar config" test -e "$repo_path/config/waybar"
+check_fail "no Fuzzel config" test -e "$repo_path/config/fuzzel"
+check_fail "no OpenCode config" test -e "$repo_path/config/opencode"
+check_fail "no display-manager package" grep -qxE 'sddm|greetd|greetd-tuigreet' "$repo_path/install/packages"
+check_fail "no removed desktop packages" grep -qxE 'niri|kitty|waybar|fuzzel|prettymux|neofetch|opencode-bin|claude-code|oh-my-pi-bin' \
+  "$repo_path/install/packages" "$repo_path/install/packages-aur"
 
-# Compile in memory, without leaving __pycache__ in managed helper directories.
-check "helpers compile" python3 -c '
-import pathlib, sys
-root = pathlib.Path(sys.argv[1])
-for path in [root / "bin/ai-usage", root / "bin/topbar-panel", root / "bin/battery-status", *root.glob("bin/ai-usage-scanners/*.py")]:
+check "Ghostty config is seeded" grep -q '^font-family = JetBrainsMono Nerd Font$' "$repo_path/config/ghostty/config"
+check "Ghostty uses its configured background" grep -qx 'background = #1a1b26' "$repo_path/config/ghostty/config"
+check "Quickshell has AI usage indicator" grep -q 'ai-usage.*--json' "$repo_path/config/quickshell/shell.qml"
+check "Quickshell status helpers use absolute paths" grep -q 'HOME.*desktop-status' "$repo_path/config/quickshell/shell.qml"
+check "Super+Space uses the application launcher" grep -q 'SUPER + Space.*exec(launcher)' "$repo_path/config/hypr/hyprland.lua"
+check "application launcher uses Wofi" grep -q 'local launcher = "wofi ' "$repo_path/config/hypr/hyprland.lua"
+check "Super+Shift+Space opens the control menu" grep -q 'SUPER + SHIFT + Space.*control-menu' "$repo_path/config/hypr/hyprland.lua"
+check "Super+S opens the settings menu" grep -q 'SUPER + S.*settings-menu' "$repo_path/config/hypr/hyprland.lua"
+check "Hyprland loads session services on start" grep -q 'hypridle.service hyprsunset.service' "$repo_path/config/hypr/hyprland.lua"
+check "desktop processes stop with the graphical session" grep -q '^PartOf=graphical-session.target$' \
+  "$repo_path/config/systemd/user/desktop-session.service"
+check "desktop session launcher is installed" grep -q 'desktop-session' "$repo_path/install/user.sh"
+check "monitor rules handle dock events" grep -q 'monitor.added' "$repo_path/config/hypr/monitors.lua"
+check "dock mirror rules use 8-bit output" grep -q 'bitdepth = 8' "$repo_path/config/hypr/monitors.lua"
+check "external keyboard rule maps Cmd and Windows modifiers" python3 -c '
+from pathlib import Path
+text = Path("etc/udev/hwdb.d/90-external-keyboard.hwdb").read_text()
+assert "evdev:input:b0003v1FC9pE8C7*" in text
+for mapping in (
+  "KEYBOARD_KEY_700e2=leftmeta", "KEYBOARD_KEY_700e3=leftalt",
+  "KEYBOARD_KEY_700e6=rightmeta", "KEYBOARD_KEY_700e7=rightalt",
+):
+  assert mapping in text, mapping
+'
+check_fail "no keyd configuration" test -e "$repo_path/etc/keyd"
+check "battery service has a generic name" test -f "$repo_path/etc/systemd/system/battery-charge-limit.service"
+check_fail "no branded runtime names" rg -qi 'blarchy|blix' "$repo_path/bin" "$repo_path/config" "$repo_path/etc" \
+  "$repo_path/install/hardware.sh" "$repo_path/install/system.sh" "$repo_path/install/user.sh" "$repo_path/install/pam.sh"
+
+check "firefox policies are valid JSON" python3 -m json.tool "$repo_path/etc/firefox/policies/policies.json"
+check "Firefox profile defaults are present" test -s "$repo_path/config/firefox/user.js"
+check "Firefox profile helper compiles" python3 -c 'compile(open("bin/firefox-profile").read(), "bin/firefox-profile", "exec")'
+check "AI helper and Python scanner compile" python3 -c '
+from pathlib import Path
+root = Path(".")
+for path in [root / "bin/ai-usage", *root.glob("bin/ai-usage-scanners/*.py"), root / "bin/system-info"]:
   compile(path.read_text(), str(path), "exec")
-' "$repo_path"
+'
+if command -v systemd-analyze >/dev/null 2>&1 && [[ -x /bin/bash && -x /usr/bin/systemd-inhibit ]]; then
+  check "battery-limit unit verifies" systemd-analyze verify "$repo_path/etc/systemd/system/battery-charge-limit.service"
+  check "keep-awake user unit verifies" systemd-analyze --user verify "$repo_path/config/systemd/user/keep-awake.service"
+else
+  printf 'skip: systemd unit validation needs standard Arch paths\n'
+fi
+if command -v dconf >/dev/null 2>&1; then
+  check "dconf defaults compile" bash -c '
+    temporary=$(mktemp -d)
+    trap '\''rm -rf -- "$temporary"'\'' EXIT
+    dconf compile "$temporary/database" "$1/etc/dconf/db/desktop.d"
+  ' test "$repo_path"
+else
+  printf 'skip: dconf validation not installed\n'
+fi
+if command -v lua >/dev/null 2>&1; then
+  check "Hyprland Lua configs parse" lua -e 'assert(loadfile(arg[1])); assert(loadfile(arg[2]))' \
+    "$repo_path/config/hypr/hyprland.lua" "$repo_path/config/hypr/monitors.lua"
+else
+  printf 'skip: Lua parser not installed\n'
+fi
+
 if ! python3 "$repo_path/test/regressions.py"; then
   failures=$((failures + 1))
 fi
-if ! python3 "$repo_path/test/topbar.py"; then
-  failures=$((failures + 1))
-fi
-if command -v niri >/dev/null 2>&1; then
-  check "Niri validates its config" niri validate --config "$repo_path/config/niri/config.kdl"
-else
-  printf 'skip: Niri validation (available in Arch CI)\n'
-fi
-if command -v systemd-analyze >/dev/null 2>&1; then
-  check "systemd validates battery unit" systemd-analyze verify "$repo_path/etc/systemd/system/blarchy-battery-limit.service"
-else
-  printf 'skip: systemd validation (available in Arch CI)\n'
-fi
-
-# Night-mode toggle and caffeinate widget.
-check "night-mode parses" bash -n "$repo_path/bin/night-mode"
-check "night-mode status emits JSON" bash -c \
-  "'$repo_path/bin/night-mode' status | python3 -c 'import json,sys; json.load(sys.stdin)'"
-check "gammastep in packages" grep -qx 'gammastep' "$repo_path/install/packages"
-check "procps-ng in packages" grep -qx 'procps-ng' "$repo_path/install/packages"
-check "uBlock Origin for Firefox in packages" grep -qx 'firefox-ublock-origin' "$repo_path/install/packages"
-check "Dark Reader for Firefox in packages" grep -qx 'firefox-dark-reader' "$repo_path/install/packages"
-check "Firefox policies are valid JSON" python3 -m json.tool "$repo_path/etc/firefox/policies/policies.json"
-check "waybar has night-mode module" grep -q 'custom/night-mode' "$repo_path/config/waybar/config.jsonc"
-check "waybar has Awake module" grep -q 'custom/awake' "$repo_path/config/waybar/config.jsonc"
-check "keep-awake parses" bash -n "$repo_path/bin/keep-awake"
-check "waybar has CPU and memory modules" grep -q '"modules-right": \["cpu", "memory"' "$repo_path/config/waybar/config.jsonc"
-check "niri restores night-mode at login" grep -q 'night-mode.*run' "$repo_path/config/niri/config.kdl"
-check "helpers referenced by login-proof path" bash -c \
-  "grep -q '~/.local/bin/night-mode' '$repo_path/config/waybar/config.jsonc' '$repo_path/config/niri/config.kdl'"
-check "user setup installs night-mode" grep -q 'bin/night-mode' "$repo_path/install/user.sh"
-
-# Battery widget with smoothed estimate and power-profile switching.
-check "battery-status compiles" python3 -c "compile(open('$repo_path/bin/battery-status').read(), 'battery-status', 'exec')"
-check "power-profile parses" bash -n "$repo_path/bin/power-profile"
-check "waybar has battery module" grep -q 'custom/battery' "$repo_path/config/waybar/config.jsonc"
-check "battery opens the panel on click" grep -q 'topbar-panel battery' "$repo_path/config/waybar/config.jsonc"
-check "battery cycles profiles on right-click" grep -q 'power-profile cycle' "$repo_path/config/waybar/config.jsonc"
-check "user setup installs battery helpers" bash -c "grep -q 'bin/battery-status' '$repo_path/install/user.sh' && grep -q 'bin/power-profile' '$repo_path/install/user.sh'"
-
-# tmux project workspace helper.
-check "dev parses" bash -n "$repo_path/bin/dev"
-check "user setup installs dev" grep -q 'bin/dev' "$repo_path/install/user.sh"
-check "dev uses tmux" grep -q 'tmux new-session' "$repo_path/bin/dev"
-check "dev opens nvim" grep -q 'nvim .' "$repo_path/bin/dev"
-check "dev runs hyfetch" grep -q 'hyfetch' "$repo_path/bin/dev"
-check "dev gives nvim most of the width" grep -q 'split-window -h -l 35%' "$repo_path/bin/dev"
-check "tmux is installed" grep -qx 'tmux' "$repo_path/install/packages"
-check "tmux enables mouse" grep -qx 'set -g mouse on' "$repo_path/config/tmux/tmux.conf"
-
-# Wallpaper and terminal theme.
-check "wallpaper bundled" test -f "$repo_path/assets/pictures/mountain.png"
-check "avatar bundled" test -f "$repo_path/assets/pictures/hermes.jpg"
-check "niri shows the wallpaper" grep -q 'swaybg -i ~/Pictures/mountain.png' "$repo_path/config/niri/config.kdl"
-check "kitty uses the Seafoam Dusk theme" grep -q 'background #171c1b' "$repo_path/config/kitty/kitty.conf"
-check "kitty is translucent" grep -q 'background_opacity 0.60' "$repo_path/config/kitty/kitty.conf"
-check "kitty handles alternate transparent backgrounds" grep -q 'transparent_background_colors #4e6c5e@0.60' "$repo_path/config/kitty/kitty.conf"
-check "inactive windows are translucent" grep -q 'match is-active=false' "$repo_path/config/niri/config.kdl"
-check "firefox opacity is 0.85" grep -A2 -q 'match app-id="\^firefox\$"' "$repo_path/config/niri/config.kdl"
-check "firefox focus ring has no backdrop" grep -A2 -q 'match app-id="\^firefox\$"' "$repo_path/config/niri/config.kdl"
-check "kitty focus transparency is constant" grep -A2 -q 'match app-id="kitty" is-active=false' "$repo_path/config/niri/config.kdl"
-check "kitty focus ring has no backdrop" grep -A2 -q 'match app-id="kitty"' "$repo_path/config/niri/config.kdl"
-check "btop uses the Seafoam Dusk theme" grep -q 'color_theme = "seafoam"' "$repo_path/config/btop/btop.conf"
-check "Seafoam Dusk btop theme exists" test -f "$repo_path/config/btop/themes/seafoam.theme"
-check_fail "no old Ubuntu palette leftovers anywhere" grep -rqi -E \
-  '300a24|e95420|75507b|2c001e|eeeeec|cc0000|4e9a06|b84420' \
-  "$repo_path/config" "$repo_path/bin" "$repo_path/etc" "$repo_path/logo.svg" \
-  --exclude-dir=.nvim-before-seafoam
-
-# External display discovery.
-check "displays parses" bash -n "$repo_path/bin/displays"
-check "displays prints usage" bash "$repo_path/bin/displays" --help
-check "hardware check covers displays" grep -q 'blarchy_detect_displays' "$repo_path/install/hardware.sh"
-check "niri output examples stay inert until enabled" grep -q '/-output' "$repo_path/config/niri/config.kdl"
-check_fail "no bare output block (Niri requires a name)" grep -q '^output {' "$repo_path/config/niri/config.kdl"
-check_fail "mouse-follow is omitted, never set off" grep -q 'focus-follows-mouse' "$repo_path/config/niri/config.kdl"
-
-# Battery charge clamp.
-check "battery-limit unit exists" test -f "$repo_path/etc/systemd/system/blarchy-battery-limit.service"
-check "battery-limit script parses" bash -n "$repo_path/etc/lib/blarchy/battery-limit"
-check "system setup installs the battery unit" grep -q 'blarchy-battery-limit' "$repo_path/install/system.sh"
-check "system setup installs Bluetooth tray suppression" grep -q '10-bluetooth' "$repo_path/install/system.sh"
-check "Bluetooth tray suppression disables indicator plugins" grep -q "!ShowConnected.*!StatusNotifierItem" "$repo_path/etc/dconf/db/blarchy.d/10-bluetooth"
-
-# Removed desktops stay removed.
-check_fail "unused text logo is removed" test -e "$repo_path/logo.txt"
-check_fail "no obsolete branding in shipped files or docs" grep -rqiE \
-  'omarchy|omakub|hyprland|xfce' \
-  "$repo_path/logo.svg" "$repo_path/README.md" \
-  "$repo_path/docs" "$repo_path/config" "$repo_path/bin" "$repo_path/etc" "$repo_path/install"
-check "OpenCode separates runtime and TUI settings" python3 -c "
-import json
-from pathlib import Path
-config = Path('$repo_path/config/opencode')
-runtime = json.loads((config / 'opencode.json').read_text())
-tui = json.loads((config / 'tui.json').read_text())
-assert not {'theme', 'keybinds', 'tui'} & runtime.keys()
-assert runtime['autoupdate'] is False
-assert tui['theme'] == 'system'
-"
-check "Hyprlock config exists" test -f "$repo_path/config/hypr/hyprlock.conf"
-check_fail "no xfce config" test -e "$repo_path/config/xfce4"
-check_fail "no quickshell dir" test -e "$repo_path/shell"
-check "bin/ holds only managed helpers" python3 -c "
-from pathlib import Path
-names = sorted(p.name for p in Path('$repo_path/bin').iterdir() if p.name != '__pycache__')
-assert names == ['ai-usage', 'ai-usage-scanners', 'battery-status', 'clipboard-history', 'control-menu', 'dev', 'displays', 'keep-awake', 'network-settings', 'night-mode', 'power-profile', 'topbar-panel'], names
-"
-check "network settings helper parses" bash -n "$repo_path/bin/network-settings"
-if command -v dconf >/dev/null 2>&1; then
-  check "dark-mode defaults compile" bash -c '
-    temporary=$(mktemp -d)
-    trap '\''rm -rf -- "$temporary"'\'' EXIT
-    dconf compile "$temporary/database" "$1/etc/dconf/db/blarchy.d"
-  ' test "$repo_path"
-else
-  printf 'skip: dconf validation (available in Arch CI)\n'
-fi
-check_fail "removed and hardware-only utilities absent from base packages" grep -xE \
-  'zoxide|fzf|bluez|bluez-utils|blueman|power-profiles-daemon|brightnessctl' "$repo_path/install/packages"
-check "Git defaults to main" git config --file "$repo_path/config/git/config" --get --fixed-value init.defaultBranch main
 
 if (( failures > 0 )); then
   printf '%d check(s) failed\n' "$failures" >&2

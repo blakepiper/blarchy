@@ -1,19 +1,56 @@
 {
   "policies": {
-    "FirefoxHome": {
-      "SponsoredTopSites": false,
-      "Stories": false,
-      "SponsoredStories": false,
-      "Locked": true
-    },
-    "FirefoxSuggest": {
-      "SponsoredSuggestions": false,
-      "Locked": true
-    },
     "AIControls": {
       "Default": {
-        "Value": "blocked",
-        "Locked": true
+        "Locked": true,
+        "Value": "blocked"
+      }
+    },
+    "EnableTrackingProtection": {
+      "Category": "strict",
+      "Value": true
+    },
+    "ExtensionSettings": {
+      "{cebd391d-f568-473f-bb6e-698d08ec81ec}": {
+        "install_url": "https://addons.mozilla.org/firefox/downloads/file/4846541/tokyo_night_dark_theme-3.0.xpi",
+        "installation_mode": "normal_installed"
+      },
+      "addon@darkreader.org": {
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/darkreader/latest.xpi",
+        "installation_mode": "force_installed",
+        "private_browsing": true
+      },
+      "enhancerforyoutube@maximerf.addons.mozilla.org": {
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/enhancer-for-youtube/latest.xpi",
+        "installation_mode": "force_installed",
+        "private_browsing": true
+      },
+      "uBlock0@raymondhill.net": {
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi",
+        "installation_mode": "force_installed",
+        "private_browsing": true
+      }
+    },
+    "SearchEngines": {
+      "Default": "DuckDuckGo",
+      "DefaultPrivate": "DuckDuckGo"
+    },
+    "FirefoxHome": {
+      "SponsoredStories": false,
+      "SponsoredTopSites": false,
+      "Stories": false
+    },
+    "FirefoxSuggest": {
+      "SponsoredSuggestions": false
+    },
+    "Preferences": {
+      "browser.ipProtection.enabled": {
+        "Status": "locked",
+        "Value": true
+      },
+      "privacy.globalprivacycontrol.enabled": {
+        "Status": "user",
+        "Value": true
       }
     }
   }

@@ -1,0 +1,16 @@
+#!/bin/bash
+# Capture a display or selected region, save it, and copy the image.
+
+set -euo pipefail
+
+directory="$HOME/Pictures/Screenshots"
+mkdir -p "$directory"
+file="$directory/$(date +%Y-%m-%d_%H-%M-%S-%N).png"
+
+if [[ ${1:-} == --full ]]; then
+  grim "$file"
+else
+  geometry=$(slurp) || exit 0
+  grim -g "$geometry" "$file"
+fi
+wl-copy --type image/png <"$file"

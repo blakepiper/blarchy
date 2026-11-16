@@ -1,13 +1,11 @@
 #!/bin/bash
-# Per-user setup. Run as the desktop user (not root). Seeds repository
-# defaults into $HOME without overwriting existing files, then ensures
-# the shell is usable. Idempotent: safe to rerun.
+# Seed user defaults without replacing existing files.
 
 set -euo pipefail
 
-repo=${BLARCHY_REPO:-}
+repo=${INSTALL_REPO:-}
 if [[ -z $repo || ! -d $repo/config ]]; then
-  echo "Error: BLARCHY_REPO must point to the repository checkout." >&2
+  echo 'Error: INSTALL_REPO must point to the repository checkout.' >&2
   exit 1
 fi
 
@@ -20,8 +18,7 @@ seed_file() {
     return
   fi
   mkdir -p "$(dirname "$destination")"
-  temporary=$(mktemp "$(dirname "$destination")/.blarchy-seed.XXXXXX")
-  # Publish only complete files so an interrupted copy can be retried.
+  temporary=$(mktemp "$(dirname "$destination")/.seed.XXXXXX")
   if ! cp -a "$source_file" "$temporary" || ! mv -n "$temporary" "$destination"; then
     rm -f -- "$temporary"
     return 1
@@ -42,23 +39,20 @@ seed_tree() {
 
 seed_tree "$repo/config" "$HOME/.config"
 seed_tree "$repo/assets/pictures" "$HOME/Pictures"
-
-# Screenshots land here (matches the Niri screenshot-path setting).
 mkdir -p "$HOME/Pictures/Screenshots"
 
-# Interactive Bash: autosuggestions, Starship prompt, and local bin on PATH.
+# Interactive Bash: ble.sh, Starship, and local helper commands.
 bashrc="$HOME/.bashrc"
 touch "$bashrc"
-if ! grep -Fq '# >>> blarchy >>>' "$bashrc"; then
+if ! grep -Fq '# >>> desktop setup >>>' "$bashrc"; then
   cat >>"$bashrc" <<'BASHRC'
 
-# >>> blarchy >>>
+# >>> desktop setup >>>
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
   *) export PATH="$HOME/.local/bin:$PATH" ;;
 esac
 if [[ $- == *i* ]]; then
-  # Load before Starship so it uses ble.sh's prompt hooks; attach last.
   if [[ -z ${BLE_VERSION-} && -r /usr/share/blesh/ble.sh ]]; then
     source /usr/share/blesh/ble.sh --attach=none
   fi
@@ -69,25 +63,21 @@ if [[ $- == *i* ]]; then
     ble-attach
   fi
 fi
-# <<< blarchy <<<
+# <<< desktop setup <<<
 BASHRC
 fi
 
-# Desktop configs call these helpers by absolute path, independent of
-# login-shell PATH. These are managed files: always refresh them on rerun.
-mkdir -p "$HOME/.local/bin"
-cp -a "$repo/bin/ai-usage" "$HOME/.local/bin/ai-usage"
-mkdir -p "$HOME/.local/bin/ai-usage-scanners"
-cp -a "$repo/bin/ai-usage-scanners/"*.py "$HOME/.local/bin/ai-usage-scanners/"
-cp -a "$repo/bin/dev" "$HOME/.local/bin/dev"
-cp -a "$repo/bin/night-mode" "$HOME/.local/bin/night-mode"
-cp -a "$repo/bin/keep-awake" "$HOME/.local/bin/keep-awake"
-cp -a "$repo/bin/displays" "$HOME/.local/bin/displays"
-cp -a "$repo/bin/clipboard-history" "$HOME/.local/bin/clipboard-history"
-cp -a "$repo/bin/control-menu" "$HOME/.local/bin/control-menu"
-cp -a "$repo/bin/network-settings" "$HOME/.local/bin/network-settings"
-cp -a "$repo/bin/topbar-panel" "$HOME/.local/bin/topbar-panel"
-cp -a "$repo/bin/battery-status" "$HOME/.local/bin/battery-status"
-cp -a "$repo/bin/power-profile" "$HOME/.local/bin/power-profile"
+mkdir -p "$HOME/.local/bin" "$HOME/.local/bin/ai-usage-scanners"
+for helper in ai-usage clipboard-history control-menu desktop-session \
+  desktop-status dev displays firefox-profile keep-awake screenshot \
+  session-controls settings-menu system-info; do
+  cp -a "$repo/bin/$helper" "$HOME/.local/bin/$helper"
+done
+cp -a "$repo/bin/ai-usage-scanners/codex_usage_scanner.py" \
+  "$HOME/.local/bin/ai-usage-scanners/codex_usage_scanner.py"
 
-echo "User setup complete"
+if command -v firefox >/dev/null 2>&1; then
+  "$HOME/.local/bin/firefox-profile"
+fi
+
+echo 'User setup complete'

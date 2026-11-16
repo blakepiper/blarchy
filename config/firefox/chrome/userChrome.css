@@ -1,0 +1,113 @@
+
+/* Square corners throughout Firefox's browser interface. */
+:root {
+  --lwt-accent-color: #1a1b26 !important;
+  --lwt-text-color: #c0caf5 !important;
+  --toolbar-bgcolor: #1a1b26 !important;
+  --toolbar-color: #c0caf5 !important;
+  --toolbar-field-background-color: #24283b !important;
+  --toolbar-field-color: #c0caf5 !important;
+  --urlbarView-highlight-background: #292e42 !important;
+  --lwt-sidebar-background-color: #16161e !important;
+  --lwt-sidebar-text-color: #c0caf5 !important;
+  --arrowpanel-background: #1a1b26 !important;
+  --arrowpanel-color: #c0caf5 !important;
+  --arrowpanel-border-color: #414868 !important;
+  --border-radius-small: 0px !important;
+  --border-radius-medium: 0px !important;
+  --border-radius-large: 0px !important;
+  --tab-border-radius: 0px !important;
+  --toolbarbutton-border-radius: 0px !important;
+  --arrowpanel-border-radius: 0px !important;
+  --arrowpanel-menuitem-border-radius: 0px !important;
+  --urlbarView-item-radius: 0px !important;
+}
+
+*, *::before, *::after {
+  border-radius: 0 !important;
+}
+
+/* Keep the native + below vertical tabs and hide the pinned uBlock icon. */
+#new-tab-button,
+#alltabs-button,
+#nav-bar #ublock0_raymondhill_net-browser-action {
+  display: none !important;
+}
+
+/* Firefox keeps the menu outside the customizable toolbar. Swap it with the
+ * last extensions button while preserving the native toolbar and overflow. */
+:root:not([customizing]) #nav-bar {
+  --desktop-button-inner: var(--toolbarbutton-padding-inner, var(--toolbarbutton-inner-padding, 8px));
+  --desktop-button-outer: var(--toolbarbutton-padding-outer, var(--toolbarbutton-outer-padding, 2px));
+  --desktop-button-width: calc(16px + 2 * (var(--desktop-button-inner) + var(--desktop-button-outer)));
+  --desktop-menu-width: calc(16px + 2 * var(--desktop-button-inner) + var(--desktop-button-outer) + var(--toolbar-padding-inline, 6px));
+  --desktop-overflow-width: 0px;
+}
+
+:root:not([customizing]) #nav-bar:is([overflowing], [nonemptyoverflow]) {
+  --desktop-overflow-width: var(--desktop-button-width);
+}
+
+:root:not([customizing]) #nav-bar #unified-extensions-button {
+  order: 1 !important;
+  position: relative;
+  inset-inline-start: calc(var(--desktop-menu-width) + var(--desktop-overflow-width));
+}
+
+:root:not([customizing]) #nav-bar:has(#unified-extensions-button:not([hidden])) > :is(#nav-bar-overflow-button, #PanelUI-button) {
+  position: relative;
+  inset-inline-start: calc(-1 * var(--desktop-button-width));
+}
+
+/* Keep the private-window indicator after the menu/extensions pair. Firefox
+ * appends the menu after this indicator, breaking the adjacent-button swap. */
+:root:not([customizing]) #nav-bar > :is(.private-browsing-indicator-with-label, .private-browsing-indicator-button) {
+  order: 1 !important;
+}
+
+/* Hide account and Sync entry points and sign-in promotions. */
+#fxa-toolbar-menu-button,
+#appMenu-fxa-status2,
+#appMenu-fxa-signed-out-row,
+#appMenu-nova-fxa-label,
+#appMenu-fxa-sign-in-promo,
+#appMenu-fxa-separator,
+#PanelUI-history-sync-promo,
+#PanelUI-bookmarks-sync-promo,
+#sync-tabs-menuitem,
+#sync-setup,
+#sync-enable,
+#sync-unverifieditem,
+#sync-syncnowitem,
+#sync-reauthitem {
+  display: none !important;
+}
+
+/* Hide the sidebar utility strip; leave its slotted vertical tabstrip visible.
+ * These user-origin rules also apply inside sidebar-main's shadow root. */
+@-moz-document url("chrome://browser/content/browser.xhtml") {
+  .buttons-wrapper:has(.tools-and-extensions),
+  #sidebar-tools-and-extensions-splitter {
+    display: none !important;
+  }
+}
+
+/* Hidden tool buttons must not let the collapsed tab launcher shrink to zero. */
+@-moz-document url("chrome://browser/content/browser.xhtml") {
+  #sidebar-container:not([sidebar-launcher-expanded]) {
+    min-width: 50px !important;
+    width: 50px !important;
+    max-width: 50px !important;
+  }
+}
+
+/* Use the installed JetBrains Mono Nerd Font throughout the browser interface. */
+:root, :root * {
+  font-family: "JetBrainsMono Nerd Font", monospace !important;
+  font-weight: bold !important;
+}
+
+/* Window management is handled by the desktop's controls and shortcuts. */
+.titlebar-buttonbox-container {
+  display: none !important;
+}

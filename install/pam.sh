@@ -1,10 +1,10 @@
-# Optional keyring hooks supplement, never replace, the installed PAM stack.
+# Optional keyring hooks supplement the installed PAM stack.
 # shellcheck shell=bash
 
-blarchy_configure_keyring_pam() {
+configure_keyring_pam() {
   local pam_dir="$1"
   local entry service type options
-  for entry in 'sddm auth' 'sddm session auto_start' 'passwd password'; do
+  for entry in 'login auth' 'login session auto_start' 'passwd password'; do
     read -r service type options <<<"$entry"
     if [[ ! -f $pam_dir/$service ]]; then
       echo "Error: missing PAM configuration: $pam_dir/$service" >&2

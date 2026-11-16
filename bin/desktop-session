@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -euo pipefail
+
+children=()
+
+start_child() {
+  "$@" &
+  children+=("$!")
+}
+
+cleanup() {
+  local child
+  for child in "${children[@]}"; do
+    kill "$child" 2>/dev/null || true
+  done
+  for child in "${children[@]}"; do
+    wait "$child" 2>/dev/null || true
+  done
+}
+
+trap cleanup EXIT
+trap 'exit 0' INT TERM
+
+start_child mako
+start_child swaybg -i "$HOME/Pictures/mountain.png" -m fill
+start_child wl-paste --type text --watch cliphist store
+start_child wl-paste --type image --watch cliphist store
+start_child udiskie --tray
+start_child quickshell --path "$HOME/.config/quickshell/shell.qml"
+start_child "$HOME/.local/bin/session-controls" nightlight-apply
+
+wait

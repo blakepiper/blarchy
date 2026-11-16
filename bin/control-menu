@@ -1,55 +1,12 @@
 #!/bin/bash
-# control-menu: minimal power menu for Niri + fuzzel.
-#
-# Usage: control-menu
-# Bound to Mod+Shift+Space in config/niri/config.kdl.
-#
-# Power-only scope: Lock, Suspend, Reboot, Log Out, Monitors Off, Power Off.
-# Destructive actions (reboot/poweroff/logout) ask for confirmation via a
-# second fuzzel prompt. No hibernate: it needs matching disk swap, which a
-# fresh install does not guarantee.
+# Session controls for the Hyprland keyboard shortcut.
 
 set -euo pipefail
 
-menu_prompt='Power: '
-confirm_prompt='Confirm: '
-
 confirm() {
-  local action="$1"
   local answer
-  answer=$(printf 'No\nYes' | fuzzel --dmenu --prompt "$confirm_prompt$action? ") || return 1
+  answer=$(printf 'No\nYes\n' | wofi --dmenu --hide-search --no-custom-entry --prompt "$1") || return 1
   [[ $answer == Yes ]]
-}
-
-do_lock() {
-  exec hyprlock
-}
-
-do_suspend() {
-  # Lock first, then suspend. swayidle also locks on before-sleep,
-  # so this is double-safe if that hook fires too.
-  hyprlock &
-  sleep 0.5
-  exec systemctl suspend
-}
-
-do_reboot() {
-  confirm "Reboot" || exit 0
-  exec systemctl reboot
-}
-
-do_poweroff() {
-  confirm "Power off" || exit 0
-  exec systemctl poweroff
-}
-
-do_logout() {
-  confirm "Log out of Niri" || exit 0
-  exec niri msg action quit
-}
-
-do_monitors_off() {
-  exec niri msg action power-off-monitors
 }
 
 selection=$(printf '%s\n' \
@@ -59,16 +16,29 @@ selection=$(printf '%s\n' \
   '󰗽  Log Out' \
   '󰍹  Monitors Off' \
   '  Power Off' \
-  | fuzzel --dmenu --prompt "$menu_prompt") || exit 0
+  | wofi --dmenu --hide-search --no-custom-entry --prompt 'Control') || exit 0
 
 [[ -n $selection ]] || exit 0
 
-case "$selection" in
-  *Lock*) do_lock ;;
-  *Suspend*) do_suspend ;;
-  *Reboot*) do_reboot ;;
-  *Power*) do_poweroff ;;
-  *Log*) do_logout ;;
-  *Monitors*) do_monitors_off ;;
+case $selection in
+  *Lock*) exec hyprlock ;;
+  *Suspend*)
+    hyprlock &
+    sleep 0.5
+    exec systemctl suspend
+    ;;
+  *Reboot*)
+    confirm 'Reboot?' || exit 0
+    exec systemctl reboot
+    ;;
+  *Power*)
+    confirm 'Power off?' || exit 0
+    exec systemctl poweroff
+    ;;
+  *Log*)
+    confirm 'Log out? Unsaved work may be lost.' || exit 0
+    exec hyprctl dispatch exit
+    ;;
+  *Monitors*) exec hyprctl dispatch dpms off ;;
   *) exit 0 ;;
 esac

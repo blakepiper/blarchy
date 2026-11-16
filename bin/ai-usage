@@ -1,42 +1,23 @@
 #!/usr/bin/env python3
-
-"""AI subscription usage for the Waybar top bar.
-
-Polls OpenAI Codex and OpenCode Go for live quota windows plus local
-token/prompt statistics, reusing the scanner helpers in
-bin/ai-usage-scanners/. Results are cached for five minutes.
-
-Usage:
-  ai-usage --waybar   print one JSON object for Waybar's custom module
-  ai-usage details    print human-readable details (used for click-through)
-  ai-usage refresh    force a refresh, then print details
-  ai-usage            print human-readable details (cached)
-"""
+"""Read Codex subscription limits and local token use."""
 
 from __future__ import annotations
 
 import argparse
-import concurrent.futures
 import datetime as dt
 import json
 import os
 import subprocess
 import sys
 import tempfile
-import urllib.error
-import urllib.request
 from pathlib import Path
 from typing import Any
 
 
 SCRIPT_PATH = Path(__file__).resolve()
-SCANNER_DIR = SCRIPT_PATH.parent / "ai-usage-scanners"
-CACHE_PATH = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "blarchy" / "ai-usage" / "usage.json"
+SCANNER_PATH = SCRIPT_PATH.parent / "ai-usage-scanners" / "codex_usage_scanner.py"
+CACHE_PATH = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "ai-usage" / "usage.json"
 CACHE_SECONDS = 300
-
-
-def expand_path(value: str) -> Path:
-  return Path(os.path.expandvars(os.path.expanduser(value))).resolve()
 
 
 def number(value: Any, fallback: float = 0.0) -> float:
@@ -62,209 +43,43 @@ def normalized_percent(value: Any) -> float:
   return max(0, min(1, percent))
 
 
-def run_json(command: list[str], timeout: int = 45) -> dict[str, Any] | None:
+def scan_codex() -> dict[str, Any]:
+  env = {**os.environ, "PATH": os.pathsep.join([
+    os.environ.get("PATH", ""),
+    str(Path.home() / ".local" / "bin"),
+  ])}
   try:
     result = subprocess.run(
-      command,
-      capture_output=True,
-      text=True,
-      timeout=timeout,
-      check=False,
-      env={**os.environ, "PATH": os.pathsep.join([
-        os.environ.get("PATH", ""),
-        str(Path.home() / ".local" / "bin"),
-      ])},
+      [sys.executable, str(SCANNER_PATH)], capture_output=True, text=True,
+      timeout=45, check=False, env=env,
     )
   except (OSError, subprocess.TimeoutExpired):
-    return None
+    result = None
+  try:
+    raw = json.loads(result.stdout) if result else {}
+  except json.JSONDecodeError:
+    raw = {}
 
-  for line in reversed(result.stdout.splitlines()):
-    try:
-      data = json.loads(line)
-    except json.JSONDecodeError:
-      continue
-    if isinstance(data, dict):
-      return data
-  return None
-
-
-def base_provider(provider_id: str, name: str) -> dict[str, Any]:
+  status = str(raw.get("usageStatusText") or "")
+  limits = []
+  for label, percent_key, reset_key in (
+    ("Session", "rateLimitPercent", "rateLimitResetAt"),
+    ("Weekly", "secondaryRateLimitPercent", "secondaryRateLimitResetAt"),
+  ):
+    percent = normalized_percent(raw.get(percent_key))
+    if percent >= 0:
+      limits.append({"label": label, "percent": percent, "resetAt": str(raw.get(reset_key) or "")})
+  if result is None or result.returncode != 0:
+    status = status or "Codex usage unavailable"
   return {
-    "id": provider_id,
-    "name": name,
-    "tier": "",
-    "status": "",
-    "limits": [],
-    "todayTokens": 0,
-    "todayPrompts": 0,
+    "id": "codex",
+    "name": "Codex",
+    "tier": str(raw.get("tierLabel") or ""),
+    "status": status,
+    "limits": limits,
+    "todayTokens": max(0, integer(raw.get("todayTotalTokens"))),
+    "todayPrompts": max(0, integer(raw.get("todayPrompts"))),
   }
-
-
-def limit(label: str, percent: Any, reset_at: Any = "") -> dict[str, Any]:
-  return {
-    "label": str(label or "Limit"),
-    "percent": normalized_percent(percent),
-    "resetAt": str(reset_at or ""),
-  }
-
-
-def pretty_tier(rate_limit_tier: Any, subscription_type: Any) -> str:
-  tier = str(rate_limit_tier or "").strip()
-  subscription = str(subscription_type or "").strip()
-  if tier.lower().startswith("max_"):
-    return "Max " + tier[4:]
-  value = tier or subscription
-  if not value:
-    return ""
-  return value.replace("_", " ").title().replace(" Ai", " AI")
-
-
-def apply_local_stats(provider: dict[str, Any], data: dict[str, Any]) -> None:
-  provider["todayTokens"] = max(0, integer(data.get("todayTotalTokens")))
-  provider["todayPrompts"] = max(0, integer(data.get("todayPrompts")))
-
-
-def claude_stats_fallback(provider: dict[str, Any]) -> None:
-  try:
-    data = json.loads(expand_path("~/.claude/stats-cache.json").read_text(encoding="utf-8"))
-  except (OSError, json.JSONDecodeError):
-    return
-
-  today = dt.datetime.now().strftime("%Y-%m-%d")
-  today_entry = next(
-    (entry for entry in data.get("dailyModelTokens", []) if entry.get("date") == today),
-    {},
-  )
-  tokens = today_entry.get("tokensByModel", {})
-  provider["todayTokens"] = max(0, sum(integer(value) for value in tokens.values()))
-  activity = data.get("dailyActivity", [])
-  today_activity = next((entry for entry in activity if entry.get("date") == today), {})
-  provider["todayPrompts"] = max(0, integer(today_activity.get("messageCount", 0)))
-
-
-def claude_provider() -> dict[str, Any]:
-  provider = base_provider("claude", "Claude Code")
-  scanner = SCANNER_DIR / "claude_usage_scanner.py"
-  data = run_json([sys.executable, str(scanner), str(expand_path("~/.claude/projects"))])
-  if data:
-    apply_local_stats(provider, data)
-
-  if provider["todayTokens"] == 0:
-    claude_stats_fallback(provider)
-
-  try:
-    credentials = json.loads(expand_path("~/.claude/.credentials.json").read_text(encoding="utf-8"))
-    oauth = credentials.get("claudeAiOauth", {})
-  except (OSError, json.JSONDecodeError):
-    oauth = {}
-
-  provider["tier"] = pretty_tier(oauth.get("rateLimitTier"), oauth.get("subscriptionType"))
-  token = str(oauth.get("accessToken") or "")
-  expires_at = number(oauth.get("expiresAt"), 0)
-  if expires_at and expires_at < 10_000_000_000:
-    expires_at *= 1000
-
-  if not token:
-    provider["status"] = "Waiting for auth"
-    return provider
-  if expires_at and expires_at <= dt.datetime.now().timestamp() * 1000:
-    provider["status"] = "Claude auth expired"
-    return provider
-
-  request = urllib.request.Request(
-    "https://api.anthropic.com/api/oauth/usage",
-    headers={
-      "Authorization": f"Bearer {token}",
-      "anthropic-beta": "oauth-2025-04-20",
-      "Accept": "application/json",
-    },
-  )
-  try:
-    with urllib.request.urlopen(request, timeout=8) as response:
-      payload = json.load(response)
-  except (OSError, ValueError, urllib.error.URLError):
-    provider["status"] = "Claude limits unavailable"
-    return provider
-
-  weekly = payload.get("seven_day_oauth_apps") or payload.get("seven_day") or {}
-  session = payload.get("five_hour") or {}
-  def claude_percent(value: Any) -> float:
-    parsed = number(value, -1)
-    if parsed < 0:
-      return -1
-    return max(0, min(1, parsed / 100))
-
-  provider["limits"] = [
-    {
-      "label": "Session (5-hour)",
-      "percent": claude_percent(session.get("utilization")),
-      "resetAt": str(session.get("resets_at") or ""),
-    },
-    {
-      "label": "Weekly (7-day)",
-      "percent": claude_percent(weekly.get("utilization")),
-      "resetAt": str(weekly.get("resets_at") or ""),
-    },
-  ]
-  return provider
-
-
-def scanner_provider(
-  provider_id: str,
-  name: str,
-  command: list[str],
-  limit_keys: list[tuple[str, str, str]],
-) -> dict[str, Any]:
-  provider = base_provider(provider_id, name)
-  data = run_json(command)
-  if not data:
-    provider["status"] = f"{name} unavailable"
-    return provider
-
-  apply_local_stats(provider, data)
-  provider["tier"] = str(data.get("tierLabel") or "")
-  provider["status"] = str(data.get("usageStatusText") or "")
-  provider["limits"] = [
-    limit(label, data.get(percent_key), data.get(reset_key))
-    for label, percent_key, reset_key in limit_keys
-    if normalized_percent(data.get(percent_key)) >= 0
-  ]
-  return provider
-
-
-def codex_provider() -> dict[str, Any]:
-  scanner = SCANNER_DIR / "codex_usage_scanner.py"
-  return scanner_provider(
-    "codex",
-    "Codex",
-    [sys.executable, str(scanner)],
-    [
-      ("Session", "rateLimitPercent", "rateLimitResetAt"),
-      ("Weekly", "secondaryRateLimitPercent", "secondaryRateLimitResetAt"),
-    ],
-  )
-
-
-def opencode_provider() -> dict[str, Any]:
-  scanner = SCANNER_DIR / "opencode_go_usage_scanner.py"
-  database = expand_path("~/.local/share/opencode/opencode.db")
-  auth = expand_path("~/.local/share/opencode/auth.json")
-  return scanner_provider(
-    "opencode-go",
-    "OpenCode Go",
-    [sys.executable, str(scanner), str(database), str(auth)],
-    [
-      ("5-hour", "rateLimitPercent", "rateLimitResetAt"),
-      ("Weekly", "secondaryRateLimitPercent", "secondaryRateLimitResetAt"),
-      ("Monthly", "tertiaryRateLimitPercent", "tertiaryRateLimitResetAt"),
-    ],
-  )
-
-
-PROVIDERS = (
-  ("codex", codex_provider),
-  ("opencode-go", opencode_provider),
-)
 
 
 def fetch_data(force: bool = False) -> dict[str, Any]:
@@ -272,23 +87,12 @@ def fetch_data(force: bool = False) -> dict[str, Any]:
     try:
       cached = json.loads(CACHE_PATH.read_text(encoding="utf-8"))
       age = dt.datetime.now().timestamp() - number(cached.get("updatedAt"), 0)
-      if age >= 0 and age < CACHE_SECONDS and isinstance(cached.get("providers"), list):
+      if 0 <= age < CACHE_SECONDS and isinstance(cached.get("providers"), list):
         return cached
     except (OSError, json.JSONDecodeError):
       pass
 
-  providers: list[dict[str, Any]] = []
-  with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-    futures = {provider_id: executor.submit(function) for provider_id, function in PROVIDERS}
-    for provider_id, _ in PROVIDERS:
-      try:
-        providers.append(futures[provider_id].result())
-      except Exception:
-        fallback = base_provider(provider_id, provider_id)
-        fallback["status"] = f"{fallback['name']} unavailable"
-        providers.append(fallback)
-
-  data = {"schemaVersion": 1, "updatedAt": dt.datetime.now().timestamp(), "providers": providers}
+  data = {"schemaVersion": 1, "updatedAt": dt.datetime.now().timestamp(), "providers": [scan_codex()]}
   CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
   with tempfile.NamedTemporaryFile("w", dir=CACHE_PATH.parent, delete=False, encoding="utf-8") as temporary:
     json.dump(data, temporary, separators=(",", ":"))
@@ -315,7 +119,6 @@ def reset_text(reset_at: str) -> str:
     seconds = max(0, int((reset - dt.datetime.now(reset.tzinfo)).total_seconds()))
   except (TypeError, ValueError, OverflowError, OSError):
     return ""
-
   minutes = seconds // 60
   hours = minutes // 60
   days = hours // 24
@@ -337,84 +140,37 @@ def token_text(value: Any) -> str:
   return str(round(tokens))
 
 
-def provider_lines(provider: dict[str, Any]) -> list[str]:
-  heading = provider.get("name", "Provider")
+def details_text(data: dict[str, Any]) -> str:
+  provider = data["providers"][0]
+  lines = [provider.get("name", "Codex")]
   if provider.get("tier"):
-    heading += f" · {provider['tier']}"
-  lines = [heading]
+    lines[0] += f" · {provider['tier']}"
   for window in provider.get("limits", []):
-    percent = normalized_percent(window.get("percent"))
-    if percent < 0:
-      continue
-    used = round(percent * 100)
+    used = round(normalized_percent(window["percent"]) * 100)
     reset = reset_text(str(window.get("resetAt") or ""))
     suffix = f" · {reset}" if reset else ""
-    lines.append(f"  {window.get('label', 'Limit')}: {used}% used · {100 - used}% left{suffix}")
-  status = str(provider.get("status") or "").strip()
-  if status:
-    lines.append(f"  {status}")
+    lines.append(f"  {window['label']}: {used}% used · {100 - used}% left{suffix}")
+  if provider.get("status"):
+    lines.append(f"  {provider['status']}")
   elif not provider.get("limits"):
     lines.append("  No signed-in usage data")
   lines.append(
     f"  Today: {token_text(provider.get('todayTokens'))} tokens · "
     f"{max(0, integer(provider.get('todayPrompts')))} prompts",
   )
-  return lines
-
-
-def details_text(data: dict[str, Any]) -> str:
-  lines: list[str] = []
-  for provider in data.get("providers", []):
-    lines.extend(provider_lines(provider))
-    lines.append("")
   updated = dt.datetime.fromtimestamp(number(data.get("updatedAt"), 0)).astimezone()
   lines.append(f"Updated {updated.strftime('%H:%M:%S')}")
-  return "\n".join(lines).rstrip()
-
-
-def codex_used_percent(data: dict[str, Any]) -> float:
-  """Return the most-used live quota window for the Codex provider."""
-  usage = -1.0
-  for provider in data.get("providers", []):
-    if provider.get("id") != "codex":
-      continue
-    for window in provider.get("limits", []):
-      percent = normalized_percent(window.get("percent"))
-      if percent >= 0:
-        usage = max(usage, percent)
-    break
-  return usage
-
-
-def waybar_output(data: dict[str, Any]) -> str:
-  usage = codex_used_percent(data)
-  if usage < 0:
-    payload = {"text": "AI", "tooltip": details_text(data), "class": "unknown"}
-  else:
-    used = round(usage * 100)
-    if used >= 85:
-      bar_class = "critical"
-    elif used >= 70:
-      bar_class = "warning"
-    else:
-      bar_class = "ok"
-    payload = {
-      "text": f"AI {used}%",
-      "tooltip": details_text(data),
-      "percentage": used,
-      "class": bar_class,
-    }
-  return json.dumps(payload)
+  return "\n".join(lines)
 
 
 def main() -> int:
-  parser = argparse.ArgumentParser(description="AI subscription usage for Waybar")
+  parser = argparse.ArgumentParser(description="Codex subscription usage")
   parser.add_argument("action", nargs="?", choices=("details", "refresh"), default="details")
-  parser.add_argument("--waybar", action="store_true", help="emit one JSON object for Waybar's custom module")
+  parser.add_argument("--json", action="store_true", help="emit status data as JSON")
   args = parser.parse_args()
   data = fetch_data(force=args.action == "refresh")
-  if args.waybar:
-    print(waybar_output(data))
+  if args.json:
+    print(json.dumps(data["providers"][0]))
   else:
     print(details_text(data))
   return 0

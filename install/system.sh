@@ -1,72 +1,56 @@
 #!/bin/bash
-# Root-scoped system integration. Run through install.sh, which invokes
-# this script with sudo. Requires BLARCHY_REPO, BLARCHY_USER,
-# BLARCHY_ENABLE_BLUETOOTH, BLARCHY_ENABLE_PPD in the environment.
+# Root-scoped system integration. Run through install.sh with sudo.
 
 set -euo pipefail
 
-repo=${BLARCHY_REPO:-}
-install_user=${BLARCHY_USER:-}
-enable_bluetooth=${BLARCHY_ENABLE_BLUETOOTH:-0}
-enable_ppd=${BLARCHY_ENABLE_PPD:-0}
+repo=${INSTALL_REPO:-}
+install_user=${INSTALL_USER:-}
+enable_bluetooth=${INSTALL_ENABLE_BLUETOOTH:-0}
+enable_ppd=${INSTALL_ENABLE_PPD:-0}
 
 if [[ -z $repo || ! -d $repo ]]; then
-  echo "Error: BLARCHY_REPO must point to the repository checkout." >&2
+  echo 'Error: INSTALL_REPO must point to the repository checkout.' >&2
   exit 1
 fi
 if [[ -z $install_user ]] || ! getent passwd "$install_user" >/dev/null 2>&1; then
-  echo "Error: BLARCHY_USER must name the desktop user." >&2
+  echo 'Error: INSTALL_USER must name the desktop user.' >&2
   exit 1
 fi
 if (( EUID != 0 )); then
-  echo "Error: system integration must run as root." >&2
+  echo 'Error: system integration must run as root.' >&2
   exit 1
 fi
 
-# Login screen: SDDM with the package-managed SilentSDDM theme.
-install -Dm 0644 "$repo/etc/sddm.conf.d/90-silent.conf" /etc/sddm.conf.d/90-silent.conf
-# Seed an avatar for the installing account without replacing a custom one.
-avatar="/usr/share/sddm/faces/$install_user.face.icon"
-if [[ ! -e $avatar ]]; then
-  install -Dm 0644 "$repo/assets/pictures/hermes.jpg" "$avatar"
-fi
-install -Dm 0644 "$repo/etc/keyd/external-keyboard.conf" /etc/keyd/external-keyboard.conf
-install -m 0644 "$repo/etc/systemd/system/blarchy-battery-limit.service" \
-  /etc/systemd/system/blarchy-battery-limit.service
-install -Dm 0755 "$repo/etc/lib/blarchy/battery-limit" /usr/local/lib/blarchy/battery-limit
-install -Dm 0644 "$repo/etc/firefox/policies/policies.json" /etc/firefox/policies/policies.json
+install -Dm 0644 "$repo/etc/udev/hwdb.d/90-external-keyboard.hwdb" \
+  /etc/udev/hwdb.d/90-external-keyboard.hwdb
+systemd-hwdb update
+udevadm trigger --subsystem-match=input --action=change
+
+install -Dm 0644 "$repo/etc/systemd/system/battery-charge-limit.service" \
+  /etc/systemd/system/battery-charge-limit.service
+install -Dm 0755 "$repo/etc/lib/battery-charge-limit" \
+  /usr/local/lib/battery-charge-limit
+install -Dm 0644 "$repo/etc/firefox/policies/policies.json" \
+  /etc/firefox/policies/policies.json
 
 # System dark defaults remain overridable by each user's dconf settings.
-install -Dm 0644 "$repo/etc/dconf/db/blarchy.d/00-interface" /etc/dconf/db/blarchy.d/00-interface
-install -Dm 0644 "$repo/etc/dconf/db/blarchy.d/10-bluetooth" /etc/dconf/db/blarchy.d/10-bluetooth
+install -Dm 0644 "$repo/etc/dconf/db/desktop.d/00-interface" \
+  /etc/dconf/db/desktop.d/00-interface
+install -Dm 0644 "$repo/etc/dconf/db/desktop.d/10-bluetooth" \
+  /etc/dconf/db/desktop.d/10-bluetooth
 mkdir -p /etc/dconf/profile
 if [[ ! -e /etc/dconf/profile/user ]]; then
   printf 'user-db:user\n' >/etc/dconf/profile/user
 fi
-if ! grep -qx 'system-db:blarchy' /etc/dconf/profile/user; then
-  printf '\nsystem-db:blarchy\n' >>/etc/dconf/profile/user
+if ! grep -qx 'system-db:desktop' /etc/dconf/profile/user; then
+  printf '\nsystem-db:desktop\n' >>/etc/dconf/profile/user
 fi
 dconf update
 
-# Use the login password to unlock the keyring, and keep it in sync on passwd.
+# Unlock the keyring during a TTY login and keep it in sync after passwd.
 # shellcheck source=install/pam.sh
 source "$repo/install/pam.sh"
-blarchy_configure_keyring_pam /etc/pam.d
-
-# Make sure a Niri Wayland session exists for SDDM to offer.
-# The niri package normally ships this file; only fall back when missing.
-if [[ ! -f /usr/share/wayland-sessions/niri.desktop ]]; then
-  mkdir -p /usr/share/wayland-sessions
-  cat >/usr/share/wayland-sessions/niri.desktop <<'DESKTOP'
-[Desktop Entry]
-Name=Niri
-Comment=Scrollable-tiling Wayland compositor
-Exec=niri-session
-Type=Application
-DesktopNames=niri
-DESKTOP
-  chmod 0644 /usr/share/wayland-sessions/niri.desktop
-fi
+configure_keyring_pam /etc/pam.d
 
 systemctl daemon-reload
 
@@ -77,14 +61,9 @@ enable_if_available() {
   fi
 }
 
-# Apply the external keyboard mapping at the evdev layer so it does not alter
-# the laptop's built-in keyboard. The service is harmless when that keyboard
-# is disconnected and will pick it up when it is plugged in later.
-enable_if_available keyd.service
-
 enable_if_available systemd-oomd.service
 
-# Network: keep an existing non-NetworkManager stack when one is enabled.
+# Keep an existing network stack; use NetworkManager on a minimal install.
 alternate_network_enabled=0
 for unit in systemd-networkd.service iwd.service dhcpcd.service; do
   if systemctl is-enabled "$unit" >/dev/null 2>&1; then
@@ -95,38 +74,23 @@ done
 if systemctl is-enabled NetworkManager.service >/dev/null 2>&1; then
   :
 elif (( alternate_network_enabled )); then
-  echo "Preserve the existing network stack instead of enabling NetworkManager."
+  echo 'Preserve the existing network stack instead of enabling NetworkManager.'
 else
   enable_if_available NetworkManager.service
 fi
-# Apply the firewall on reboot so an SSH-based installation stays connected.
-# UFW ships deny-incoming/allow-outgoing defaults. Do not apply live rules
-# during installation; setting its boot flag also makes retries harmless.
+
+# Apply the firewall on reboot so an SSH-based install stays connected.
 sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf
 systemctl enable ufw.service
 
-# Hardware-conditional services.
 if (( enable_bluetooth == 1 )); then
   enable_if_available bluetooth.service
 fi
 if (( enable_ppd == 1 )); then
   enable_if_available power-profiles-daemon.service
-  # 80 percent charge clamp for battery lifespan. Starts now so the live
-  # session gets it too, not just the next boot.
-  enable_if_available blarchy-battery-limit.service
-  systemctl start blarchy-battery-limit.service
-fi
-
-# Display manager: keep whatever is already enabled, otherwise use SDDM.
-display_manager=""
-if [[ -e /etc/systemd/system/display-manager.service || -L /etc/systemd/system/display-manager.service ]]; then
-  display_manager=$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null || true)
-fi
-if [[ -n $display_manager && $display_manager != *sddm.service ]]; then
-  echo "Preserve existing display manager: $(basename "$display_manager")"
-else
-  enable_if_available sddm.service
+  enable_if_available battery-charge-limit.service
+  systemctl start battery-charge-limit.service
 fi
 
 fc-cache -f >/dev/null
-echo "System integration complete"
+echo 'System integration complete'

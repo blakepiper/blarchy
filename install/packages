@@ -60,6 +60,7 @@ noto-fonts-emoji
 
 # Shell and command-line tools
 starship
+openai-codex
 ripgrep
 fd
 bat

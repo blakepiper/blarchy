@@ -3,6 +3,5 @@
 # One package per line. Trailing "# comment" is allowed.
 
 blesh-git # Bash autosuggestions and syntax highlighting
-openai-codex-bin # OpenAI Codex CLI
 tamsyn-font # Bitmap interface font
 terminus-font-ttf # Scalable terminal font

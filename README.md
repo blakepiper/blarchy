@@ -37,9 +37,10 @@ The installer targets fresh Arch systems, not desktop conversions.
 
 ## Packages and updates
 
-Official Arch packages are installed and updated with pacman. The AUR list is
-kept to `blesh-git` and `openai-codex-bin`; yay is bootstrapped only to manage
-those exceptions.
+Official Arch packages are installed and updated with pacman. Codex is
+installed from the official repositories. The AUR list is limited to
+`blesh-git`, `tamsyn-font`, and `terminus-font-ttf`; yay is bootstrapped only
+to manage those exceptions.
 
 ```bash
 sudo pacman -Syu

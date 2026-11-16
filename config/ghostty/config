@@ -1,7 +1,7 @@
 command = /usr/bin/bash
 shell-integration = bash
 shell-integration-features = no-cursor
-font-family = JetBrainsMono Nerd Font
+font-family = "Terminus (TTF)"
 font-size = 11
 background = #1a1b26
 foreground = #c0caf5

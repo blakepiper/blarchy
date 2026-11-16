@@ -1,7 +1,7 @@
-/* Keep page text in JetBrains Mono, including sites with their own font styles. */
+/* Keep page text in Tamsyn, including sites with their own font styles. */
 @-moz-document url-prefix("http://"), url-prefix("https://") {
   :root, :root * {
-    font-family: "JetBrainsMono Nerd Font", monospace !important;
+    font-family: "Tamsyn", monospace !important;
     font-weight: bold !important;
   }
 }

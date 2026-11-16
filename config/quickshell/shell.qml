@@ -234,7 +234,7 @@ Scope {
             anchors.verticalCenter: parent.verticalCenter
             text: "\uf303"
             color: "#1793d1"
-            font.family: "JetBrainsMono Nerd Font"
+            font.family: "Symbols Nerd Font Mono"
             font.pixelSize: 18
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -283,7 +283,7 @@ Scope {
                 anchors.centerIn: parent
                 text: workspace.name
                 color: workspace.focused ? "#ffffff" : workspaceMouse.containsMouse ? "#c0caf5" : "#77819d"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 16
                 Behavior on color { ColorAnimation { duration: 180 } }
@@ -341,7 +341,7 @@ Scope {
             property string currentTime: Qt.formatDateTime(new Date(), "HH:mm")
             text: currentTime
             color: "#c0caf5"
-            font.family: "JetBrainsMono Nerd Font"
+            font.family: "Terminus (TTF)"
             font.bold: true
             font.pixelSize: 16
 
@@ -375,7 +375,7 @@ Scope {
                   anchors.centerIn: parent
                   text: "‹"
                   color: "#c0caf5"
-                  font.family: "JetBrainsMono Nerd Font"
+                  font.family: "Terminus (TTF)"
                   font.pixelSize: 20
                 }
                 MouseArea {
@@ -390,7 +390,7 @@ Scope {
                 height: 26
                 text: Qt.formatDateTime(calendarPopup.displayedMonth, "MMMM yyyy")
                 color: "#c0caf5"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 14
                 horizontalAlignment: Text.AlignHCenter
@@ -406,7 +406,7 @@ Scope {
                   anchors.centerIn: parent
                   text: "›"
                   color: "#c0caf5"
-                  font.family: "JetBrainsMono Nerd Font"
+                  font.family: "Terminus (TTF)"
                   font.pixelSize: 20
                 }
                 MouseArea {
@@ -433,7 +433,7 @@ Scope {
                     anchors.fill: parent
                     text: modelData
                     color: "#8291b3"
-                    font.family: "JetBrainsMono Nerd Font"
+                    font.family: "Terminus (TTF)"
                     font.bold: true
                     font.pixelSize: 11
                     horizontalAlignment: Text.AlignHCenter
@@ -473,7 +473,7 @@ Scope {
                     anchors.fill: parent
                     text: parent.inDisplayedMonth ? parent.dayNumber : ""
                     color: parent.isToday ? "#d7ffe8" : "#c0caf5"
-                    font.family: "JetBrainsMono Nerd Font"
+                    font.family: "Terminus (TTF)"
                     font.pixelSize: 13
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -585,7 +585,7 @@ Scope {
                 anchors.centerIn: parent
                 text: "\uf2db"
                 color: "#f7768e"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Symbols Nerd Font Mono"
                 font.pixelSize: 20
               }
               MouseArea {
@@ -603,7 +603,7 @@ Scope {
                 text: root.aiUsagePercent < 0 ? "AI" : "AI " + root.aiUsagePercent + "%"
                 color: root.aiUsagePercent >= 90 ? "#f7768e"
                   : root.aiUsagePercent >= 75 ? "#e0af68" : "#9ece6a"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 12
               }
@@ -635,7 +635,7 @@ Scope {
                   : Number(root.battery) <= 60 ? "\uf242"
                   : Number(root.battery) <= 85 ? "\uf241" : "\uf240"
                 color: Number(root.battery) <= 20 ? "#f7768e" : "#a6da95"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Symbols Nerd Font Mono"
                 font.pixelSize: 21
               }
               Text {
@@ -644,7 +644,7 @@ Scope {
                 anchors.bottom: parent.bottom
                 text: "\uf0e7"
                 color: "#eed49f"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Symbols Nerd Font Mono"
                 font.pixelSize: 11
               }
               MouseArea {
@@ -810,7 +810,7 @@ Scope {
               Text {
                 text: "SYSTEM"
                 color: "#f7768e"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 12
               }
@@ -835,7 +835,7 @@ Scope {
                         text: modelData.label
                         elide: Text.ElideRight
                         color: "#a9b1d6"
-                        font.family: "JetBrainsMono Nerd Font"
+                        font.family: "Terminus (TTF)"
                         font.bold: true
                         style: Text.Outline
                         styleColor: "#47a9b1d6"
@@ -846,7 +846,7 @@ Scope {
                         text: modelData.value
                         horizontalAlignment: Text.AlignRight
                         color: "#c0caf5"
-                        font.family: "JetBrainsMono Nerd Font"
+                        font.family: "Terminus (TTF)"
                         font.pixelSize: 12
                       }
                     }
@@ -855,7 +855,7 @@ Scope {
                     visible: panel.systemStats.rows.length === 0
                     text: "Reading sensors…"
                     color: "#a9b1d6"
-                    font.family: "JetBrainsMono Nerd Font"
+                    font.family: "Terminus (TTF)"
                     font.pixelSize: 12
                   }
                 }
@@ -870,7 +870,7 @@ Scope {
               Text {
                 text: "BATTERY"
                 color: "#a6da95"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 12
               }
@@ -878,7 +878,7 @@ Scope {
                 anchors.right: parent.right
                 text: root.battery + "%"
                 color: "#c0caf5"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 14
               }
@@ -900,7 +900,7 @@ Scope {
                 width: parent.width
                 text: root.batteryEta
                 color: "#a9b1d6"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.pixelSize: 12
                 elide: Text.ElideRight
               }
@@ -929,7 +929,7 @@ Scope {
                       anchors.verticalCenter: parent.verticalCenter
                       text: modelData.label
                       color: root.powerMode === modelData.value ? "#d7ffe8" : "#a9b1d6"
-                      font.family: "JetBrainsMono Nerd Font"
+                      font.family: "Terminus (TTF)"
                       font.bold: true
                       font.pixelSize: 12
                     }
@@ -952,7 +952,7 @@ Scope {
               Text {
                 text: "VOLUME"
                 color: "#8aadf4"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 12
               }
@@ -961,7 +961,7 @@ Scope {
                 anchors.rightMargin: 7
                 text: volumeControl.audio ? Math.round(volumeControl.audio.volume * 100) + "%" : "--"
                 color: "#c0caf5"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 14
               }
@@ -977,7 +977,7 @@ Scope {
                   anchors.centerIn: parent
                   text: volumeControl.audio && volumeControl.audio.muted ? "MUTED" : "MUTE"
                   color: volumeControl.audio && volumeControl.audio.muted ? "#f7768e" : "#a9b1d6"
-                  font.family: "JetBrainsMono Nerd Font"
+                  font.family: "Terminus (TTF)"
                   font.bold: true
                   font.pixelSize: 11
                 }
@@ -1030,7 +1030,7 @@ Scope {
               Text {
                 text: "BRIGHTNESS"
                 color: "#eed49f"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 12
               }
@@ -1038,7 +1038,7 @@ Scope {
                 anchors.right: parent.right
                 text: root.brightness + "%"
                 color: "#c0caf5"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 14
               }
@@ -1083,7 +1083,7 @@ Scope {
                 y: 66
                 text: "NIGHT LIGHT"
                 color: "#e0af68"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 12
               }
@@ -1092,7 +1092,7 @@ Scope {
                 anchors.right: parent.right
                 text: root.nightlightLevel === 0 ? "OFF" : root.nightlightLevel + "%"
                 color: "#c0caf5"
-                font.family: "JetBrainsMono Nerd Font"
+                font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 14
               }

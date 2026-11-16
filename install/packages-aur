@@ -4,3 +4,5 @@
 
 blesh-git # Bash autosuggestions and syntax highlighting
 openai-codex-bin # OpenAI Codex CLI
+tamsyn-font # Bitmap interface font
+terminus-font-ttf # Scalable terminal font

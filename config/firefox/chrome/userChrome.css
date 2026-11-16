@@ -101,9 +101,9 @@
   }
 }
 
-/* Use the installed JetBrains Mono Nerd Font throughout the browser interface. */
+/* Use the Tamsyn bitmap font throughout the browser interface. */
 :root, :root * {
-  font-family: "JetBrainsMono Nerd Font", monospace !important;
+  font-family: "Tamsyn", monospace !important;
   font-weight: bold !important;
 }
 

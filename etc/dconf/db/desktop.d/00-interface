@@ -1,3 +1,4 @@
 [org/gnome/desktop/interface]
 color-scheme='prefer-dark'
 gtk-theme='Adwaita-dark'
+font-name='Tamsyn Bold 10'

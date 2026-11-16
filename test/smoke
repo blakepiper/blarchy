@@ -68,6 +68,7 @@ check "Wofi in official package list" grep -qx 'wofi' "$repo_path/install/packag
 check "Ghostty in official package list" grep -qx 'ghostty' "$repo_path/install/packages"
 check "Neovim in official package list" grep -qx 'neovim' "$repo_path/install/packages"
 check "Fastfetch replaces Neofetch" grep -qx 'fastfetch' "$repo_path/install/packages"
+check "Nerd Font symbols remain available without a Nerd text face" grep -qx 'ttf-nerd-fonts-symbols-mono' "$repo_path/install/packages"
 check "Firefox is installed from pacman without duplicate extension packages" python3 -c '
 from pathlib import Path
 packages = [line.split("#", 1)[0].strip() for line in Path("install/packages").read_text().splitlines()]
@@ -80,7 +81,7 @@ check "only approved AUR exceptions are listed" python3 -c '
 from pathlib import Path
 packages = [line.split("#", 1)[0].strip() for line in Path("install/packages-aur").read_text().splitlines()]
 packages = [line for line in packages if line]
-assert packages == ["blesh-git", "openai-codex-bin"], packages
+assert packages == ["blesh-git", "openai-codex-bin", "tamsyn-font", "terminus-font-ttf"], packages
 '
 check "yay checks development updates by default" grep -qx 'yay -Y --devel --save' "$repo_path/install.sh"
 
@@ -100,7 +101,9 @@ check_fail "no display-manager package" grep -qxE 'sddm|greetd|greetd-tuigreet' 
 check_fail "no removed desktop packages" grep -qxE 'niri|kitty|waybar|fuzzel|prettymux|neofetch|opencode-bin|claude-code|oh-my-pi-bin' \
   "$repo_path/install/packages" "$repo_path/install/packages-aur"
 
-check "Ghostty config is seeded" grep -q '^font-family = JetBrainsMono Nerd Font$' "$repo_path/config/ghostty/config"
+check "Ghostty config uses the Terminus TTF font" grep -q '^font-family = "Terminus (TTF)"$' "$repo_path/config/ghostty/config"
+check_fail "JetBrains Mono Nerd Font is no longer a default" rg -n 'JetBrainsMono Nerd Font|ttf-jetbrains-mono-nerd' \
+  "$repo_path/config" "$repo_path/install/packages" "$repo_path/install/packages-aur"
 check "Ghostty uses its configured background" grep -qx 'background = #1a1b26' "$repo_path/config/ghostty/config"
 check "Quickshell has AI usage indicator" grep -q 'ai-usage.*--json' "$repo_path/config/quickshell/shell.qml"
 check "Quickshell status helpers use absolute paths" grep -q 'HOME.*desktop-status' "$repo_path/config/quickshell/shell.qml"

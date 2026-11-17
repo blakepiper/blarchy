@@ -66,9 +66,6 @@ No package versions are pinned, and there is no repository self-updater.
 
 The Ghostty defaults are in [`config/ghostty/config`](config/ghostty/config).
 Neovim starts without a plugin manager or repository-provided settings.
-Firefox uses the policy, privacy, vertical-tab, and theme defaults from
-[`config/firefox`](config/firefox), with its add-ons installed from Mozilla's
-official add-on service.
 
 ## Keyboard controls
 

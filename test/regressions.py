@@ -37,31 +37,11 @@ class RegressionTests(unittest.TestCase):
     )
 
   def test_user_setup_retry_preserves_config_and_keeps_blank_nvim(self):
-    fake_bin = self.root / "fake-bin"
-    fake_bin.mkdir()
-    fake_firefox = fake_bin / "firefox"
-    fake_firefox.write_text('''#!/bin/bash
-[[ $1 == -no-remote && $2 == -CreateProfile ]] || exit 9
-profile_path=${3#* }
-mkdir -p "$profile_path"
-cat >"$HOME/.mozilla/firefox/profiles.ini" <<EOF
-[Profile0]
-Name=desktop-default
-IsRelative=0
-Path=$profile_path
-Default=1
-[InstallTest]
-Default=$profile_path
-Locked=1
-EOF
-''')
-    fake_firefox.chmod(0o755)
     command = ["bash", str(REPO / "install/user.sh")]
     env = {
       **os.environ,
       "HOME": str(self.root),
       "INSTALL_REPO": str(REPO),
-      "PATH": str(fake_bin) + os.pathsep + os.environ["PATH"],
     }
     subprocess.run(command, env=env, check=True, capture_output=True)
 
@@ -72,32 +52,22 @@ EOF
     self.assertEqual(nvim.read_text(), "")
     quickshell = self.root / ".config/quickshell/shell.qml"
     self.assertTrue(quickshell.is_file())
-    profile = self.root / ".mozilla/firefox/Profiles/desktop-default"
-    self.assertEqual(
-      (profile / "user.js").read_text(),
-      (REPO / "config/firefox/user.js").read_text(),
-    )
-    profile_chrome = profile / "chrome/userChrome.css"
-    self.assertEqual(
-      profile_chrome.read_text(),
-      (REPO / "config/firefox/chrome/userChrome.css").read_text(),
-    )
+    self.assertFalse((self.root / ".mozilla/firefox").exists())
 
     ghostty.write_text("user terminal settings\n")
     nvim.write_text("-- user config\n")
-    profile_chrome.write_text("user Firefox style\n")
     subprocess.run(command, env=env, check=True, capture_output=True)
     self.assertEqual(ghostty.read_text(), "user terminal settings\n")
     self.assertEqual(nvim.read_text(), "-- user config\n")
-    self.assertEqual(profile_chrome.read_text(), "user Firefox style\n")
 
     bashrc = (self.root / ".bashrc").read_text()
     self.assertEqual(bashrc.count("# >>> desktop setup >>>"), 1)
     self.assertEqual(bashrc.count("source /usr/share/blesh/ble.sh --attach=none"), 1)
     for helper in (
-      "ai-usage", "clipboard-history", "control-menu", "desktop-status", "dev",
-      "desktop-session", "displays", "keep-awake", "screenshot", "session-controls",
-      "firefox-profile", "settings-menu", "system-info",
+      "ai-usage", "clipboard-history", "control-menu", "desktop-session",
+      "desktop-settings", "desktop-settings-apply", "desktop-status", "dev",
+      "displays", "keep-awake", "screenshot", "session-controls", "settings-menu",
+      "system-info",
     ):
       installed = self.root / ".local/bin" / helper
       self.assertTrue(installed.is_file(), helper)

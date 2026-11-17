@@ -1,42 +1,50 @@
+# A subdued Tokyo Night prompt for Ghostty's Terminus font.
+# Keep one shared dark fill and use balanced padding around the Arch glyph.
 add_newline = true
 command_timeout = 200
-format = "$directory$git_branch$git_status$git_state$cmd_duration$character"
+format = "$os$directory$git_branch$git_status$git_state$cmd_duration$character"
 
-[character]
-error_symbol = "[](fg:prev_bg bg:#171c1b)[✗](bold #f0919b)"
-success_symbol = "[](fg:prev_bg bg:#171c1b)[❯](bold #9fe3c4)"
-vimcmd_symbol = "[](fg:prev_bg bg:#171c1b)[❮](bold #9fe3c4)"
+[os]
+disabled = false
+format = "[  $symbol  ]($style)"
+style = "bold fg:#7aa2f7 bg:#24283b"
+
+[os.symbols]
+Arch = ""
 
 [directory]
 truncation_length = 2
 truncation_symbol = "…/"
 format = "[ $path$read_only ]($style)"
-style = "fg:#e4f0eb bg:#3e6257"
+style = "bold fg:#c0caf5 bg:#24283b"
 
 [git_branch]
-format = "[](fg:#3e6257 bg:#7db9a0)[ $branch ]($style)"
-style = "fg:#17211e bg:#7db9a0 italic"
+format = "[ $branch ]($style)"
+style = "fg:#a9b1d6 bg:#24283b"
 
 [git_status]
-format     = "([](fg:#7db9a0 bg:#9fe3c4)[ $all_status$ahead_behind]($style))"
-style      = "fg:#17211e bg:#9fe3c4"
-ahead      = "⇡${count} "
-diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
-behind     = "⇣${count} "
-conflicted = " "
-up_to_date = ""
-untracked  = ""
-modified   = " "
-stashed    = ""
-staged     = ""
-renamed    = ""
-deleted    = ""
+format = "[ $all_status$ahead_behind ]($style)"
+style = "fg:#e0af68 bg:#24283b"
+ahead = "⇡${count} "
+diverged = "⇕⇡${ahead_count}⇣${behind_count} "
+behind = "⇣${count} "
+conflicted = "≠ "
+untracked = "? "
+modified = "~ "
+staged = "+ "
+deleted = "- "
 
 [git_state]
-format = "[](fg:prev_bg bg:#9fe3c4)[ $state( $progress_current/$progress_total) ]($style)"
-style = "fg:#17211e bg:#9fe3c4 bold"
+format = "[ $state( $progress_current/$progress_total) ]($style)"
+style = "fg:#c0caf5 bg:#24283b"
 
 [cmd_duration]
 min_time = 2000
 format = "[ took $duration ]($style)"
-style = "fg:#17211e bg:#9fe3c4"
+style = "fg:#a9b1d6 bg:#24283b"
+
+[character]
+format = "$symbol"
+success_symbol = "[❯](bold fg:#7aa2f7) "
+error_symbol = "[❯](bold fg:#f7768e) "
+vimcmd_symbol = "[❮](bold fg:#a6da95) "

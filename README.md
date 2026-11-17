@@ -58,6 +58,7 @@ No package versions are pinned, and there is no repository self-updater.
 | Launcher and menus | Wofi |
 | Notifications | mako |
 | Terminal | Ghostty |
+| Shell prompt | Starship |
 | Lock and idle | hyprlock and hypridle |
 | Wallpaper | swaybg with a solid dark background |
 | Editor | vanilla Neovim with an empty `init.lua` |
@@ -65,7 +66,13 @@ No package versions are pinned, and there is no repository self-updater.
 | System information | fastfetch |
 
 The Ghostty defaults are in [`config/ghostty/config`](config/ghostty/config).
+The Starship prompt is configured in [`config/starship.toml`](config/starship.toml).
 Neovim starts without a plugin manager or repository-provided settings.
+
+HyprGlass materials are optional. Build the plugin for the installed Hyprland
+version and set `HYPRGLASS_PLUGIN` to its absolute library path before starting
+Hyprland to enable the configured glass presets. The regular layer blur and
+opacity rules work without the plugin.
 
 ## Keyboard controls
 

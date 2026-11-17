@@ -9,14 +9,23 @@ import Quickshell.Wayland
 
 Scope {
   id: root
-  readonly property int popupTop: 40
+  readonly property int barHeight: 36
+  readonly property string settingsCommand: Quickshell.env("HOME") + "/.local/bin/desktop-settings-apply"
 
   property string battery: ""
   property string batteryStatus: ""
   property string batteryEta: ""
   property string brightness: ""
+  property bool canSetBrightness: false
+  property bool canSetNightlight: false
+  property bool hasSettings: false
   property string powerMode: ""
-  property int aiUsagePercent: -1
+  property var powerProfiles: []
+  readonly property var profileButtons: [
+    { label: "Saver", value: "power-saver" },
+    { label: "Balanced", value: "balanced" },
+    { label: "Performance", value: "performance" }
+  ].filter(profile => powerProfiles.includes(profile.value))
   property int nightlightLevel: 0
   property date currentDate: new Date()
 
@@ -30,16 +39,19 @@ Scope {
     running: true
     stdout: StdioCollector {
       onStreamFinished: {
+        const status = {};
         for (const line of this.text.trim().split("\n")) {
           const separator = line.indexOf("=");
           if (separator < 0) continue;
-          const key = line.slice(0, separator);
-          const value = line.slice(separator + 1);
-          if (key === "battery") root.battery = value;
-          else if (key === "battery_status") root.batteryStatus = value;
-          else if (key === "battery_eta") root.batteryEta = value;
-          else if (key === "brightness") root.brightness = value;
+          status[line.slice(0, separator)] = line.slice(separator + 1);
         }
+        root.battery = status.battery || "";
+        root.batteryStatus = status.battery_status || "";
+        root.batteryEta = status.battery_eta || "";
+        root.brightness = status.brightness || "";
+        root.canSetBrightness = status.can_set_brightness === "yes";
+        root.canSetNightlight = status.can_set_nightlight === "yes";
+        root.hasSettings = status.has_settings === "yes";
       }
     }
   }
@@ -52,60 +64,36 @@ Scope {
   }
 
   Process {
-    id: aiUsageProcess
-    command: [Quickshell.env("HOME") + "/.local/bin/ai-usage", "--json"]
-    running: true
-    stdout: StdioCollector {
-      onStreamFinished: {
-        try {
-          const provider = JSON.parse(this.text.trim());
-          let highest = -1;
-          for (const limit of provider.limits || []) {
-            const percent = Number(limit.percent);
-            if (isFinite(percent)) highest = Math.max(highest, percent);
-          }
-          root.aiUsagePercent = highest < 0 ? -1 : Math.round(highest * 100);
-        } catch (error) {
-          root.aiUsagePercent = -1;
-        }
-      }
-    }
-  }
-
-  Timer {
-    interval: 300000
-    running: true
-    repeat: true
-    onTriggered: aiUsageProcess.running = true
-  }
-
-  Process {
-    id: aiUsageOpen
-    command: ["ghostty", "+new-window", "-e",
-      Quickshell.env("HOME") + "/.local/bin/ai-usage", "details"]
-  }
-
-  Process {
     id: brightnessProcess
   }
 
   Process {
     id: powerModeProcess
-    command: [Quickshell.env("HOME") + "/.local/bin/session-controls", "power-mode"]
-    running: true
+    command: [root.settingsCommand, "power-profiles"]
+    running: root.hasSettings && root.battery !== ""
     stdout: StdioCollector {
-      onStreamFinished: root.powerMode = this.text.trim()
+      onStreamFinished: {
+        try {
+          const result = JSON.parse(this.text);
+          root.powerMode = result.available ? result.active : "";
+          root.powerProfiles = result.available ? result.profiles : [];
+        } catch (error) {
+          root.powerMode = "";
+          root.powerProfiles = [];
+          console.warn("Invalid power profiles:", error);
+        }
+      }
     }
   }
 
   Process {
     id: powerModeSetProcess
-    onExited: powerModeProcess.exec([Quickshell.env("HOME") + "/.local/bin/session-controls", "power-mode"])
+    onExited: powerModeProcess.running = true
   }
 
   Process {
     id: nightlightRead
-    command: [Quickshell.env("HOME") + "/.local/bin/session-controls", "nightlight-level"]
+    command: [root.settingsCommand, "nightlight-level"]
     stdout: StdioCollector {
       onStreamFinished: {
         const level = Number(this.text.trim());
@@ -126,7 +114,7 @@ Scope {
     interval: 250
     onTriggered: {
       if (nightlightSet.running) { restart(); return; }
-      nightlightSet.exec([Quickshell.env("HOME") + "/.local/bin/session-controls", "nightlight-level",
+      nightlightSet.exec([root.settingsCommand, "nightlight-level",
         "--intensity", root.nightlightLevel.toString()]);
     }
   }
@@ -154,7 +142,7 @@ Scope {
           controlPopup.visible = false;
         } else {
           activeControl = name;
-          if (name === "brightness") nightlightRead.running = true;
+          if (name === "brightness" && root.canSetNightlight) nightlightRead.running = true;
           controlPopup.visible = true;
         }
       }
@@ -164,7 +152,7 @@ Scope {
       }
       screen: modelData
       anchors { top: true; left: true; right: true }
-      implicitHeight: 36
+      implicitHeight: root.barHeight
       color: "transparent"
       mask: Region {}
       HyprlandFocusGrab {
@@ -176,72 +164,112 @@ Scope {
         }
       }
 
-      // Keep membership keyed by workspace ID so ListView can animate removals.
+      // Keep the adaptive list of numbered workspaces that currently exist.
+      // Read Hyprland's IPC directly because the Quickshell workspace ObjectModel can be stale.
       ListModel { id: workspaceModel; dynamicRoles: true }
-      function syncWorkspaces() {
-        const workspaces = Hyprland.workspaces.values.filter(w => w.id > 0)
-          .sort((a, b) => a.id - b.id);
-        const ids = workspaces.map(w => w.id);
+      property int currentWorkspaceId: 1
+      function syncWorkspaces(entries) {
+        const workspaces = entries.filter(w => Number(w.id) > 0)
+          .sort((a, b) => Number(a.id) - Number(b.id));
+        const ids = workspaces.map(w => Number(w.id));
         for (let i = workspaceModel.count - 1; i >= 0; --i)
           if (ids.indexOf(workspaceModel.get(i).workspaceId) < 0)
             workspaceModel.remove(i);
         for (let i = 0; i < workspaces.length; ++i) {
           const w = workspaces[i];
-          if (i >= workspaceModel.count || workspaceModel.get(i).workspaceId !== w.id)
-            workspaceModel.insert(i, { workspaceId: w.id, workspace: w });
+          const workspaceId = Number(w.id);
+          const workspaceName = String(w.name || w.id);
+          if (i >= workspaceModel.count || workspaceModel.get(i).workspaceId !== workspaceId) {
+            workspaceModel.insert(i, { workspaceId, workspaceName });
+          } else if (workspaceModel.get(i).workspaceName !== workspaceName) {
+            workspaceModel.setProperty(i, "workspaceName", workspaceName);
+          }
         }
       }
-      Component.onCompleted: syncWorkspaces()
-      Connections {
-        target: Hyprland.workspaces
-        function onValuesChanged() { panel.syncWorkspaces(); }
+      Process {
+        id: workspaceQuery
+        command: ["hyprctl", "-j", "workspaces"]
+        stdout: StdioCollector {
+          onStreamFinished: {
+            try {
+              const entries = JSON.parse(this.text);
+              panel.syncWorkspaces(entries);
+            }
+            catch (error) { console.warn("Invalid workspace list:", error); }
+          }
+        }
+      }
+      Process {
+        id: activeWorkspaceQuery
+        command: ["hyprctl", "-j", "activeworkspace"]
+        stdout: StdioCollector {
+          onStreamFinished: {
+            const output = this.text.trim();
+            try {
+              const workspaceId = Number(JSON.parse(output).id);
+              panel.currentWorkspaceId = workspaceId;
+            }
+            catch (error) { console.warn("Invalid active workspace:", JSON.stringify(output), error); }
+          }
+        }
+      }
+      function refreshWorkspaceState() {
+        if (!workspaceQuery.running) workspaceQuery.running = true;
+        if (!activeWorkspaceQuery.running) activeWorkspaceQuery.running = true;
+      }
+      Component.onCompleted: refreshWorkspaceState()
+      Timer {
+        interval: 1000
+        repeat: true
+        running: true
+        onTriggered: panel.refreshWorkspaceState()
       }
 
       PanelWindow {
         id: workspaceGlass
         screen: panel.screen
-        WlrLayershell.namespace: "session-workspaces"
+        WlrLayershell.namespace: "desktop-workspace-glass"
         anchors { top: true; left: true }
         margins.left: 10
         exclusionMode: ExclusionMode.Ignore
         focusable: false
         color: "transparent"
         implicitWidth: Math.ceil(capsule.width)
-        implicitHeight: 36
+        implicitHeight: root.barHeight
         mask: Region { item: capsule }
 
         Rectangle {
           id: capsule
           anchors.verticalCenter: parent.verticalCenter
-          width: 36 + workspaceList.width + 8
+          width: 44 + workspaceList.width + 8
           height: 30
           radius: 15
           color: "#18101827"
           border.color: "#40c0caf5"
           border.width: 1
 
+          Text {
+            x: 8.5
+            width: 22
+            height: 24
+            anchors.verticalCenter: parent.verticalCenter
+            text: "\uf303"
+            color: "#1793d1"
+            font.family: "Symbols Nerd Font Mono"
+            font.pixelSize: 20
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+          }
           Rectangle {
-            x: 31
+            x: 39
             anchors.verticalCenter: parent.verticalCenter
             width: 1
             height: 14
             color: "#33c0caf5"
           }
-          Text {
-            x: 8
-            width: 19
-            height: 26
-            anchors.verticalCenter: parent.verticalCenter
-            text: "\uf303"
-            color: "#1793d1"
-            font.family: "Symbols Nerd Font Mono"
-            font.pixelSize: 18
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-          }
           ListView {
             id: workspaceList
-            x: 36
+            x: 44
             anchors.verticalCenter: parent.verticalCenter
             width: Math.min(contentWidth, Math.max(32, panel.width / 2 - 60))
             height: 26
@@ -264,16 +292,17 @@ Scope {
             }
             delegate: Rectangle {
               id: workspaceButton
-              required property var workspace
+              required property int workspaceId
+              required property string workspaceName
               required property int index
               function revealFocused() {
-                if (workspace.focused)
+                if (workspaceId === panel.currentWorkspaceId)
                   workspaceList.positionViewAtIndex(index, ListView.Contain);
               }
               Component.onCompleted: Qt.callLater(revealFocused)
               Connections {
-                target: workspaceButton.workspace
-                function onFocusedChanged() { workspaceButton.revealFocused(); }
+                target: panel
+                function onCurrentWorkspaceIdChanged() { workspaceButton.revealFocused(); }
               }
               width: Math.max(28, workspaceLabel.implicitWidth + 16)
               height: 26
@@ -281,8 +310,8 @@ Scope {
               Text {
                 id: workspaceLabel
                 anchors.centerIn: parent
-                text: workspace.name
-                color: workspace.focused ? "#ffffff" : workspaceMouse.containsMouse ? "#c0caf5" : "#77819d"
+                text: workspaceButton.workspaceName
+                color: workspaceButton.workspaceId === panel.currentWorkspaceId ? "#ffffff" : workspaceMouse.containsMouse ? "#c0caf5" : "#77819d"
                 font.family: "Terminus (TTF)"
                 font.bold: true
                 font.pixelSize: 16
@@ -297,8 +326,8 @@ Scope {
                   controlPopup.visible = false;
                   calendarPopup.visible = false;
                   Hyprland.dispatch(Hyprland.usingLua
-                    ? 'hl.dsp.focus({ workspace = "' + workspace.name + '" })'
-                    : "workspace " + workspace.name);
+                    ? 'hl.dsp.focus({ workspace = "' + workspaceButton.workspaceName + '" })'
+                    : "workspace " + workspaceButton.workspaceName);
                 }
               }
             }
@@ -309,7 +338,7 @@ Scope {
       PanelWindow {
         id: clockGlass
         screen: panel.screen
-        WlrLayershell.namespace: "session-clock"
+        WlrLayershell.namespace: "desktop-clock-glass"
         anchors.top: true
         exclusionMode: ExclusionMode.Ignore
         focusable: false
@@ -320,7 +349,7 @@ Scope {
         }
         // Keep the Wayland buffer stable; animate only the card inside it.
         implicitWidth: 264
-        implicitHeight: 36 + 270
+        implicitHeight: root.barHeight + 270
         mask: Region { item: clockCard }
         Rectangle {
           id: clockCard
@@ -499,7 +528,7 @@ Scope {
       PanelWindow {
         id: controlsGlass
         screen: panel.screen
-        WlrLayershell.namespace: "session-controls"
+        WlrLayershell.namespace: "desktop-controls-glass"
         anchors { top: true; right: true }
         margins.right: 10
         exclusionMode: ExclusionMode.Ignore
@@ -540,25 +569,30 @@ Scope {
           // One contour: the active tab's shoulders join the menu without a seam.
           readonly property string outline: {
             const p = controlsGlass.expansion;
-            const w = width, h = height;
-            const left = Math.max(0, tabCenter - 22) * p;
-            const right = w + (Math.min(w, tabCenter + 22) - w) * p;
+            const inset = 0.5;
+            const w = width - 2 * inset, h = height - 2 * inset;
+            const center = tabCenter - inset;
+            const left = Math.max(0, center - 22) * p;
+            const right = w + (Math.min(w, center + 22) - w) * p;
             const r = 12;
-            const bottomRadius = Math.min(12, (h - 30) / 2);
-            const br = Math.min(12, (h - 30) / 2, (w - right) / 2);
-            const bl = Math.min(12, (h - 30) / 2, left / 2);
+            const headerBottom = 30 - inset;
+            const bottomRadius = Math.min(12, (h - headerBottom) / 2);
+            const br = Math.min(12, (h - headerBottom) / 2, (w - right) / 2);
+            const bl = Math.min(12, (h - headerBottom) / 2, left / 2);
             const sr = Math.min(8, (w - right) / 2) * p;
             const sl = Math.min(8, left / 2) * p;
             if (p < 0.001)
-              return `M 15 0 H ${w-15} Q ${w} 0 ${w} 15 Q ${w} 30 ${w-15} 30 H 15 Q 0 30 0 15 Q 0 0 15 0 Z`;
-            return `M ${left+r} 0 H ${right-r} Q ${right} 0 ${right} ${r}`
-              + ` V ${30-sr} Q ${right} 30 ${right+sr} 30`
-              + ` H ${w-br} Q ${w} 30 ${w} ${30+br}`
-              + ` V ${h-bottomRadius} Q ${w} ${h} ${w-bottomRadius} ${h}`
-              + ` H ${bottomRadius} Q 0 ${h} 0 ${h-bottomRadius}`
-              + ` V ${30+bl} Q 0 30 ${bl} 30`
-              + ` H ${left-sl} Q ${left} 30 ${left} ${30-sl}`
-              + ` V ${r} Q ${left} 0 ${left+r} 0 Z`;
+              return `M ${inset+15} ${inset} H ${w-15+inset} Q ${w+inset} ${inset} ${w+inset} ${15+inset}`
+                + ` Q ${w+inset} ${h+inset} ${w-15+inset} ${h+inset} H ${15+inset}`
+                + ` Q ${inset} ${h+inset} ${inset} ${15+inset} Q ${inset} ${inset} ${15+inset} ${inset} Z`;
+            return `M ${left+r+inset} ${inset} H ${right-r+inset} Q ${right+inset} ${inset} ${right+inset} ${r+inset}`
+              + ` V ${headerBottom-sr} Q ${right+inset} ${headerBottom} ${right+sr+inset} ${headerBottom}`
+              + ` H ${w-br+inset} Q ${w+inset} ${headerBottom} ${w+inset} ${headerBottom+br}`
+              + ` V ${h-bottomRadius+inset} Q ${w+inset} ${h+inset} ${w-bottomRadius+inset} ${h+inset}`
+              + ` H ${bottomRadius+inset} Q ${inset} ${h+inset} ${inset} ${h-bottomRadius+inset}`
+              + ` V ${headerBottom+bl} Q ${inset} ${headerBottom} ${left+inset} ${headerBottom}`
+              + ` H ${left-sl+inset} Q ${left+inset} ${headerBottom} ${left+inset} ${headerBottom-sl}`
+              + ` V ${r+inset} Q ${left+inset} ${inset} ${left+r+inset} ${inset} Z`;
           }
           Shape {
             anchors.fill: parent
@@ -574,8 +608,9 @@ Scope {
             id: controlsRow
             anchors.right: parent.right
             anchors.rightMargin: 12
-            y: 2.5
-            spacing: 14
+            // Keep the icons centered in the fixed-height header as the card expands.
+            y: (30 - height) / 2
+            spacing: 10
 
             Item {
               id: systemControl
@@ -583,6 +618,7 @@ Scope {
               height: 25
               Text {
                 anchors.centerIn: parent
+                anchors.verticalCenterOffset: -1.5
                 text: "\uf2db"
                 color: "#f7768e"
                 font.family: "Symbols Nerd Font Mono"
@@ -592,25 +628,6 @@ Scope {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: panel.toggleControl("system")
-              }
-            }
-
-            Item {
-              width: 48
-              height: 25
-              Text {
-                anchors.centerIn: parent
-                text: root.aiUsagePercent < 0 ? "AI" : "AI " + root.aiUsagePercent + "%"
-                color: root.aiUsagePercent >= 90 ? "#f7768e"
-                  : root.aiUsagePercent >= 75 ? "#e0af68" : "#9ece6a"
-                font.family: "Terminus (TTF)"
-                font.bold: true
-                font.pixelSize: 12
-              }
-              MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: aiUsageOpen.running = true
               }
             }
 
@@ -630,6 +647,7 @@ Scope {
               }
               Text {
                 anchors.centerIn: parent
+                anchors.verticalCenterOffset: -1.5
                 text: Number(root.battery) <= 10 ? "\uf244"
                   : Number(root.battery) <= 35 ? "\uf243"
                   : Number(root.battery) <= 60 ? "\uf242"
@@ -651,7 +669,7 @@ Scope {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                  powerModeProcess.exec([Quickshell.env("HOME") + "/.local/bin/session-controls", "power-mode"]);
+                  if (root.hasSettings) powerModeProcess.running = true;
                   panel.toggleControl("battery");
                 }
               }
@@ -731,7 +749,7 @@ Scope {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: panel.toggleControl("volume")
-                onWheel: {
+                onWheel: wheel => {
                   if (!volumeControl.audio) return;
                   const step = wheel.angleDelta.y > 0 ? 0.05 : -0.05;
                   volumeControl.audio.volume = Math.max(0, Math.min(1, volumeControl.audio.volume + step));
@@ -741,7 +759,7 @@ Scope {
 
             Item {
               id: brightnessControl
-              visible: root.brightness !== ""
+              visible: root.brightness !== "" || root.canSetNightlight
               width: 25
               height: 25
               Rectangle {
@@ -756,7 +774,7 @@ Scope {
               Canvas {
                 id: sunIcon
                 anchors.fill: parent
-                property real level: Number(root.brightness)
+                property real level: root.brightness === "" ? root.nightlightLevel : Number(root.brightness)
                 onLevelChanged: requestPaint()
                 onPaint: {
                   const ctx = getContext("2d");
@@ -785,8 +803,9 @@ Scope {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: panel.toggleControl("brightness")
-                onWheel: {
-                  brightnessProcess.exec(["/usr/bin/brightnessctl", "--class=backlight", "set",
+                onWheel: wheel => {
+                  if (!root.canSetBrightness || root.brightness === "") return;
+                  brightnessProcess.exec(["brightnessctl", "--class=backlight", "set",
                     wheel.angleDelta.y > 0 ? "5%+" : "5%-"]);
                 }
               }
@@ -863,9 +882,9 @@ Scope {
             }
 
             Item {
-              visible: panel.activeControl === "battery" && root.battery !== "" && root.battery !== ""
+              visible: panel.activeControl === "battery" && root.battery !== ""
               width: parent.width
-              height: 138
+              height: root.profileButtons.length ? 58 + modeColumn.implicitHeight : 52
 
               Text {
                 text: "BATTERY"
@@ -910,11 +929,7 @@ Scope {
                 width: parent.width
                 spacing: 4
                 Repeater {
-                  model: [
-                    { label: "Saver", value: "power-saver" },
-                    { label: "Balanced", value: "balanced" },
-                    { label: "Performance", value: "performance" }
-                  ]
+                  model: root.profileButtons
                   Rectangle {
                     required property var modelData
                     width: modeColumn.width
@@ -937,8 +952,7 @@ Scope {
                       anchors.fill: parent
                       cursorShape: Qt.PointingHandCursor
                       onClicked: powerModeSetProcess.exec([
-                        Quickshell.env("HOME") + "/.local/bin/session-controls",
-                        "power-mode", modelData.value])
+                        root.settingsCommand, "power-mode", modelData.value])
                     }
                   }
                 }
@@ -1024,10 +1038,11 @@ Scope {
             }
 
             Item {
-              visible: panel.activeControl === "brightness" && root.brightness !== ""
+              visible: panel.activeControl === "brightness" && (root.brightness !== "" || root.canSetNightlight)
               width: parent.width
-              height: 128
+              height: root.brightness !== "" && root.canSetNightlight ? 128 : 62
               Text {
+                visible: root.brightness !== ""
                 text: "BRIGHTNESS"
                 color: "#eed49f"
                 font.family: "Terminus (TTF)"
@@ -1035,6 +1050,7 @@ Scope {
                 font.pixelSize: 12
               }
               Text {
+                visible: root.brightness !== ""
                 anchors.right: parent.right
                 text: root.brightness + "%"
                 color: "#c0caf5"
@@ -1044,6 +1060,8 @@ Scope {
               }
               Slider {
                 id: brightnessSlider
+                visible: root.brightness !== ""
+                enabled: root.canSetBrightness
                 y: 27
                 width: parent.width
                 height: 28
@@ -1052,7 +1070,7 @@ Scope {
                 value: Number(root.brightness)
                 onMoved: {
                   root.brightness = Math.round(value).toString();
-                  brightnessProcess.exec(["/usr/bin/brightnessctl", "--class=backlight",
+                  brightnessProcess.exec(["brightnessctl", "--class=backlight",
                     "--min-value=1", "set", root.brightness + "%"]);
                 }
                 background: Rectangle {
@@ -1080,7 +1098,8 @@ Scope {
                 }
               }
               Text {
-                y: 66
+                visible: root.canSetNightlight
+                y: root.brightness !== "" ? 66 : 0
                 text: "NIGHT LIGHT"
                 color: "#e0af68"
                 font.family: "Terminus (TTF)"
@@ -1088,7 +1107,8 @@ Scope {
                 font.pixelSize: 12
               }
               Text {
-                y: 66
+                visible: root.canSetNightlight
+                y: root.brightness !== "" ? 66 : 0
                 anchors.right: parent.right
                 text: root.nightlightLevel === 0 ? "OFF" : root.nightlightLevel + "%"
                 color: "#c0caf5"
@@ -1098,7 +1118,8 @@ Scope {
               }
               Slider {
                 id: nightlightSlider
-                y: 93
+                visible: root.canSetNightlight
+                y: root.brightness !== "" ? 93 : 27
                 width: parent.width
                 height: 28
                 from: 0

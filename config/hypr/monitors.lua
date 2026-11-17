@@ -65,7 +65,7 @@ local function schedule_monitors()
   end, { timeout = 150, type = "oneshot" })
 end
 
-hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
+hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1.25 })
 hl.on("monitor.added", schedule_monitors)
 hl.on("monitor.removed", schedule_monitors)
 hl.on("hyprland.start", schedule_monitors)

@@ -67,3 +67,12 @@ done
 
 printf 'battery=%s\nbattery_status=%s\nbattery_eta=%s\nbrightness=%s\n' \
   "$battery" "$battery_status" "$battery_eta" "$brightness"
+if command -v brightnessctl >/dev/null 2>&1; then
+  printf 'can_set_brightness=yes\n'
+fi
+if command -v powerprofilesctl >/dev/null 2>&1; then
+  printf 'has_settings=yes\n'
+fi
+if command -v hyprsunset >/dev/null 2>&1; then
+  printf 'can_set_nightlight=yes\n'
+fi

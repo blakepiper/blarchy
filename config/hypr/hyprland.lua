@@ -1,26 +1,115 @@
+-- Load before configuring the plugin. Whitelist the glass-enabled app and layer surfaces.
+local glassPlugin = os.getenv("HYPRGLASS_PLUGIN")
+if glassPlugin and glassPlugin ~= "" then hl.plugin.load(glassPlugin) end
+if hl.plugin.hyprglass then
+  local hg = hl.plugin.hyprglass
+  hg.config({
+    enabled = false,
+    default_theme = "dark",
+    default_preset = "desktop-glass",
+    layers = { enabled = true },
+  })
+  hg.preset("desktop-glass", {
+    inherits = "pomme",
+    blur_strength = 0.7,
+    edge_thickness_px = 18,
+    edge_height = 24,
+    refraction_strength = 0.8,
+    chromatic_aberration = 0.12,
+    dark = {
+      tint_color = 0x10182738,
+      brightness = 0.85,
+      contrast = 1.05,
+      saturation = 1.0,
+      adaptive_dim = 0.25,
+    },
+  })
+  -- Clearer material for the small topbar panes; keep popup glass richer.
+  hg.preset("desktop-bar-glass", {
+    inherits = "desktop-glass",
+    blur_strength = 0.25,
+    edge_thickness_px = 5,
+    edge_height = 8,
+    refraction_strength = 0.25,
+    chromatic_aberration = 0.02,
+    dark = {
+      tint_color = 0x10182718,
+      brightness = 1.0,
+      contrast = 1.0,
+      saturation = 1.0,
+      adaptive_dim = 0.08,
+    },
+  })
+  for _, namespace in ipairs({ "desktop-workspace-glass", "desktop-clock-glass", "desktop-controls-glass" }) do
+    hg.layer(namespace, {
+      preset = "desktop-bar-glass",
+      mask_mode = "contour",
+      mask_threshold = 0.05,
+      mask_feather = 0.03,
+    })
+  end
+  -- Alpha masks follow rounded cards and exclude transparent layer margins.
+  for _, namespace in ipairs({ "wofi" }) do
+    hg.layer(namespace, {
+      preset = "desktop-glass",
+      mask_mode = "contour",
+      mask_threshold = 0.05,
+      mask_feather = 0.03,
+    })
+  end
+end
+hl.window_rule({
+  name = "ghostty-glass",
+  match = { class = "^org[.]local[.]GhosttyGlass$" },
+  tag = "+hyprglass_enabled",
+  -- Ghostty supplies background alpha; preserve opaque, readable glyphs.
+  opacity = "1.0 override 1.0 override 1.0 override",
+})
+
 local home = os.getenv("HOME") or ""
 local exec = hl.dsp.exec_cmd
 
 hl.config({
   general = {
     layout = "dwindle",
-    gaps_out = { top = 40, right = 10, bottom = 10, left = 10 },
+    gaps_out = { top = 4, right = 10, bottom = 10, left = 10 },
   },
   decoration = {
-    active_opacity = 0.92,
-    inactive_opacity = 0.86,
+    active_opacity = 0.85,
+    inactive_opacity = 0.80,
     rounding = 10,
   },
   dwindle = { force_split = 2 },
   input = {
     natural_scroll = true,
+    touchpad = { natural_scroll = true },
     repeat_delay = 250,
     repeat_rate = 45,
   },
 })
 
+hl.layer_rule({
+  name = "wofi-glass",
+  match = { namespace = "^wofi$" },
+  blur = true,
+  ignore_alpha = 0.0,
+})
+for _, namespace in ipairs({ "desktop-workspace-glass", "desktop-clock-glass", "desktop-controls-glass" }) do
+  hl.layer_rule({
+    name = namespace,
+    match = { namespace = "^" .. namespace .. "$" },
+    blur = true,
+    ignore_alpha = 0.0,
+  })
+end
+
 dofile(home .. "/.config/hypr/monitors.lua")
 
+hl.window_rule({
+  name = "opaque-firefox-video",
+  match = { class = "^firefox$", title = "^\\[firefox-video\\] " },
+  opacity = "1.0 override 1.0 override 1.0 override",
+})
 hl.window_rule({
   name = "opaque-steam-games",
   match = { class = "^steam_app_.*$" },
@@ -32,7 +121,8 @@ hl.bind("SUPER + Return", exec("ghostty"))
 hl.bind("SUPER + Space", exec(launcher))
 hl.bind("SUPER + D", exec(launcher))
 hl.bind("SUPER + SHIFT + Space", exec(home .. "/.local/bin/control-menu"))
-hl.bind("SUPER + S", exec(home .. "/.local/bin/settings-menu"))
+hl.bind("SUPER + S", exec(home .. "/.local/bin/desktop-settings"),
+  { description = "Open settings menu" })
 hl.bind("SUPER + F", exec("nautilus"))
 hl.bind("SUPER + B", exec("firefox"))
 hl.bind("SUPER + SHIFT + B", exec("firefox --private-window"))

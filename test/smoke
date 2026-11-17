@@ -42,6 +42,8 @@ shell_files=(
   "$repo_path/bin/clipboard-history"
   "$repo_path/bin/control-menu"
   "$repo_path/bin/desktop-session"
+  "$repo_path/bin/desktop-settings"
+  "$repo_path/bin/desktop-settings-apply"
   "$repo_path/bin/dev"
   "$repo_path/bin/displays"
   "$repo_path/bin/keep-awake"
@@ -108,12 +110,12 @@ check "Ghostty config uses the Terminus TTF font" grep -q '^font-family = "Termi
 check_fail "JetBrains Mono Nerd Font is no longer a default" rg -n 'JetBrainsMono Nerd Font|ttf-jetbrains-mono-nerd' \
   "$repo_path/config" "$repo_path/install/packages" "$repo_path/install/packages-aur"
 check "Ghostty uses its configured background" grep -qx 'background = #1a1b26' "$repo_path/config/ghostty/config"
-check "Quickshell has AI usage indicator" grep -q 'ai-usage.*--json' "$repo_path/config/quickshell/shell.qml"
+check_fail "Quickshell omits the AI usage indicator" grep -q 'ai-usage.*--json' "$repo_path/config/quickshell/shell.qml"
 check "Quickshell status helpers use absolute paths" grep -q 'HOME.*desktop-status' "$repo_path/config/quickshell/shell.qml"
 check "Super+Space uses the application launcher" grep -q 'SUPER + Space.*exec(launcher)' "$repo_path/config/hypr/hyprland.lua"
 check "application launcher uses Wofi" grep -q 'local launcher = "wofi ' "$repo_path/config/hypr/hyprland.lua"
 check "Super+Shift+Space opens the control menu" grep -q 'SUPER + SHIFT + Space.*control-menu' "$repo_path/config/hypr/hyprland.lua"
-check "Super+S opens the settings menu" grep -q 'SUPER + S.*settings-menu' "$repo_path/config/hypr/hyprland.lua"
+check "Super+S opens the settings menu" grep -q 'SUPER + S.*desktop-settings' "$repo_path/config/hypr/hyprland.lua"
 check "Hyprland loads session services on start" grep -q 'hypridle.service hyprsunset.service' "$repo_path/config/hypr/hyprland.lua"
 check "desktop processes stop with the graphical session" grep -q '^PartOf=graphical-session.target$' \
   "$repo_path/config/systemd/user/desktop-session.service"
@@ -136,8 +138,6 @@ check_fail "no branded runtime names" rg -qi 'blarchy|blix' "$repo_path/bin" "$r
   "$repo_path/install/hardware.sh" "$repo_path/install/system.sh" "$repo_path/install/user.sh" "$repo_path/install/pam.sh"
 
 check "firefox policies are valid JSON" python3 -m json.tool "$repo_path/etc/firefox/policies/policies.json"
-check "Firefox profile defaults are present" test -s "$repo_path/config/firefox/user.js"
-check "Firefox profile helper compiles" python3 -c 'compile(open("bin/firefox-profile").read(), "bin/firefox-profile", "exec")'
 check "AI helper and Python scanner compile" python3 -c '
 from pathlib import Path
 root = Path(".")
@@ -160,8 +160,7 @@ else
   printf 'skip: dconf validation not installed\n'
 fi
 if command -v lua >/dev/null 2>&1; then
-  check "Hyprland Lua configs parse" lua -e 'assert(loadfile(arg[1])); assert(loadfile(arg[2]))' \
-    "$repo_path/config/hypr/hyprland.lua" "$repo_path/config/hypr/monitors.lua"
+  check "Hyprland Lua configs parse" lua -e 'assert(loadfile("config/hypr/hyprland.lua")); assert(loadfile("config/hypr/monitors.lua")); os.exit(0)'
 else
   printf 'skip: Lua parser not installed\n'
 fi

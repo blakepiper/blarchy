@@ -68,6 +68,7 @@ fi
 
 mkdir -p "$HOME/.local/bin" "$HOME/.local/bin/ai-usage-scanners"
 for helper in ai-usage clipboard-history control-menu desktop-session \
+  desktop-settings desktop-settings-apply \
   desktop-status dev displays keep-awake screenshot \
   session-controls settings-menu system-info; do
   cp -a "$repo/bin/$helper" "$HOME/.local/bin/$helper"

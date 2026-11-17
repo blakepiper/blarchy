@@ -1,0 +1,48 @@
+#!/bin/bash
+# Settings commands used by the Quickshell controls.
+
+set -euo pipefail
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+session_controls="$script_dir/session-controls"
+
+power_profiles() {
+  local profile_list active available=false profiles_json profile
+  local -a profiles=()
+
+  if ! command -v powerprofilesctl >/dev/null 2>&1 ||
+    ! profile_list=$(LC_ALL=C powerprofilesctl list 2>/dev/null); then
+    printf '{"available":false,"active":"","profiles":[]}\n'
+    return
+  fi
+
+  mapfile -t profiles < <(
+    sed -nE 's/^[[:space:]*-]*(performance|balanced|power-saver):.*$/\1/p' <<<"$profile_list" |
+      sort -u
+  )
+  active=$(LC_ALL=C powerprofilesctl get 2>/dev/null) || active=""
+  if (( ${#profiles[@]} > 0 )); then
+    profiles_json=$(printf '%s\n' "${profiles[@]}" | jq -R . | jq -s -c .)
+    for profile in "${profiles[@]}"; do
+      [[ $profile != "$active" ]] || available=true
+    done
+  else
+    profiles_json='[]'
+  fi
+  jq -cn --argjson available "$available" --arg active "$active" \
+    --argjson profiles "$profiles_json" \
+    '{available: $available, active: $active, profiles: $profiles}'
+}
+
+case "${1:-}" in
+  power-profiles)
+    power_profiles
+    ;;
+  power-mode|nightlight-level)
+    exec "$session_controls" "$@"
+    ;;
+  *)
+    echo 'Usage: desktop-settings-apply {power-profiles|power-mode [profile]|nightlight-level [--intensity 0-100]}' >&2
+    exit 2
+    ;;
+esac

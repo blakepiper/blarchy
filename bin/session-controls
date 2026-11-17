@@ -5,11 +5,25 @@ set -euo pipefail
 
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/desktop-session"
 nightlight_file="$state_dir/nightlight-level"
+legacy_settings_file="${XDG_CONFIG_HOME:-$HOME/.config}/desktop-settings/settings.json"
+
+legacy_nightlight_level() {
+  local enabled level
+  [[ -r $legacy_settings_file ]] || { printf '0\n'; return; }
+  enabled=$(jq -r '.nightlight.enabled // false' "$legacy_settings_file" 2>/dev/null) || enabled=false
+  level=$(jq -r '.nightlight.intensity // 0' "$legacy_settings_file" 2>/dev/null) || level=0
+  [[ $level =~ ^[0-9]+$ ]] || level=0
+  (( level <= 100 )) || level=100
+  [[ $enabled == true ]] || level=0
+  printf '%s\n' "$level"
+}
 
 nightlight_level() {
   local level=0
-  [[ ! -r $nightlight_file ]] || read -r level <"$nightlight_file"
-  [[ $level =~ ^[0-9]+$ ]] || level=0
+  if [[ -r $nightlight_file ]]; then
+    read -r level <"$nightlight_file" || level=""
+  fi
+  [[ $level =~ ^[0-9]+$ ]] || level=$(legacy_nightlight_level)
   (( level <= 100 )) || level=100
   printf '%s\n' "$level"
 }

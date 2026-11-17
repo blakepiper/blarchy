@@ -42,7 +42,7 @@ def profile_directories():
   if profile_path.exists():
     raise RuntimeError(f"Firefox profile path already exists but is not registered: {profile_path}")
   subprocess.run(
-    ["firefox", "-no-remote", "-CreateProfile", f"{PROFILE_NAME} {profile_path}"],
+    ["firefox", "--headless", "-no-remote", "-CreateProfile", f"{PROFILE_NAME} {profile_path}"],
     check=True,
   )
   if profile_path.is_dir():

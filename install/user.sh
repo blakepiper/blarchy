@@ -68,15 +68,11 @@ fi
 
 mkdir -p "$HOME/.local/bin" "$HOME/.local/bin/ai-usage-scanners"
 for helper in ai-usage clipboard-history control-menu desktop-session \
-  desktop-status dev displays firefox-profile keep-awake screenshot \
+  desktop-status dev displays keep-awake screenshot \
   session-controls settings-menu system-info; do
   cp -a "$repo/bin/$helper" "$HOME/.local/bin/$helper"
 done
 cp -a "$repo/bin/ai-usage-scanners/codex_usage_scanner.py" \
   "$HOME/.local/bin/ai-usage-scanners/codex_usage_scanner.py"
-
-if command -v firefox >/dev/null 2>&1; then
-  "$HOME/.local/bin/firefox-profile"
-fi
 
 echo 'User setup complete'

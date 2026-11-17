@@ -1,0 +1,12 @@
+[Unit]
+Description=Restore and watch desktop settings
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+ConditionEnvironment=HYPRLAND_INSTANCE_SIGNATURE
+
+[Service]
+Type=exec
+ExecStart=%h/.local/bin/desktop-settings-apply watch-session
+Restart=on-failure
+RestartSec=2

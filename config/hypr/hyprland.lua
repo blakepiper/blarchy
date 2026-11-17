@@ -59,6 +59,17 @@ if hl.plugin.hyprglass then
   end
 end
 hl.window_rule({
+  name = "desktop-settings-glass",
+  match = { class = "^org[.]local[.]DesktopSettings$", title = "^Desktop Settings$" },
+  tag = "+hyprglass_enabled",
+  opacity = "1.0 override 1.0 override 1.0 override",
+})
+hl.window_rule({
+  name = "desktop-settings-clear-material",
+  match = { class = "^org[.]local[.]DesktopSettings$", title = "^Desktop Settings$" },
+  tag = "+hyprglass_preset_desktop-bar-glass",
+})
+hl.window_rule({
   name = "ghostty-glass",
   match = { class = "^org[.]local[.]GhosttyGlass$" },
   tag = "+hyprglass_enabled",
@@ -122,7 +133,7 @@ hl.bind("SUPER + Space", exec(launcher))
 hl.bind("SUPER + D", exec(launcher))
 hl.bind("SUPER + SHIFT + Space", exec(home .. "/.local/bin/control-menu"))
 hl.bind("SUPER + S", exec(home .. "/.local/bin/desktop-settings"),
-  { description = "Open settings menu" })
+  { description = "Open Desktop Settings" })
 hl.bind("SUPER + F", exec("nautilus"))
 hl.bind("SUPER + B", exec("firefox"))
 hl.bind("SUPER + SHIFT + B", exec("firefox --private-window"))
@@ -168,10 +179,10 @@ hl.bind("XF86MonBrightnessDown", exec("brightnessctl --class=backlight set 5%-")
   { repeating = true, locked = true })
 
 hl.on("hyprland.start", function()
-  hl.exec_cmd("dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP XDG_SESSION_TYPE && systemctl --user start desktop-session.service hypridle.service hyprsunset.service")
+  hl.exec_cmd("dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP XDG_SESSION_TYPE && systemctl --user daemon-reload && systemctl --user start desktop-session.service desktop-settings.service desktop-settings-idle.service hyprsunset.service")
   hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
 end)
 
 hl.on("hyprland.shutdown", function()
-  os.execute("systemctl --user stop desktop-session.service hypridle.service hyprsunset.service")
+  os.execute("systemctl --user stop desktop-session.service desktop-settings.service desktop-settings-idle.service hyprsunset.service")
 end)

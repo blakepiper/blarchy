@@ -1,7 +1,18 @@
 #!/bin/bash
-# Keep the desktop settings entry point inside this setup.
 
 set -euo pipefail
 
-script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-exec "$script_dir/settings-menu" "$@"
+launcher=$(readlink -f -- "${BASH_SOURCE[0]}")
+settings_dir=${DESKTOP_SETTINGS_DIR:-${launcher%/*}/../config/hypr/desktop-settings}
+if [[ ! -f $settings_dir/main.py ]]; then
+  settings_dir=${DESKTOP_SETTINGS_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/hypr/desktop-settings}
+fi
+if [[ ! -f $settings_dir/main.py ]]; then
+  echo "Desktop Settings source is missing at $settings_dir." >&2
+  exit 1
+fi
+if [[ -v HYPRLAND_APP_FONTCONFIG_FILE ]]; then
+  export FONTCONFIG_FILE=$HYPRLAND_APP_FONTCONFIG_FILE
+fi
+export PYTHONDONTWRITEBYTECODE=1
+exec python3 "$settings_dir/main.py" "$@"

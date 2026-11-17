@@ -16,6 +16,13 @@ gnome-keyring
 dconf
 gsettings-desktop-schemas
 gnome-themes-extra
+adwaita-icon-theme
+
+# GTK Desktop Settings application
+gtk3
+python-cairo
+python-dbus
+python-gobject
 
 # Session shell, notifications, locking, and wallpaper
 mako

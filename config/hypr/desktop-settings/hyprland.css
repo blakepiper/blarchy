@@ -1,0 +1,123 @@
+/* Hyprland only: clear panes, opaque type, and the topbar's Tokyo Night accents. */
+window.settings-glass {
+  background: rgba(16,24,39,0.095);
+  color: #c0caf5;
+}
+.settings-glass, .settings-glass button, .settings-glass entry,
+.settings-glass combobox, .settings-glass spinbutton {
+  font-family: "Terminus (TTF)", monospace;
+  font-size: 14px;
+}
+.settings-glass scrolledwindow, .settings-glass viewport { background: transparent; }
+.settings-glass .sidebar {
+  margin: 12px 0 12px 12px;
+  padding: 12px;
+  border: 1px solid rgba(192,202,245,0.20);
+  border-radius: 20px;
+  background: rgba(16,24,39,0.12);
+  box-shadow: inset 0 1px rgba(255,255,255,0.10);
+}
+.settings-glass .brand { margin: 8px 12px 0; }
+.settings-glass .brand-mark { color: #f7768e; }
+.settings-glass .brand-title { font-size: 20px; font-weight: bold; letter-spacing: 3px; color: #e2e6ef; }
+.settings-glass .sidebar entry { margin: 0 0 6px; }
+.settings-glass .sidebar row {
+  margin: 3px 0;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  background: transparent;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.settings-glass .sidebar row:hover { background: rgba(192,202,245,0.07); }
+.settings-glass .sidebar row:selected {
+  color: #e2e6ef;
+  background: rgba(122,162,247,0.13);
+  border-color: rgba(122,162,247,0.35);
+  box-shadow: inset 0 1px rgba(255,255,255,0.10);
+}
+.settings-glass .sidebar row:selected label { font-weight: bold; }
+.settings-glass .sidebar row.nav-display:selected, .settings-glass .page-display .page-icon { color: #eed49f; }
+.settings-glass .sidebar row.nav-audio:selected, .settings-glass .page-audio .page-icon { color: #8aadf4; }
+.settings-glass .sidebar row.nav-power:selected, .settings-glass .page-power .page-icon { color: #a6da95; }
+.settings-glass .sidebar row.nav-bluetooth:selected, .settings-glass .page-bluetooth .page-icon { color: #bb9af7; }
+.settings-glass .sidebar row.nav-network:selected, .settings-glass .page-network .page-icon { color: #7dcfff; }
+.settings-glass .sidebar row.nav-about:selected, .settings-glass .page-about .page-icon { color: #f7768e; }
+.settings-glass .page-header { margin: 4px 0 12px; }
+.settings-glass .page-icon {
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(192,202,245,0.20);
+  background: rgba(192,202,245,0.05);
+  color: #8aadf4;
+}
+.settings-glass .page-title { font-size: 30px; font-weight: bold; color: #e2e6ef; }
+.settings-glass .subtitle { font-size: 13px; color: #a9b1d6; }
+.settings-glass .dim { color: #969fbd; font-size: 13px; }
+.settings-glass .setting-label { font-weight: bold; color: #d4dcf4; }
+.settings-glass .section-title { font-size: 17px; color: #d4dcf4; margin-bottom: 6px; }
+.settings-glass .card {
+  border-radius: 18px;
+  padding: 20px;
+  border: 1px solid rgba(192,202,245,0.20);
+  background: rgba(16,24,39,0.14);
+  background-image: linear-gradient(to bottom, rgba(192,202,245,0.035), rgba(192,202,245,0.005));
+  box-shadow: inset 0 1px rgba(255,255,255,0.08);
+}
+.settings-glass button, .settings-glass entry, .settings-glass combobox button, .settings-glass spinbutton {
+  border-radius: 11px;
+  border: 1px solid rgba(192,202,245,0.24);
+  background: rgba(16,24,39,0.22);
+  color: #d4dcf4;
+  box-shadow: inset 0 1px rgba(255,255,255,0.06);
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+.settings-glass button { padding: 9px 14px; }
+.settings-glass button:hover { background: rgba(122,162,247,0.17); border-color: rgba(122,162,247,0.55); }
+.settings-glass button:active { background: rgba(122,162,247,0.26); }
+.settings-glass button:focus, .settings-glass entry:focus { border-color: #7aa2f7; }
+.settings-glass button:disabled { color: #727b96; background: rgba(16,24,39,0.10); border-color: rgba(192,202,245,0.10); }
+.settings-glass button.suggested-action { background: rgba(122,162,247,0.25); border-color: rgba(122,162,247,0.65); color: #e2e6ef; font-weight: bold; }
+.settings-glass button.suggested-action:hover { background: rgba(122,162,247,0.36); }
+.settings-glass button.destructive-action { color: #f7768e; border-color: rgba(247,118,142,0.35); }
+.settings-glass entry { padding: 10px 12px; caret-color: #c0caf5; }
+.settings-glass entry selection { background: rgba(122,162,247,0.4); color: #ffffff; }
+.settings-glass scale trough { min-height: 6px; border-radius: 12px; background: rgba(192,202,245,0.16); }
+.settings-glass scale highlight { min-height: 6px; border-radius: 12px; background: #8aadf4; }
+/* Keep the full thumb width draggable; theme margins must not collapse its hit area. */
+.settings-glass scale { padding: 12px 0; }
+.settings-glass scale slider { min-width: 18px; min-height: 18px; margin: -7px 0; padding: 0; border-radius: 50%; background: #c0caf5; border: 1px solid #8aadf4; box-shadow: 0 1px 3px rgba(16,24,39,0.25); }
+.settings-glass scale slider:hover { background: #e2e6ef; }
+.settings-glass scale slider:active { background: #8aadf4; }
+.settings-glass scale:disabled slider, .settings-glass scale:disabled highlight { background: #727b96; border-color: #727b96; }
+.settings-glass scale value { font-size: 13px; color: #d4dcf4; }
+.settings-glass .page-display scale highlight, .settings-glass .page-display progressbar progress { background: #eed49f; }
+.settings-glass .page-display scale slider { border-color: #eed49f; }
+.settings-glass .page-power progressbar progress { background: #a6da95; }
+.settings-glass button.settings-switch, .settings-glass button.settings-switch:hover,
+.settings-glass button.settings-switch:active, .settings-glass button.settings-switch:checked,
+.settings-glass button.settings-switch:focus {
+  min-width: 48px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+}
+.settings-glass progressbar trough { min-height: 6px; border-radius: 12px; background: rgba(192,202,245,0.15); }
+.settings-glass progressbar progress { min-height: 6px; border-radius: 12px; }
+.settings-glass .monitor { border-radius: 12px; border: 1px solid rgba(138,173,244,0.65); background: rgba(138,173,244,0.10); }
+.settings-glass .display-footer { background: rgba(16,24,39,0.14); border-top: 1px solid rgba(192,202,245,0.16); }
+.settings-glass .status { margin: 0 12px 12px; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(166,218,149,0.35); background: rgba(38,58,51,0.65); }
+.settings-glass .status.error { color: #ffb4c1; border-color: rgba(247,118,142,0.50); background: rgba(67,38,45,0.80); }
+.settings-glass scrollbar { background: transparent; }
+.settings-glass scrollbar slider { min-width: 4px; min-height: 28px; border-radius: 8px; background: rgba(192,202,245,0.25); }
+.settings-glass separator { background: rgba(192,202,245,0.15); }
+
+/* A compact live meter belongs beside the microphone test action. */
+.settings-glass levelbar trough { background: rgba(192,202,245,0.13); border-radius: 8px; padding: 0; }
+.settings-glass levelbar block { min-height: 6px; border: 0; border-radius: 8px; }
+.settings-glass levelbar block.filled { background: #8aadf4; }
+.settings-glass levelbar block.empty { background: transparent; }

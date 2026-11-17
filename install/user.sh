@@ -38,6 +38,9 @@ seed_tree() {
 }
 
 seed_tree "$repo/config" "$HOME/.config"
+if [[ -d $repo/share ]]; then
+  seed_tree "$repo/share" "$HOME/.local/share"
+fi
 mkdir -p "$HOME/Pictures/Screenshots"
 
 # Interactive Bash: ble.sh, Starship, and local helper commands.

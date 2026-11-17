@@ -6,6 +6,7 @@ set -euo pipefail
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/desktop-session"
 nightlight_file="$state_dir/nightlight-level"
 legacy_settings_file="${XDG_CONFIG_HOME:-$HOME/.config}/desktop-settings/settings.json"
+settings_apply="$HOME/.local/bin/desktop-settings-apply"
 
 legacy_nightlight_level() {
   local enabled level
@@ -20,6 +21,10 @@ legacy_nightlight_level() {
 
 nightlight_level() {
   local level=0
+  if [[ -x $settings_apply ]]; then
+    "$settings_apply" nightlight-level
+    return
+  fi
   if [[ -r $nightlight_file ]]; then
     read -r level <"$nightlight_file" || level=""
   fi
@@ -31,6 +36,10 @@ nightlight_level() {
 apply_nightlight() {
   local level="$1"
   local temperature
+  if [[ -x $settings_apply ]]; then
+    "$settings_apply" apply-hyprland-nightlight
+    return
+  fi
   [[ -n ${WAYLAND_DISPLAY:-} ]] || return 0
   systemctl --user start hyprsunset.service
   if (( level == 0 )); then
@@ -52,11 +61,19 @@ set_nightlight() {
   temporary=$(mktemp "$state_dir/.nightlight.XXXXXX")
   printf '%s\n' "$level" >"$temporary"
   mv -f -- "$temporary" "$nightlight_file"
-  apply_nightlight "$level"
+  if [[ -x $settings_apply ]]; then
+    "$settings_apply" nightlight-level --intensity "$level"
+  else
+    apply_nightlight "$level"
+  fi
 }
 
 power_mode() {
   local action="${1:-get}"
+  if [[ -x $settings_apply ]]; then
+    "$settings_apply" power-mode "$action"
+    return
+  fi
   if ! command -v powerprofilesctl >/dev/null 2>&1; then
     printf 'unavailable\n'
     return 0

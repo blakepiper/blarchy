@@ -115,7 +115,7 @@ check "Quickshell status helpers use absolute paths" grep -q 'HOME.*desktop-stat
 check "Super+Space uses the application launcher" grep -q 'SUPER + Space.*exec(launcher)' "$repo_path/config/hypr/hyprland.lua"
 check "application launcher uses Wofi" grep -q 'local launcher = "wofi ' "$repo_path/config/hypr/hyprland.lua"
 check "Super+Shift+Space opens the control menu" grep -q 'SUPER + SHIFT + Space.*control-menu' "$repo_path/config/hypr/hyprland.lua"
-check "Super+S opens the settings menu" grep -q 'SUPER + S.*desktop-settings' "$repo_path/config/hypr/hyprland.lua"
+check "Super+S opens Desktop Settings" grep -q 'SUPER + S.*desktop-settings' "$repo_path/config/hypr/hyprland.lua"
 check "Hyprland loads session services on start" grep -q 'hypridle.service hyprsunset.service' "$repo_path/config/hypr/hyprland.lua"
 check "desktop processes stop with the graphical session" grep -q '^PartOf=graphical-session.target$' \
   "$repo_path/config/systemd/user/desktop-session.service"

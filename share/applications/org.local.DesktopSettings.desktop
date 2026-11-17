@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Desktop Settings
+Comment=Display, audio, Bluetooth, network, power and input controls
+Exec=desktop-settings
+Icon=preferences-system
+Categories=Settings;System;
+StartupNotify=true

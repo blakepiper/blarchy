@@ -56,6 +56,7 @@ No package versions are pinned, and there is no repository self-updater.
 | Compositor | Hyprland |
 | Bar and controls | Quickshell |
 | Launcher and menus | Wofi |
+| Settings | GTK 3 Desktop Settings |
 | Notifications | mako |
 | Terminal | Ghostty |
 | Shell prompt | Starship |
@@ -69,6 +70,12 @@ The Ghostty defaults are in [`config/ghostty/config`](config/ghostty/config).
 The Starship prompt is configured in [`config/starship.toml`](config/starship.toml).
 Neovim starts without a plugin manager or repository-provided settings.
 
+Desktop Settings is bundled in [`config/hypr/desktop-settings`](config/hypr/desktop-settings)
+and opens as a native GTK window. Its pages manage Hyprland displays and input,
+audio, networking, Bluetooth, power, the screen-off timer, shortcuts, and system
+information. It is an in-repository Hyprland adaptation of the [Blix settings
+application](https://github.com/blakepiper/blix/tree/main/packaging/blix-settings).
+
 HyprGlass materials are optional. Build the plugin for the installed Hyprland
 version and set `HYPRGLASS_PLUGIN` to its absolute library path before starting
 Hyprland to enable the configured glass presets. The regular layer blur and
@@ -81,7 +88,7 @@ opacity rules work without the plugin.
 | Super + Enter | Ghostty |
 | Super + Space or Super + D | Application launcher |
 | Super + Shift + Space | Lock, suspend, reboot, logout, monitor, and power controls |
-| Super + S | Audio, network, Bluetooth, power, and display settings |
+| Super + S | Display, audio, network, Bluetooth, power, input, and shortcut settings |
 | Super + F / Super + B | File manager / Firefox |
 | Super + Q / Super + Shift + Q | Close window / exit Hyprland |
 | Super + arrows | Focus windows |

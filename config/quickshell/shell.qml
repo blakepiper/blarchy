@@ -566,7 +566,7 @@ Scope {
           Behavior on tabOffset {
             NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
           }
-          // One contour: the active tab's shoulders join the menu without a seam.
+          // Keep the menu edge flat while joining the selected tab without a seam.
           readonly property string outline: {
             const p = controlsGlass.expansion;
             const inset = 0.5;
@@ -575,23 +575,24 @@ Scope {
             const left = Math.max(0, center - 22) * p;
             const right = w + (Math.min(w, center + 22) - w) * p;
             const r = 12;
-            const headerBottom = 30 - inset;
-            const bottomRadius = Math.min(12, (h - headerBottom) / 2);
-            const br = Math.min(12, (h - headerBottom) / 2, (w - right) / 2);
-            const bl = Math.min(12, (h - headerBottom) / 2, left / 2);
-            const sr = Math.min(8, (w - right) / 2) * p;
-            const sl = Math.min(8, left / 2) * p;
+            const headerBottom = 30 - 2 * inset;
+            const bodyHeight = Math.max(0, h - headerBottom);
+            const bottomRadius = Math.min(r, bodyHeight / 2);
+            const sr = Math.min(8, (w - right) / 2);
+            const sl = Math.min(8, left / 2);
+            const bodyRightRadius = Math.min(r, bodyHeight / 2, w - right - sr);
+            const bodyLeftRadius = Math.min(r, bodyHeight / 2, left - sl);
             if (p < 0.001)
               return `M ${inset+15} ${inset} H ${w-15+inset} Q ${w+inset} ${inset} ${w+inset} ${15+inset}`
                 + ` Q ${w+inset} ${h+inset} ${w-15+inset} ${h+inset} H ${15+inset}`
                 + ` Q ${inset} ${h+inset} ${inset} ${15+inset} Q ${inset} ${inset} ${15+inset} ${inset} Z`;
             return `M ${left+r+inset} ${inset} H ${right-r+inset} Q ${right+inset} ${inset} ${right+inset} ${r+inset}`
-              + ` V ${headerBottom-sr} Q ${right+inset} ${headerBottom} ${right+sr+inset} ${headerBottom}`
-              + ` H ${w-br+inset} Q ${w+inset} ${headerBottom} ${w+inset} ${headerBottom+br}`
+              + ` V ${headerBottom-sr+inset} Q ${right+inset} ${headerBottom+inset} ${right+sr+inset} ${headerBottom+inset}`
+              + ` H ${w-bodyRightRadius+inset} Q ${w+inset} ${headerBottom+inset} ${w+inset} ${headerBottom+bodyRightRadius+inset}`
               + ` V ${h-bottomRadius+inset} Q ${w+inset} ${h+inset} ${w-bottomRadius+inset} ${h+inset}`
               + ` H ${bottomRadius+inset} Q ${inset} ${h+inset} ${inset} ${h-bottomRadius+inset}`
-              + ` V ${headerBottom+bl} Q ${inset} ${headerBottom} ${left+inset} ${headerBottom}`
-              + ` H ${left-sl+inset} Q ${left+inset} ${headerBottom} ${left+inset} ${headerBottom-sl}`
+              + ` V ${headerBottom+bodyLeftRadius+inset} Q ${inset} ${headerBottom+inset} ${bodyLeftRadius+inset} ${headerBottom+inset}`
+              + ` H ${left-sl+inset} Q ${left+inset} ${headerBottom+inset} ${left+inset} ${headerBottom-sl+inset}`
               + ` V ${r+inset} Q ${left+inset} ${inset} ${left+r+inset} ${inset} Z`;
           }
           Shape {
